@@ -1,0 +1,55 @@
+{
+  "appPolicies" : {
+    "eula" : "",
+    "policies" : [
+      { "locale" : "en_US", "policyText" : "", "policyURL" : "" }
+    ]
+  },
+  "identifier" : "6C1A2B9E",
+  "nonRenewingSubscriptions" : [ ],
+  "products" : [
+    {
+      "displayPrice" : "6.99",
+      "familyShareable" : true,
+      "internalID" : "6C1A2B01",
+      "localizations" : [
+        { "description" : "Unlimited pages, forever. One purchase, no subscription.", "displayName" : "Unlock Carriage", "locale" : "en_US" }
+      ],
+      "productID" : "com.leejustin.carriage.unlock",
+      "referenceName" : "Unlock",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "1.99",
+      "familyShareable" : true,
+      "internalID" : "6C1A2B02",
+      "localizations" : [
+        { "description" : "Cream, onion skin and carbon copy paper, with red, faded and carbon blue ribbons.", "displayName" : "Paper & Ink", "locale" : "en_US" }
+      ],
+      "productID" : "com.leejustin.carriage.pack.paperink",
+      "referenceName" : "Paper and Ink Pack",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "1.99",
+      "familyShareable" : true,
+      "internalID" : "6C1A2B03",
+      "localizations" : [
+        { "description" : "Three more machines: an office upright, an electric and a tin traveller.", "displayName" : "Machine Sounds", "locale" : "en_US" }
+      ],
+      "productID" : "com.leejustin.carriage.pack.sounds",
+      "referenceName" : "Machine Sounds Pack",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6C1A2B00",
+    "_compatibilityTimeRate" : { "3" : 6 },
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [ ]
+  },
+  "subscriptionGroups" : [ ],
+  "version" : { "major" : 4, "minor" : 0 }
+}
