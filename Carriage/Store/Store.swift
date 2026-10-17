@@ -1,0 +1,143 @@
+import Observation
+import os
+import StoreKit
+
+/// How the app is sold. The spec leaves this open; flip `current` to match App Store Connect.
+enum Monetization {
+    /// Paid up front: everything in the base app is unlocked, packs are still sold.
+    case upfront
+    /// Free to try: three pages, then a one-time unlock.
+    case freemium(freePages: Int)
+
+    static let current: Monetization = .freemium(freePages: 3)
+}
+
+enum ProductID {
+    static let unlock = "com.leejustin.carriage.unlock"
+    static let paperInk = "com.leejustin.carriage.pack.paperink"
+    static let sounds = "com.leejustin.carriage.pack.sounds"
+
+    static let all = [unlock, paperInk, sounds]
+}
+
+/// StoreKit 2: one non-consumable unlock and two non-consumable packs. No subscriptions, no ads.
+@Observable
+final class Store {
+    private(set) var products: [String: Product] = [:]
+    private(set) var purchased: Set<String> = []
+    private(set) var isLoading = false
+    /// True once the App Store has answered at least once, so a refund check can trust `purchased`.
+    private(set) var entitlementsChecked = false
+    var lastError: String?
+
+    @ObservationIgnored private var updates: Task<Void, Never>?
+    @ObservationIgnored private let log = Logger(subsystem: "Carriage", category: "Store")
+
+    init() {
+        updates = Task { [weak self] in
+            for await result in Transaction.updates {
+                await self?.handle(result)
+            }
+        }
+    }
+
+    var isUnlocked: Bool {
+        if case .upfront = Monetization.current { return true }
+        return purchased.contains(ProductID.unlock)
+    }
+
+    var hasPaperInk: Bool { purchased.contains(ProductID.paperInk) }
+    var hasSounds: Bool { purchased.contains(ProductID.sounds) }
+
+    var freePageLimit: Int? {
+        if case let .freemium(pages) = Monetization.current, !isUnlocked { return pages }
+        return nil
+    }
+
+    func canUse(_ paper: PaperStyle) -> Bool { !paper.isPremium || hasPaperInk }
+    func canUse(_ ink: InkStyle) -> Bool { !ink.isPremium || hasPaperInk }
+    func canUse(_ sound: MachineSound) -> Bool { !sound.isPremium || hasSounds }
+
+    func price(_ id: String) -> String? { products[id]?.displayPrice }
+
+    func load() async {
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            let loaded = try await Product.products(for: ProductID.all)
+            products = Dictionary(uniqueKeysWithValues: loaded.map { ($0.id, $0) })
+        } catch {
+            log.error("Couldn't load products: \(error.localizedDescription)")
+        }
+        await refreshEntitlements()
+    }
+
+    func refreshEntitlements() async {
+        var owned: Set<String> = []
+        for await result in Transaction.currentEntitlements {
+            if case let .verified(transaction) = result, transaction.revocationDate == nil {
+                owned.insert(transaction.productID)
+            }
+        }
+        purchased = owned
+        entitlementsChecked = true
+    }
+
+    /// Fetches the products if they aren't here yet (the first try at launch can fail on a slow network).
+    func loadProductsIfNeeded() async {
+        guard products.count < ProductID.all.count else { return }
+        do {
+            let loaded = try await Product.products(for: ProductID.all)
+            for product in loaded { products[product.id] = product }
+        } catch {
+            log.error("Couldn't load products: \(error.localizedDescription)")
+        }
+    }
+
+    /// Returns true if the purchase went through.
+    @discardableResult
+    func purchase(_ id: String) async -> Bool {
+        lastError = nil
+        if products[id] == nil { await loadProductsIfNeeded() }
+        guard let product = products[id] else {
+            lastError = "The App Store isn't reachable right now. Try again in a moment."
+            return false
+        }
+        do {
+            switch try await product.purchase() {
+            case let .success(result):
+                await handle(result)
+                return purchased.contains(id)
+            case .pending:
+                lastError = "Your purchase is waiting for approval."
+                return false
+            case .userCancelled:
+                return false
+            @unknown default:
+                return false
+            }
+        } catch {
+            lastError = error.localizedDescription
+            return false
+        }
+    }
+
+    func restore() async {
+        do {
+            try await AppStore.sync()
+        } catch {
+            lastError = error.localizedDescription
+        }
+        await refreshEntitlements()
+    }
+
+    private func handle(_ result: VerificationResult<Transaction>) async {
+        guard case let .verified(transaction) = result else { return }
+        if transaction.revocationDate == nil {
+            purchased.insert(transaction.productID)
+        } else {
+            purchased.remove(transaction.productID)
+        }
+        await transaction.finish()
+    }
+}
