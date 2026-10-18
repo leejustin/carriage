@@ -1,4 +1,5 @@
 import FoldKit
+import os
 import SwiftUI
 
 /// The machine. One paper view and one keyboard view live for the whole session and are only moved and
@@ -7,6 +8,9 @@ struct TypewriterScreen: View {
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
+    /// False for a moment after launch: a Duo's hinge reports a beat after the first layout, and that first
+    /// correction (say, regular to closed) should snap into place rather than animate.
+    @State private var settled = false
 
     private var night: Bool {
         switch model.settings.nightDesk {
@@ -27,6 +31,10 @@ struct TypewriterScreen: View {
         }
         .onChange(of: reduceMotion) { _, value in model.engine.applyConfiguration(reduceMotion: value) }
         .onChange(of: night, initial: true) { _, value in model.engine.applyConfiguration(night: value) }
+        .task {
+            try? await Task.sleep(for: .seconds(0.6))
+            settled = true
+        }
         .onAppear {
             let appModel = model
             appModel.engine.paper.onTap = { [weak appModel] in appModel?.paperTapped() }
@@ -37,7 +45,7 @@ struct TypewriterScreen: View {
         let layout = DeskLayout.make(size: size, fold: model.fold.state, useSystemKeyboard: model.settings.useSystemKeyboard)
         return Desk(layout: layout, size: size, safe: safe)
             .foldProbe(model.fold)
-            .animation(reduceMotion ? nil : .spring(duration: 0.45, bounce: 0.12), value: layout)
+            .animation(reduceMotion || !settled ? nil : .spring(duration: 0.45, bounce: 0.12), value: layout)
             .onChange(of: layout.presentation, initial: true) { _, presentation in
                 model.engine.applyConfiguration(presentation: presentation, reduceMotion: reduceMotion)
                 DispatchQueue.main.async { model.engine.paper.activateHardwareInput() }
@@ -55,7 +63,24 @@ struct TypewriterScreen: View {
             .onChange(of: layout.kind) { old, new in
                 foldChanged(from: old, to: new)
             }
+            #if DEBUG
+            .onChange(of: layout, initial: true) { _, layout in
+                logLayout(layout, size: size)
+            }
+            #endif
     }
+
+    #if DEBUG
+    /// For checking postures on the Duo simulator: one log line per layout.
+    private func logLayout(_ layout: DeskLayout, size: CGSize) {
+        let fold = model.fold.state
+        let crease = layout.crease.map { "\(Int($0.minX)),\(Int($0.minY)) \(Int($0.width))x\(Int($0.height))" } ?? "none"
+        let angle = fold.hingeAngle.map { String(format: "%.0f", $0) } ?? "none"
+        let line = "layout=\(layout.kind.rawValue) posture=\(fold.posture.rawValue) angle=\(angle) simulated=\(fold.isSimulated) window=\(Int(size.width))x\(Int(size.height)) crease=\(crease)"
+        Logger(subsystem: "Carriage", category: "Fold").notice("\(line, privacy: .public)")
+        FoldCapture.capture(name: layout.kind.rawValue, line: line)
+    }
+    #endif
 
     /// Folding shut saves the page behind the machine's cover; opening lifts the cover again.
     private func foldChanged(from old: DeskLayout.Kind, to new: DeskLayout.Kind) {
@@ -309,3 +334,29 @@ struct ToastView: View {
         .animation(.spring(duration: 0.35), value: model.toast)
     }
 }
+
+#if DEBUG
+/// For checking postures on the Duo simulator without anyone watching: each layout change saves a picture of the
+/// window and its log line to Documents/FoldCapture once the layout has settled.
+@MainActor
+enum FoldCapture {
+    private static var count = 0
+
+    static func capture(name: String, line: String) {
+        count += 1
+        let index = count
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            guard let window = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first?.keyWindow,
+                  let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
+            let folder = documents.appendingPathComponent("FoldCapture", isDirectory: true)
+            try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+            let image = UIGraphicsImageRenderer(bounds: window.bounds).image { _ in
+                window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
+            }
+            let stem = String(format: "%02d-%@", index, name)
+            try? image.pngData()?.write(to: folder.appendingPathComponent(stem + ".png"))
+            try? (line + "\n").write(to: folder.appendingPathComponent(stem + ".txt"), atomically: true, encoding: .utf8)
+        }
+    }
+}
+#endif
