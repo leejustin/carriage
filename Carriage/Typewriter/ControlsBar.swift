@@ -1,4 +1,5 @@
 import SwiftUI
+import TipKit
 
 /// The few controls over the paper. They fade away while you type and come back on a tap or a pause.
 struct ControlsBar: View {
@@ -32,10 +33,18 @@ struct ControlsBar: View {
 
             ModeSwitch(mode: model.engine.mode, compact: layout.paper.width < 520) { model.engine.setMode($0) }
 
+            // Open flat like a book: read the page as a two-page spread.
+            if layout.kind == .flatSplit {
+                KnobButton(symbol: "book", label: "Read as a spread", active: model.showSpread) {
+                    withAnimation { model.showSpread.toggle() }
+                }
+            }
+
             KnobButton(symbol: model.focusMode.isOn ? "moon.fill" : "moon", label: model.focusMode.isOn ? "Leave focus" : "Focus",
                        active: model.focusMode.isOn) {
                 model.toggleFocus()
             }
+            .popoverTip(FocusTip(), arrowEdge: .top)
 
             // On a narrow page the timer lives in the … menu, and shows here only while it runs.
             if !compact || model.focus.isRunning {
@@ -43,6 +52,7 @@ struct ControlsBar: View {
             }
 
             sheetMenu
+                .popoverTip(PageMenuTip(), arrowEdge: .top)
 
             KnobButton(symbol: "gearshape", label: "Settings") { model.showSettings = true }
                 .keyboardShortcut(",", modifiers: .command)
@@ -56,6 +66,7 @@ struct ControlsBar: View {
             Button("Save") {
                 model.engine.page?.title = draftTitle
                 model.engine.page?.modifiedAt = .now
+                if let page = model.engine.page { model.mirror(page) }
             }
         }
     }
@@ -76,7 +87,7 @@ struct ControlsBar: View {
                         .frame(width: 14, height: 14)
                 }
             }
-            .font(.typewriter(13, face: model.settings.typeface))
+            .font(.typewriterFixed(13, face: model.settings.typeface))
             .foregroundStyle(.white.opacity(0.92))
             .padding(.horizontal, 12)
             .frame(height: 34)
@@ -108,6 +119,8 @@ struct ControlsBar: View {
             Button("New Sheet", systemImage: "doc.badge.plus") { model.newSheet() }
                 .keyboardShortcut("n", modifiers: .command)
             Button("File This Page", systemImage: "tray.and.arrow.down") { model.fileCurrentSheet() }
+            Button("Today's Journal Page", systemImage: "book.closed") { model.openTodaysJournal() }
+            Button("Version History", systemImage: "clock.arrow.circlepath") { model.versionsPage = model.engine.page }
             Divider()
             Menu("Save to Files", systemImage: "folder") {
                 ForEach(ExportFormat.allCases) { format in
@@ -119,6 +132,8 @@ struct ControlsBar: View {
                     Button(format.name, systemImage: format.symbol) { model.export(format) }
                 }
             }
+            Button("Share as Image", systemImage: "photo") { model.shareImage() }
+            Button("Print", systemImage: "printer") { model.print() }
             Button("Send to Notes", systemImage: "note.text") { model.sendToNotes() }
             Button("Copy Text", systemImage: "doc.on.doc") { model.copyText() }
             Divider()
@@ -218,7 +233,7 @@ struct ModeSwitch: View {
 
     private func segment(_ text: String, active: Bool) -> some View {
         Text(text)
-            .font(Legend.font(size: 10, condensed: true))
+            .font(Legend.fixedFont(size: 10, condensed: true))
             .tracking(1.2)
             .foregroundStyle(active ? Color.ink : .white.opacity(0.7))
             .lineLimit(1)
@@ -258,7 +273,7 @@ struct FocusButton: View {
                 TimelineView(.periodic(from: .now, by: 1)) { context in
                     let remaining = Int(model.focus.remaining(at: context.date).rounded(.up))
                     Text(String(format: "%d:%02d", remaining / 60, remaining % 60))
-                        .font(.typewriter(13).monospacedDigit())
+                        .font(.typewriterFixed(13).monospacedDigit())
                         .foregroundStyle(.white.opacity(0.92))
                         .padding(.horizontal, 10)
                         .frame(height: 34)

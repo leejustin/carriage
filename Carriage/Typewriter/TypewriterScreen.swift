@@ -6,6 +6,15 @@ import SwiftUI
 struct TypewriterScreen: View {
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var night: Bool {
+        switch model.settings.nightDesk {
+        case .on: true
+        case .off: false
+        case .system: colorScheme == .dark
+        }
+    }
 
     var body: some View {
         // The outer reader sees the safe area; the inner one fills the whole screen.
@@ -17,6 +26,7 @@ struct TypewriterScreen: View {
             .ignoresSafeArea(.container)
         }
         .onChange(of: reduceMotion) { _, value in model.engine.applyConfiguration(reduceMotion: value) }
+        .onChange(of: night, initial: true) { _, value in model.engine.applyConfiguration(night: value) }
         .onAppear {
             let appModel = model
             appModel.engine.paper.onTap = { [weak appModel] in appModel?.paperTapped() }
@@ -42,6 +52,26 @@ struct TypewriterScreen: View {
             .onChange(of: PaperInsets(layout: layout, size: size, safe: safe), initial: true) { _, insets in
                 model.engine.paper.setChromeInsets(insets.value)
             }
+            .onChange(of: layout.kind) { old, new in
+                foldChanged(from: old, to: new)
+            }
+    }
+
+    /// Folding shut saves the page behind the machine's cover; opening lifts the cover again.
+    private func foldChanged(from old: DeskLayout.Kind, to new: DeskLayout.Kind) {
+        if new != .flatSplit { model.showSpread = false }
+        guard !reduceMotion else {
+            if new == .closed { model.engine.save() }
+            return
+        }
+        if new == .closed, old != .closed {
+            model.engine.save()
+            Haptics.shared.carriageReturn(slide: 0.25)
+            SoundEngine.shared.play(.shift)
+            withAnimation(.easeOut(duration: 0.3)) { model.foldCurtain = FoldCurtain(closing: true) }
+        } else if old == .closed, new != .closed {
+            model.foldCurtain = FoldCurtain(closing: false)
+        }
     }
 }
 
@@ -51,7 +81,8 @@ private struct PaperInsets: Equatable {
 
     init(layout: DeskLayout, size: CGSize, safe: EdgeInsets) {
         value = UIEdgeInsets(
-            top: layout.paper.minY <= 0 ? safe.top : 0,
+            // The closed Duo shows a glance line under the controls.
+            top: (layout.paper.minY <= 0 ? safe.top : 0) + (layout.kind == .closed ? 46 : 0),
             left: 0,
             bottom: layout.paper.maxY >= size.height - 0.5 ? safe.bottom : 0,
             right: 0
@@ -74,8 +105,37 @@ private struct Desk: View {
             hinge
             hint
             readingFade
+            glance
             controls
             toast
+            spread
+            curtain
+        }
+    }
+
+    @ViewBuilder
+    private var glance: some View {
+        if layout.kind == .closed {
+            GlanceStrip()
+                .offset(x: layout.paper.minX + 24, y: layout.paper.minY + max(safe.top, 8) + 46)
+                .allowsHitTesting(false)
+        }
+    }
+
+    @ViewBuilder
+    private var spread: some View {
+        if model.showSpread, layout.kind == .flatSplit, let keys = layout.keyboard {
+            ReadingSpreadView(left: layout.paper, right: keys)
+                .frame(width: size.width, height: size.height)
+                .transition(.opacity)
+        }
+    }
+
+    @ViewBuilder
+    private var curtain: some View {
+        if let curtain = model.foldCurtain {
+            FoldCurtainView(curtain: curtain)
+                .frame(width: size.width, height: size.height)
         }
     }
 
@@ -120,11 +180,11 @@ private struct Desk: View {
     @ViewBuilder
     private var readingFade: some View {
         if layout.presentation == .editing {
-            let paper = Color(uiColor: model.engine.page?.paper.color ?? PaperStyle.bond.color)
+            let paper = Color(uiColor: model.engine.paper.paperColor)
             LinearGradient(stops: [.init(color: paper, location: 0), .init(color: paper, location: 0.6), .init(color: paper.opacity(0), location: 1)],
                            startPoint: .top, endPoint: .bottom)
                 // Matches the reading sheet's width (see PaperMetrics for .editing).
-                .frame(width: sheetWidth, height: safe.top + 64)
+                .frame(width: sheetWidth, height: safe.top + 64 + (layout.kind == .closed ? 46 : 0))
                 .offset(x: layout.paper.minX + ((layout.paper.width - sheetWidth) / 2).rounded(), y: layout.paper.minY)
                 .allowsHitTesting(false)
         }
@@ -205,9 +265,9 @@ struct BlankSheetHint: View {
     var body: some View {
         VStack(spacing: 8) {
             Text("A fresh sheet.")
-                .font(.typewriter(18, face: model.settings.typeface))
+                .font(.typewriterFixed(18, face: model.settings.typeface))
             Text(layout.showsKeyboard ? "Start typing." : "Start typing on your keyboard.")
-                .font(.typewriter(14, face: model.settings.typeface))
+                .font(.typewriterFixed(14, face: model.settings.typeface))
         }
         .foregroundStyle(Color.ink.opacity(0.28))
         .multilineTextAlignment(.center)
@@ -225,7 +285,7 @@ struct ToastView: View {
         ZStack {
             if let toast = model.toast {
                 Label(toast.text, systemImage: toast.symbol)
-                    .font(.typewriter(14))
+                    .font(.typewriterFixed(14))
                     .foregroundStyle(Color.ink)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 10)
