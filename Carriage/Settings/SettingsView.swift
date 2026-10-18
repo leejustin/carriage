@@ -4,6 +4,8 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
+    @State private var mirrorLocation = ""
+    @State private var diagnostics: [URL] = []
 
     var body: some View {
         @Bindable var settings = model.settings
@@ -119,10 +121,23 @@ struct SettingsView: View {
                     } label: {
                         Label("Export all pages to Files", systemImage: "folder")
                     }
+                    Toggle("Keep a Markdown copy in Files", isOn: $settings.mirrorToFiles)
                 } header: {
                     header("Your writing")
                 } footer: {
-                    Text(CarriageApp.storage.summary + " Exports are yours to keep in Files, iCloud Drive or anywhere else.")
+                    Text(CarriageApp.storage.summary + (settings.mirrorToFiles && !mirrorLocation.isEmpty
+                        ? " A Markdown copy of every page is kept in \(mirrorLocation), updated as you type."
+                        : " Exports are yours to keep in Files, iCloud Drive or anywhere else."))
+                }
+
+                Section {
+                    Picker("Night desk", selection: $settings.nightDesk) {
+                        ForEach(NightDesk.allCases) { Text($0.name).tag($0) }
+                    }
+                } header: {
+                    header("Night")
+                } footer: {
+                    Text("Dark paper and a light ribbon for typing in the dark. Exports and prints stay on white paper.")
                 }
 
                 Section {
@@ -145,9 +160,19 @@ struct SettingsView: View {
 
                 Section {
                     LabeledContent("Machine", value: model.isDuo ? "iPhone Duo" : "Pocket (made for iPhone Duo)")
+                    Button("Show the tour again") { model.replayOnboarding() }
+                    if !diagnostics.isEmpty {
+                        Button("Share crash reports (\(diagnostics.count))") {
+                            model.exportRequest = ExportRequest(items: diagnostics)
+                        }
+                        Button("Delete crash reports", role: .destructive) {
+                            DiagnosticsStore.shared.deleteAll()
+                            diagnostics = []
+                        }
+                    }
                     LabeledContent("Version", value: Bundle.main.versionString)
                     LabeledContent("Privacy", value: "Nothing collected")
-                    Text("Every sound is synthesized on your phone. Pages sync through your own iCloud account.")
+                    Text("Every sound is synthesized on your phone. Pages sync through your own iCloud account. Crash reports stay on this iPhone unless you choose to share them.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 } header: {
@@ -160,6 +185,12 @@ struct SettingsView: View {
             }
             .scrollContentBackground(.hidden)
             .background(DeskBackground())
+            .onAppear {
+                diagnostics = DiagnosticsStore.shared.reports()
+                MarkdownMirror.shared.locationDescription { location in
+                    Task { @MainActor in mirrorLocation = location }
+                }
+            }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -221,7 +252,7 @@ struct MachineSoundPicker: View {
                 } label: {
                     HStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 3) {
-                            Text(machine.name).font(.typewriter(16)).foregroundStyle(Color.ink)
+                            Text(machine.name).font(.typewriter(16)).foregroundStyle(.primary)
                             Text(machine.blurb).font(.footnote).foregroundStyle(.secondary)
                         }
                         Spacer()
