@@ -33,6 +33,10 @@ final class AppSettings {
     /// Shift lights up by itself at the start of a sentence. Nothing typed is ever changed afterwards.
     var autoCapitalize: Bool { didSet { save(autoCapitalize, "autoCapitalize") } }
     var keyboardStyle: KeyboardStyle { didSet { save(keyboardStyle.rawValue, "keyboardStyle") } }
+    /// Keep a Markdown copy of every page in the Files app.
+    var mirrorToFiles: Bool { didSet { save(mirrorToFiles, "mirrorToFiles") } }
+    /// Dark paper with light ink.
+    var nightDesk: NightDesk { didSet { save(nightDesk.rawValue, "nightDesk") } }
 
     /// Daily word goal; 0 means no goal.
     var dailyGoal: Int { didSet { save(dailyGoal, "dailyGoal") } }
@@ -68,6 +72,8 @@ final class AppSettings {
         autoHideControls = bool("autoHideControls", true)
         autoCapitalize = bool("autoCapitalize", true)
         keyboardStyle = value("keyboardStyle", .full)
+        mirrorToFiles = bool("mirrorToFiles", true)
+        nightDesk = value("nightDesk", .system)
         dailyGoal = defaults.object(forKey: "dailyGoal") as? Int ?? 500
         focusMinutes = defaults.object(forKey: "focusMinutes") as? Int ?? 25
     }

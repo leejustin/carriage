@@ -117,6 +117,15 @@ enum InkStyle: String, CaseIterable, Identifiable, Codable {
         }
     }
 
+    /// The ribbon on night paper: light ink on dark stock.
+    var nightColor: UIColor {
+        switch self {
+        case .black, .faded: UIColor(hex: 0xECE4D0)
+        case .red: UIColor(hex: 0xEC8F83)
+        case .carbonBlue: UIColor(hex: 0xB4BCEB)
+        }
+    }
+
     /// The range of per-character ink density. A worn ribbon is lighter and less even.
     var density: ClosedRange<CGFloat> {
         switch self {
@@ -156,6 +165,21 @@ enum CarriageTravel: String, CaseIterable, Identifiable, Codable {
         case .classic: 1
         case .gentle: 0.28
         case .fixed: 0
+        }
+    }
+}
+
+/// When to type white-on-dark: night paper with a light ribbon.
+enum NightDesk: String, CaseIterable, Identifiable, Codable {
+    case off, on, system
+
+    var id: String { rawValue }
+
+    var name: String {
+        switch self {
+        case .off: "Off"
+        case .on: "On"
+        case .system: "Match iPhone"
         }
     }
 }
@@ -257,4 +281,8 @@ extension Color {
     static let inkSoft = Color(hex: 0x6A645B)
     static let ribbonRed = Color(hex: 0xA22D27)
     static let brass = Color(hex: 0xB8955A)
+
+    /// Text set straight on the desk (not on paper), which darkens in dark mode.
+    static let deskInk = Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: 0xEDE6D6) : UIColor(hex: 0x1F1D1B) })
+    static let deskInkSoft = Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: 0xA9A194) : UIColor(hex: 0x6A645B) })
 }

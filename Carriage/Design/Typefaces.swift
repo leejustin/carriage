@@ -65,14 +65,25 @@ enum Legend {
         return UIFont(name: name, size: size) ?? .systemFont(ofSize: size, weight: .semibold)
     }
 
-    static func font(size: CGFloat, condensed: Bool = false) -> Font {
-        Font(uiFont(size: size, condensed: condensed))
+    /// Scales with the reader's text size (Dynamic Type), for the library, settings and sheets.
+    static func font(size: CGFloat, condensed: Bool = false, relativeTo style: Font.TextStyle = .body) -> Font {
+        .custom(condensed ? "Futura-CondensedMedium" : "Futura-Medium", size: size, relativeTo: style)
+    }
+
+    /// A fixed size, for controls floating over the page where a larger size would collide.
+    static func fixedFont(size: CGFloat, condensed: Bool = false) -> Font {
+        .custom(condensed ? "Futura-CondensedMedium" : "Futura-Medium", fixedSize: size)
     }
 }
 
 extension Font {
-    /// The typewriter face as a SwiftUI font, for library cards and menus.
-    static func typewriter(_ size: CGFloat, face: Typeface = .preferred) -> Font {
-        Font(face.font(size: size))
+    /// The typewriter face, scaling with the reader's text size.
+    static func typewriter(_ size: CGFloat, face: Typeface = .preferred, relativeTo style: Font.TextStyle = .body) -> Font {
+        .custom(face.postScriptName, size: size, relativeTo: style)
+    }
+
+    /// The typewriter face at a fixed size, for controls over the page and tiny previews.
+    static func typewriterFixed(_ size: CGFloat, face: Typeface = .preferred) -> Font {
+        .custom(face.postScriptName, fixedSize: size)
     }
 }
