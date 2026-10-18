@@ -1,6 +1,8 @@
 import os
+import StoreKit
 import SwiftData
 import SwiftUI
+import TipKit
 
 @main
 struct CarriageApp: App {
@@ -10,6 +12,8 @@ struct CarriageApp: App {
     init() {
         Typeface.registerBundledFonts()
         container = Self.makeContainer()
+        try? Tips.configure([.displayFrequency(.immediate)])
+        DiagnosticsStore.shared.start()
     }
 
     var body: some Scene {
@@ -26,7 +30,7 @@ struct CarriageApp: App {
     static private(set) var storage: PageStorage = .device
 
     private static func makeContainer() -> ModelContainer {
-        let schema = Schema([Page.self, WritingDay.self])
+        let schema = Schema([Page.self, WritingDay.self, Notebook.self, PageVersion.self])
         let log = Logger(subsystem: "Carriage", category: "Storage")
         let inMemory = ProcessInfo.processInfo.arguments.contains("-uiTesting")
         if !inMemory {
@@ -54,31 +58,59 @@ struct RootView: View {
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
-        @Bindable var model = model
         TypewriterScreen()
             .statusBarHidden(true)
             .persistentSystemOverlays(.hidden)
-            .sheet(isPresented: $model.showLibrary, onDismiss: reactivate) {
-                LibraryView().preferredColorScheme(.light)
+            .modifier(AppSheets(reactivate: reactivate))
+            .modifier(AppReactions(reactivate: reactivate))
+            .onAppear { model.start(context: context) }
+            .onChange(of: scenePhase) { _, phase in
+                switch phase {
+                case .background, .inactive:
+                    model.engine.save()
+                case .active:
+                    Task { await model.focusMode.syncWithSystem() }
+                    model.stats.refresh()
+                    model.focus.tick()
+                    model.scheduleReconcile()
+                    reactivate()
+                @unknown default:
+                    break
+                }
             }
-            .sheet(isPresented: $model.showSettings, onDismiss: reactivate) {
-                SettingsView().preferredColorScheme(.light)
-            }
-            .sheet(isPresented: $model.showPaywall, onDismiss: reactivate) {
-                PaywallView().preferredColorScheme(.light)
-            }
-            .sheet(isPresented: $model.showShop, onDismiss: reactivate) {
-                ShopView().preferredColorScheme(.light)
-            }
-            .sheet(isPresented: $model.showFocusSetup, onDismiss: reactivate) {
-                FocusSetupView().preferredColorScheme(.light)
-            }
-            .sheet(isPresented: $model.showDuoLetter, onDismiss: {
-                model.dismissDuoLetter()
-                reactivate()
-            }) {
-                DuoLetterView().preferredColorScheme(.light)
-            }
+    }
+
+    private func reactivate() {
+        DispatchQueue.main.async { model.engine.paper.activateHardwareInput() }
+    }
+}
+
+/// Every sheet the machine can show.
+private struct AppSheets: ViewModifier {
+    @Environment(AppModel.self) private var model
+    var reactivate: () -> Void
+
+    func body(content: Content) -> some View {
+        @Bindable var model = model
+        content
+            .sheet(isPresented: $model.showLibrary, onDismiss: reactivate) { LibraryView() }
+            .sheet(isPresented: $model.showSettings, onDismiss: reactivate) { SettingsView() }
+            .sheet(isPresented: $model.showPaywall, onDismiss: reactivate) { PaywallView() }
+            .sheet(isPresented: $model.showShop, onDismiss: reactivate) { ShopView() }
+            .sheet(isPresented: $model.showFocusSetup, onDismiss: reactivate) { FocusSetupView() }
+            .sheet(isPresented: $model.showOnboarding, onDismiss: reactivate) { OnboardingView() }
+            .sheet(item: $model.versionsPage, onDismiss: reactivate) { page in VersionHistoryView(page: page) }
+            .modifier(ExportSheets(reactivate: reactivate))
+    }
+}
+
+private struct ExportSheets: ViewModifier {
+    @Environment(AppModel.self) private var model
+    var reactivate: () -> Void
+
+    func body(content: Content) -> some View {
+        @Bindable var model = model
+        content
             .sheet(item: $model.filesRequest, onDismiss: reactivate) { request in
                 FilesExporter(urls: request.urls) {
                     model.toast = Toast(text: request.label, symbol: "folder")
@@ -89,24 +121,25 @@ struct RootView: View {
                 ShareSheet(items: request.items)
                     .presentationDetents([.medium, .large])
             }
-            .onAppear { model.start(context: context) }
-            .onChange(of: scenePhase) { _, phase in
-                switch phase {
-                case .background, .inactive:
-                    model.engine.save()
-                case .active:
-                    Task { await model.focusMode.syncWithSystem() }
-                    model.stats.refresh()
-                    model.focus.tick()
-                    reactivate()
-                @unknown default:
-                    break
-                }
-            }
+    }
+}
+
+/// Keeping the machine in step with settings, purchases and what's on screen.
+private struct AppReactions: ViewModifier {
+    @Environment(AppModel.self) private var model
+    @Environment(\.requestReview) private var requestReview
+    var reactivate: () -> Void
+
+    func body(content: Content) -> some View {
+        content
             .onChange(of: AppearanceSignature(model.settings)) { model.engine.applyConfiguration() }
             .onChange(of: AudioSignature(model.settings)) { model.applyAudioSettings() }
             .onChange(of: model.settings.spellCheck) { model.engine.refreshSpellCheck() }
-            .onChange(of: model.settings.dailyGoal) { _, goal in model.stats.goal = goal }
+            .onChange(of: model.settings.mirrorToFiles) { _, on in if on { model.mirrorAllPages() } }
+            .onChange(of: model.settings.dailyGoal) { _, goal in
+                model.stats.goal = goal
+                model.publishStats()
+            }
             .onChange(of: model.store.purchased) {
                 model.enforceEntitlements()
                 model.applyPurchasedChoices()
@@ -126,10 +159,14 @@ struct RootView: View {
                 Haptics.shared.bell()
                 model.toast = Toast(text: "Goal met: \(model.settings.dailyGoal) words", symbol: "checkmark.seal")
             }
-    }
-
-    private func reactivate() {
-        DispatchQueue.main.async { model.engine.paper.activateHardwareInput() }
+            .onChange(of: model.reviewRequestedAt) { _, date in
+                guard date != nil else { return }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { requestReview() }
+            }
+            .onOpenURL { url in IntentRouter.handle(url, model: model) }
+            .onChange(of: IntentRouter.shared.pending) { _, action in
+                if let action { IntentRouter.perform(action, model: model) }
+            }
     }
 }
 
@@ -138,7 +175,7 @@ private struct AppearanceSignature: Equatable {
     var values: [String]
 
     init(_ s: AppSettings) {
-        values = [s.finish.rawValue, s.typeface.rawValue, s.carriage.rawValue, "\(s.lineWidth.rawValue)", "\(s.lineSpacing.rawValue)", "\(s.typebarsOn)", s.keyboardStyle.rawValue]
+        values = [s.finish.rawValue, s.typeface.rawValue, s.carriage.rawValue, "\(s.lineWidth.rawValue)", "\(s.lineSpacing.rawValue)", "\(s.typebarsOn)", s.keyboardStyle.rawValue, s.nightDesk.rawValue]
     }
 }
 

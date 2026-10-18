@@ -17,8 +17,16 @@ final class AppModel {
     var showSettings = false
     var showPaywall = false
     var showShop = false
-    /// The one-time note on a regular iPhone that Carriage was made for iPhone Duo.
-    var showDuoLetter = false
+    /// The first-run tour (on a regular iPhone it opens with the note that Carriage was made for iPhone Duo).
+    var showOnboarding = false
+    /// The page whose version history is open.
+    var versionsPage: Page?
+    /// Shown on the closed Duo for a moment after folding shut: the page was saved.
+    var foldCurtain: FoldCurtain?
+    /// The two-page reading spread on a Duo opened flat like a book.
+    var showSpread = false
+    /// Set when it's a good moment to ask for an App Store rating.
+    var reviewRequestedAt: Date?
     var showFocusSetup = false
     var filesRequest: FilesRequest?
     let focusMode = WritingFocus.shared
@@ -26,12 +34,17 @@ final class AppModel {
     var toast: Toast?
 
     @ObservationIgnored private(set) var context: ModelContext?
+    @ObservationIgnored private var remoteChangeObserver: NSObjectProtocol?
+    @ObservationIgnored private var reconcileWork: DispatchWorkItem?
 
     init(settings: AppSettings = AppSettings()) {
         self.settings = settings
         stats = WritingStats(goal: settings.dailyGoal)
         engine = TypewriterEngine(settings: settings, stats: stats)
         engine.onHardwareKeyPress = { [weak self] in self?.fold.noteHardwareKeyPress() }
+        engine.onSaved = { [weak self] page in self?.mirror(page) }
+        engine.onSyncNotice = { [weak self] message in self?.toast = Toast(text: message, symbol: "arrow.triangle.2.circlepath") }
+        stats.onChange = { [weak self] in self?.publishStats() }
         focus.onFinish = { [weak self] in self?.focusFinished() }
         #if DEBUG
         if let raw = UserDefaults.standard.string(forKey: "foldSimulation"), let simulation = FoldSimulation(rawValue: raw) {
@@ -53,14 +66,15 @@ final class AppModel {
         #if DEBUG
         DemoContent.seedIfRequested(context: context, settings: settings)
         if ProcessInfo.processInfo.arguments.contains("-hardwareKeyboard") { fold.noteHardwareKeyPress() }
-        if ProcessInfo.processInfo.arguments.contains("-resetDuoLetter") {
-            UserDefaults.standard.removeObject(forKey: "seenDuoLetter")
+        if ProcessInfo.processInfo.arguments.contains("-resetOnboarding") {
+            UserDefaults.standard.removeObject(forKey: "seenOnboarding")
             UserDefaults.standard.removeObject(forKey: "hasSeenHinge")
         }
         #endif
         loadNextPage(feed: false, explainLimit: false)
         #if DEBUG
         DemoContent.exportPDFIfRequested(engine.page, settings: settings)
+        DemoContent.stageScreenshotScene(self)
         #endif
         Task {
             await store.load()
@@ -68,10 +82,28 @@ final class AppModel {
             applyPurchasedChoices()
         }
         Task {
-            // Give the hinge a moment to report before deciding this isn't a Duo.
+            // Give the hinge a moment to report, so the tour knows whether this is a Duo.
             try? await Task.sleep(for: .seconds(1.5))
-            if !isDuo, !UserDefaults.standard.bool(forKey: "seenDuoLetter") { showDuoLetter = true }
+            if !UserDefaults.standard.bool(forKey: "seenOnboarding") { showOnboarding = true }
         }
+        // Synced changes from other devices: let the machine check the open page.
+        remoteChangeObserver = NotificationCenter.default.addObserver(forName: .NSPersistentStoreRemoteChange, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.scheduleReconcile() }
+        }
+        mirrorAllPages()
+        publishStats()
+        // An action from Siri or a widget that launched the app.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
+            guard let self, let action = IntentRouter.shared.pending else { return }
+            IntentRouter.perform(action, model: self)
+        }
+    }
+
+    func scheduleReconcile() {
+        reconcileWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in self?.engine.reconcileWithStore() }
+        reconcileWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: work)
     }
 
     // MARK: The machine
@@ -110,9 +142,16 @@ final class AppModel {
         if focusMode.isOn { focusMode.peek() }
     }
 
-    func dismissDuoLetter() {
-        UserDefaults.standard.set(true, forKey: "seenDuoLetter")
-        showDuoLetter = false
+    func finishOnboarding() {
+        UserDefaults.standard.set(true, forKey: "seenOnboarding")
+        showOnboarding = false
+        FocusTip.tourFinished = true
+    }
+
+    /// Shows the tour again, from Settings.
+    func replayOnboarding() {
+        showSettings = false
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { self.showOnboarding = true }
     }
 
     // MARK: Pages
@@ -136,20 +175,23 @@ final class AppModel {
     }
 
     var isPresentingSheet: Bool {
-        showLibrary || showSettings || showPaywall || showShop || showDuoLetter || showFocusSetup || exportRequest != nil || filesRequest != nil
+        showLibrary || showSettings || showPaywall || showShop || showOnboarding || showFocusSetup || exportRequest != nil || filesRequest != nil || versionsPage != nil
     }
 
     @ObservationIgnored private var isFiling = false
 
     /// Feeds a fresh sheet into the machine, or shows the paywall once the free pages are used.
-    func newSheet() {
+    /// The sheet goes into `notebookID`, or by default the notebook of the page in the machine (journals excepted).
+    func newSheet(notebookID: UUID? = nil, inheritNotebook: Bool = true) {
         guard canStartPage else {
             showLibrary = false
             showPaywall = true
             return
         }
         engine.save()
-        let page = makePage()
+        var notebook = notebookID
+        if notebook == nil, inheritNotebook, engine.page?.journalDay == nil { notebook = engine.page?.notebookID }
+        let page = makePage(notebookID: notebook)
         showLibrary = false
         engine.open(page, feed: true)
     }
@@ -166,6 +208,7 @@ final class AppModel {
             toast = Toast(text: "Filed under Pages", symbol: "tray.full")
             loadNextPage(feed: true, explainLimit: true)
             isFiling = false
+            notePageFiled()
         }
     }
 
@@ -180,6 +223,7 @@ final class AppModel {
     func trash(_ page: Page) {
         page.trashedAt = Date()
         try? context?.save()
+        if let name = page.mirrorName { MarkdownMirror.shared.remove(name: name) }
         if engine.page?.id == page.id {
             loadNextPage(feed: false, explainLimit: true)
         }
@@ -188,9 +232,11 @@ final class AppModel {
     func restore(_ page: Page) {
         page.trashedAt = nil
         try? context?.save()
+        mirror(page)
     }
 
     func deleteForever(_ page: Page) {
+        if let context { PageHistory.deleteAll(of: page.id, in: context) }
         context?.delete(page)
         try? context?.save()
     }
@@ -217,11 +263,12 @@ final class AppModel {
         }
     }
 
-    private func makePage() -> Page {
+    func makePage(notebookID: UUID? = nil) -> Page {
         let paper = store.canUse(settings.defaultPaper) ? settings.defaultPaper : .bond
         let ink = store.canUse(settings.defaultInk) ? settings.defaultInk : .black
         let used = pagesUsed
         let page = Page(mode: settings.defaultMode, paper: paper, ink: ink)
+        page.notebookID = notebookID
         context?.insert(page)
         UserDefaults.standard.set(used + 1, forKey: "pagesCreated")
         try? context?.save()
