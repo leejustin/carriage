@@ -25,7 +25,10 @@ FoldKit has its own tests: open `Packages/FoldKit` or run `xcodebuild -scheme Fo
 | `Carriage/Keyboard` | The typewriter keys, drawn by the app |
 | `Carriage/Sound` | Sound synthesis and the low-latency `AVAudioEngine` player, haptics |
 | `Carriage/Typewriter` | The main screen and the layout for each posture |
-| `Carriage/Library`, `Settings`, `Store`, `Export` | Library, settings, StoreKit 2 and the shop, TXT/Markdown/PDF export |
+| `Carriage/Library`, `Settings`, `Store`, `Export` | Library, notebooks, version and writing history, settings, StoreKit 2 and the shop, TXT/Markdown/PDF/image export |
+| `Carriage/Duo` | Duo-only touches: the fold-shut cover, the outer-screen glance, the two-page reading spread |
+| `Carriage/Focus`, `Onboarding`, `Intents`, `Files` | Writing focus and its Focus Filter, the first-run tour and tips, Siri and Shortcuts actions, the Markdown copy in Files, widget data, on-device crash reports |
+| `CarriageWidgets` | Home and Lock Screen widgets for today's words and the streak |
 | `Packages/FoldKit` | The shared fold-posture helper for Carriage, Grid Fleet and Firstlight |
 
 ## FoldKit
@@ -42,6 +45,13 @@ The hinge (`UIHingeInteraction`) and fold-line (`reservedRegions(kind: .division
 | `-seedDemo` | Fill an empty library with sample pages and two weeks of writing history |
 | `-hardwareKeyboard` | Act as if a hardware keyboard is attached |
 | `-uiTesting` | Use an in-memory store |
+| `-seedLongPage` | Start with a 20,000-word page, for checking speed |
+| `-screenshotScene library\|focus\|spread` | Open straight into a scene, for screenshots |
+| `-resetOnboarding` | Show the first-run tour again |
+
+## Screenshots and store listing
+
+`scripts/screenshots.sh "iPhone 18 Pro Max"` builds the app and captures the App Store set into `docs/screenshots/`. The listing copy is in [docs/APP_STORE.md](docs/APP_STORE.md); privacy and support pages are in `docs/site/`.
 
 ## Sounds
 

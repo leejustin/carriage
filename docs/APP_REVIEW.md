@@ -10,6 +10,8 @@ Carriage is a distraction-free writing app that turns iPhone into a small typewr
 
 **Writing focus.** The moon button clears the screen down to the page and keys (tap the paper to see the controls). Carriage also offers a Focus Filter: add it to a Focus in Settings › Focus › Focus Filters and Carriage clears itself whenever that Focus is on. Carriage doesn't change Focus or notification settings itself; it shows the user how to.
 
+**Also in the app:** notebooks and a daily journal page; version history and Markdown copies in Files (iCloud Drive › Carriage); import of text files; print and share-as-image; widgets and Siri shortcuts ("Start writing in Carriage"); a night desk; a two-page reading spread when the Duo is open flat like a book.
+
 **Modes.** Free mode works like a normal editor. Typewriter mode has no delete: the X-OUT key types an x over the last character, and exports leave struck text out (plain text) or show it as ~~strikethrough~~ (Markdown).
 
 **Purchases (all non-consumable, no subscriptions, no ads):**
