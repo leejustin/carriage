@@ -1,36 +1,69 @@
 import SwiftData
 import SwiftUI
 
-/// Drafts and finished pages, laid out like sheets on a desk.
+/// Drafts and finished pages, laid out like sheets on a desk, grouped by notebook.
 struct LibraryView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
     @Query(filter: #Predicate<Page> { $0.trashedAt == nil }, sort: \Page.modifiedAt, order: .reverse)
     private var pages: [Page]
     @Query(filter: #Predicate<Page> { $0.trashedAt != nil }) private var trashed: [Page]
+    @Query(sort: \Notebook.createdAt) private var notebooks: [Notebook]
 
     @State private var search = ""
     @State private var renaming: Page?
     @State private var draftTitle = ""
+    /// The notebook being shown, or nil for every page.
+    @State private var notebookID: UUID?
+    @State private var naming: NotebookNaming?
+    @State private var notebookName = ""
+    @State private var importing = false
+
+    private enum NotebookNaming: Identifiable {
+        case new
+        case rename(Notebook)
+
+        var id: String {
+            switch self {
+            case .new: "new"
+            case let .rename(notebook): notebook.id.uuidString
+            }
+        }
+    }
 
     private var filtered: [Page] {
+        var result = pages
+        if let notebookID { result = result.filter { $0.notebookID == notebookID } }
         let query = search.trimmingCharacters(in: .whitespaces)
-        guard !query.isEmpty else { return pages }
-        return pages.filter { $0.displayTitle.localizedCaseInsensitiveContains(query) || $0.body.localizedCaseInsensitiveContains(query) }
+        guard !query.isEmpty else { return result }
+        return result.filter { $0.displayTitle.localizedCaseInsensitiveContains(query) || $0.body.localizedCaseInsensitiveContains(query) }
     }
 
     private var drafts: [Page] { filtered.filter { !$0.isFiled } }
     private var filed: [Page] { filtered.filter(\.isFiled) }
+    private var currentNotebook: Notebook? { notebooks.first { $0.id == notebookID } }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 28) {
                     if model.focusMode.showsGoals {
-                        StatsStrip()
+                        NavigationLink {
+                            WritingHistoryView()
+                        } label: {
+                            StatsStrip()
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityHint("Shows your writing history.")
                     }
                     if let limit = model.store.freePageLimit {
                         FreePagesNote(used: model.pagesUsed, limit: limit)
+                    }
+                    notebookBar
+                    if let currentNotebook {
+                        Text("\(currentNotebook.name) · \(filtered.reduce(0) { $0 + $1.wordCount }.formatted()) words")
+                            .font(.typewriter(14))
+                            .foregroundStyle(Color.deskInkSoft)
                     }
                     section("Drafts", pages: drafts, empty: "No drafts. Feed a fresh sheet to start one.")
                     section("Pages", pages: filed, empty: "Finished pages land here when you file them.")
@@ -41,7 +74,7 @@ struct LibraryView: View {
                             Label("Wastebasket (\(trashed.count))", systemImage: "trash")
                                 .font(Legend.font(size: 13))
                                 .tracking(1)
-                                .foregroundStyle(Color.inkSoft)
+                                .foregroundStyle(Color.deskInkSoft)
                         }
                     }
                 }
@@ -52,30 +85,121 @@ struct LibraryView: View {
             .searchable(text: $search, prompt: "Search pages")
             .navigationTitle("Library")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Done") { dismiss() }
-                }
-                ToolbarItem(placement: .principal) {
-                    Text("LIBRARY")
-                        .font(Legend.font(size: 15))
-                        .tracking(4)
-                        .foregroundStyle(Color.ink)
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("New Sheet", systemImage: "doc.badge.plus") { model.newSheet() }
-                }
-            }
+            .toolbar { toolbar }
             .alert("Name this page", isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
                 TextField("Title", text: $draftTitle)
                 Button("Cancel", role: .cancel) {}
                 Button("Save") {
                     renaming?.title = draftTitle
                     renaming?.modifiedAt = .now
+                    if let page = renaming { model.mirror(page) }
                 }
+            }
+            .alert(namingTitle, isPresented: Binding(get: { naming != nil }, set: { if !$0 { naming = nil } })) {
+                TextField("Name", text: $notebookName)
+                Button("Cancel", role: .cancel) {}
+                Button("Save") { saveNotebookName() }
+            }
+            .fileImporter(isPresented: $importing, allowedContentTypes: AppModel.importTypes, allowsMultipleSelection: true) { result in
+                if case let .success(urls) = result { model.importFiles(urls) }
             }
         }
         .tint(Color.ribbonRed)
+    }
+
+    @ToolbarContentBuilder
+    private var toolbar: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            Button("Done") { dismiss() }
+        }
+        ToolbarItem(placement: .principal) {
+            Text("LIBRARY")
+                .font(Legend.font(size: 15))
+                .tracking(4)
+                .foregroundStyle(Color.deskInk)
+        }
+        ToolbarItem(placement: .topBarTrailing) {
+            Menu {
+                Button("New Sheet", systemImage: "doc.badge.plus") { model.newSheet(notebookID: notebookID, inheritNotebook: false) }
+                Button("Today's Journal Page", systemImage: "book.closed") { model.openTodaysJournal() }
+                Button("New Notebook", systemImage: "folder.badge.plus") {
+                    notebookName = ""
+                    naming = .new
+                }
+                Divider()
+                Button("Import from Files", systemImage: "square.and.arrow.down") { importing = true }
+            } label: {
+                Label("Add", systemImage: "plus")
+            } primaryAction: {
+                model.newSheet(notebookID: notebookID, inheritNotebook: false)
+            }
+            .accessibilityLabel("New sheet")
+            .accessibilityHint("Hold for a journal page, a notebook or an import.")
+        }
+    }
+
+    /// All pages, then each notebook, as tabs along the top.
+    private var notebookBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                chip("All", selected: notebookID == nil) { notebookID = nil }
+                ForEach(notebooks) { notebook in
+                    chip(notebook.name, selected: notebookID == notebook.id) { notebookID = notebook.id }
+                        .contextMenu {
+                            Button("Rename", systemImage: "pencil") {
+                                notebookName = notebook.name
+                                naming = .rename(notebook)
+                            }
+                            Button("Delete Notebook", systemImage: "trash", role: .destructive) {
+                                if notebookID == notebook.id { notebookID = nil }
+                                model.delete(notebook)
+                            }
+                        }
+                }
+                Button {
+                    notebookName = ""
+                    naming = .new
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.system(size: 13, weight: .semibold))
+                        .frame(width: 32, height: 32)
+                        .background(Circle().strokeBorder(Color.deskInkSoft.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [3, 3])))
+                        .foregroundStyle(Color.deskInkSoft)
+                }
+                .accessibilityLabel("New notebook")
+            }
+        }
+    }
+
+    private func chip(_ title: String, selected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title.uppercased())
+                .font(Legend.font(size: 11, relativeTo: .caption))
+                .tracking(1.5)
+                .padding(.horizontal, 12)
+                .frame(minHeight: 32)
+                .foregroundStyle(selected ? Color(uiColor: .systemBackground) : Color.deskInk)
+                .background(Capsule().fill(selected ? Color.deskInk : Color.deskInkSoft.opacity(0.12)))
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+
+    private var namingTitle: String {
+        if case .rename = naming { return "Rename notebook" }
+        return "New notebook"
+    }
+
+    private func saveNotebookName() {
+        switch naming {
+        case .new:
+            if let notebook = model.createNotebook(named: notebookName) { notebookID = notebook.id }
+        case let .rename(notebook):
+            model.rename(notebook, to: notebookName)
+        case nil:
+            break
+        }
+        naming = nil
     }
 
     @ViewBuilder
@@ -84,11 +208,11 @@ struct LibraryView: View {
             Text(title.uppercased())
                 .font(Legend.font(size: 13))
                 .tracking(3)
-                .foregroundStyle(Color.inkSoft)
+                .foregroundStyle(Color.deskInkSoft)
             if pages.isEmpty {
                 Text(empty)
                     .font(.typewriter(13))
-                    .foregroundStyle(Color.inkSoft.opacity(0.8))
+                    .foregroundStyle(Color.deskInkSoft.opacity(0.8))
                     .padding(.vertical, 6)
             } else {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 138, maximum: 200), spacing: 18)], spacing: 22) {
@@ -111,6 +235,14 @@ struct LibraryView: View {
             draftTitle = page.title
             renaming = page
         }
+        Menu("Move to Notebook", systemImage: "folder") {
+            Button("No Notebook") { model.move(page, to: nil) }
+            ForEach(notebooks) { notebook in
+                Button(notebook.name) { model.move(page, to: notebook) }
+            }
+        }
+        Button("Version History", systemImage: "clock.arrow.circlepath") { model.versionsPage = page }
+        Divider()
         Menu("Save to Files", systemImage: "folder") {
             ForEach(ExportFormat.allCases) { format in
                 Button(format.name, systemImage: format.symbol) { model.saveToFiles(page, format: format) }
@@ -121,6 +253,8 @@ struct LibraryView: View {
                 Button(format.name, systemImage: format.symbol) { model.export(page, format: format) }
             }
         }
+        Button("Share as Image", systemImage: "photo") { model.shareImage(page) }
+        Button("Print", systemImage: "printer") { model.print(page) }
         Button("Send to Notes", systemImage: "note.text") { model.sendToNotes(page) }
         Button("Copy Text", systemImage: "doc.on.doc") { model.copyText(page) }
         Divider()
@@ -209,10 +343,10 @@ struct FreePagesNote: View {
                     .tracking(2)
             }
             .font(.typewriter(13))
-            .foregroundStyle(Color.ink)
+            .foregroundStyle(Color.deskInk)
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
-            .background(RoundedRectangle(cornerRadius: 3).strokeBorder(Color.ink.opacity(0.25), style: StrokeStyle(lineWidth: 1, dash: [4, 3])))
+            .background(RoundedRectangle(cornerRadius: 3).strokeBorder(Color.deskInk.opacity(0.25), style: StrokeStyle(lineWidth: 1, dash: [4, 3])))
         }
         .buttonStyle(.plain)
     }
@@ -232,7 +366,7 @@ struct SheetCard: View {
                     .fill(Color(uiColor: page.paper.color))
                     .overlay(Image(uiImage: PaperTexture.paper(page.paper)).resizable(resizingMode: .tile).opacity(0.9))
                 Text(preview)
-                    .font(.typewriter(6.4, face: model.settings.typeface))
+                    .font(.typewriterFixed(6.4, face: model.settings.typeface))
                     .foregroundStyle(Color(uiColor: page.ink.color).opacity(0.88))
                     .lineSpacing(1)
                     .padding(.horizontal, 12)
@@ -241,7 +375,7 @@ struct SheetCard: View {
                     .clipped()
                 if isInMachine {
                     Text("IN THE MACHINE")
-                        .font(Legend.font(size: 7.5))
+                        .font(Legend.fixedFont(size: 7.5))
                         .tracking(1.5)
                         .foregroundStyle(.white)
                         .padding(.horizontal, 6)
@@ -259,12 +393,12 @@ struct SheetCard: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(page.displayTitle)
                     .font(.typewriter(13, face: model.settings.typeface))
-                    .foregroundStyle(Color.ink)
+                    .foregroundStyle(Color.deskInk)
                     .lineLimit(1)
                 Text("\(page.modifiedAt.formatted(.dateTime.month(.abbreviated).day())) · \(page.wordCount) words")
-                    .font(Legend.font(size: 10))
+                    .font(Legend.font(size: 10, relativeTo: .caption))
                     .tracking(0.8)
-                    .foregroundStyle(Color.inkSoft)
+                    .foregroundStyle(Color.deskInkSoft)
             }
         }
         .accessibilityElement(children: .ignore)
@@ -291,7 +425,7 @@ struct WastebasketView: View {
                 ForEach(pages) { page in
                     VStack(alignment: .leading, spacing: 3) {
                         Text(page.displayTitle).font(.typewriter(15))
-                        Text("\(page.wordCount) words").font(Legend.font(size: 11)).foregroundStyle(Color.inkSoft)
+                        Text("\(page.wordCount) words").font(Legend.font(size: 11, relativeTo: .caption)).foregroundStyle(.secondary)
                     }
                     .swipeActions(edge: .trailing) {
                         Button("Delete", role: .destructive) { confirming = page }
@@ -321,12 +455,14 @@ struct WastebasketView: View {
     }
 }
 
-/// A warm blotter for the library and settings.
+/// A warm blotter for the library and settings: cream by day, walnut by night.
 struct DeskBackground: View {
+    @Environment(\.colorScheme) private var scheme
+
     var body: some View {
         ZStack {
-            Color(hex: 0xEFE9DC)
-            Image(uiImage: PaperTexture.paper(.cream)).resizable(resizingMode: .tile).opacity(0.5)
+            Color(hex: scheme == .dark ? 0x1D1A17 : 0xEFE9DC)
+            Image(uiImage: PaperTexture.paper(.cream)).resizable(resizingMode: .tile).opacity(scheme == .dark ? 0.04 : 0.5)
         }
         .ignoresSafeArea()
     }
