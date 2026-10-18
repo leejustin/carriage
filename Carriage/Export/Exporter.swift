@@ -36,6 +36,7 @@ struct PageSnapshot {
     var title: String
     var body: String
     var strikes: [NSRange]
+    var underlines: [NSRange]
     var paper: PaperStyle
     var ink: InkStyle
     var inkSeed: Int
@@ -44,6 +45,7 @@ struct PageSnapshot {
         title = page.displayTitle
         body = page.body
         strikes = page.strikes
+        underlines = page.underlines
         paper = page.paper
         ink = page.ink
         inkSeed = page.inkSeed
@@ -62,7 +64,7 @@ enum Exporter {
         case .plainText:
             try page.plainText.write(to: url, atomically: true, encoding: .utf8)
         case .markdown:
-            try TextExport.markdown(title: page.title, body: page.body, strikes: page.strikes).write(to: url, atomically: true, encoding: .utf8)
+            try TextExport.markdown(title: page.title, body: page.body, strikes: page.strikes, underlines: page.underlines).write(to: url, atomically: true, encoding: .utf8)
         case .pdf:
             try TypedPagePDF.render(page, face: face, spacing: spacing).write(to: url)
         }
@@ -90,7 +92,7 @@ enum Exporter {
             case .plainText:
                 try page.plainText.write(to: url, atomically: true, encoding: .utf8)
             case .markdown:
-                try TextExport.markdown(title: page.title, body: page.body, strikes: page.strikes).write(to: url, atomically: true, encoding: .utf8)
+                try TextExport.markdown(title: page.title, body: page.body, strikes: page.strikes, underlines: page.underlines).write(to: url, atomically: true, encoding: .utf8)
             case .pdf:
                 try TypedPagePDF.render(page, face: face, spacing: spacing).write(to: url)
             }
@@ -116,7 +118,7 @@ enum TypedPagePDF {
         let font = face.font(size: 12)
         let advance = face.advance(size: 12)
         let styler = InkStyler(font: font, ink: page.ink, paper: page.paper, face: face, seed: page.inkSeed, lineSpacing: spacing, advance: advance)
-        let storage = NSTextStorage(attributedString: styler.attributedText(body: page.body, strikes: page.strikes))
+        let storage = NSTextStorage(attributedString: styler.attributedText(body: page.body, strikes: page.strikes, underlines: page.underlines))
         let layout = NSLayoutManager()
         storage.addLayoutManager(layout)
         let textSize = CGSize(width: pageSize.width - margins.left - margins.right, height: pageSize.height - margins.top - margins.bottom)
@@ -164,7 +166,7 @@ enum TypedPagePDF {
         }
     }
 
-    private static func drawStrikes(storage: NSTextStorage, layout: NSLayoutManager, container: NSTextContainer, glyphs: NSRange,
+    static func drawStrikes(storage: NSTextStorage, layout: NSLayoutManager, container: NSTextContainer, glyphs: NSRange,
                                     origin: CGPoint, font: UIFont, advance: CGFloat, ink: InkStyle) {
         let characters = layout.characterRange(forGlyphRange: glyphs, actualGlyphRange: nil)
         let attributes: [NSAttributedString.Key: Any] = [
@@ -184,6 +186,53 @@ enum TypedPagePDF {
                 let point = CGPoint(x: origin.x + rect.midX - size.width / 2, y: origin.y + rect.midY - size.height / 2)
                 x.draw(at: point, withAttributes: attributes)
             }
+        }
+    }
+}
+
+/// A typed page as a picture for sharing: 4:5, the opening of the page on paper, signed "Typed on Carriage".
+enum TypedPageImage {
+    static let size = CGSize(width: 1080, height: 1350)
+
+    static func render(_ page: PageSnapshot, face: Typeface) -> UIImage {
+        let font = face.font(size: 30)
+        let advance = face.advance(size: 30)
+        let styler = InkStyler(font: font, ink: page.ink, paper: page.paper, face: face, seed: page.inkSeed, lineSpacing: .oneAndHalf, advance: advance)
+        let storage = NSTextStorage(attributedString: styler.attributedText(body: page.body, strikes: page.strikes, underlines: page.underlines))
+        let layout = NSLayoutManager()
+        storage.addLayoutManager(layout)
+        let inset = UIEdgeInsets(top: 120, left: 110, bottom: 190, right: 110)
+        let container = NSTextContainer(size: CGSize(width: size.width - inset.left - inset.right, height: size.height - inset.top - inset.bottom))
+        container.lineFragmentPadding = 0
+        container.lineBreakMode = .byWordWrapping
+        layout.addTextContainer(container)
+
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        return UIGraphicsImageRenderer(size: size, format: format).image { context in
+            let cg = context.cgContext
+            let bounds = CGRect(origin: .zero, size: size)
+            cg.saveGState()
+            UIColor(patternImage: PaperTexture.paper(page.paper)).setFill()
+            cg.fill(bounds)
+            cg.restoreGState()
+            let origin = CGPoint(x: inset.left, y: inset.top)
+            let glyphs = layout.glyphRange(for: container)
+            layout.drawGlyphs(forGlyphRange: glyphs, at: origin)
+            TypedPagePDF.drawStrikes(storage: storage, layout: layout, container: container, glyphs: glyphs, origin: origin, font: font, advance: advance, ink: page.ink)
+            // More to the page than fits: a typed ellipsis, as you'd leave it in the machine.
+            if NSMaxRange(glyphs) < layout.numberOfGlyphs {
+                let more = NSAttributedString(string: "...", attributes: styler.attributes(at: 0))
+                let used = layout.usedRect(for: container)
+                more.draw(at: CGPoint(x: origin.x, y: origin.y + used.maxY + 6))
+            }
+            let mark = NSAttributedString(string: "TYPED ON CARRIAGE", attributes: [
+                .font: Legend.uiFont(size: 22),
+                .foregroundColor: UIColor(hex: 0xA22D27),
+                .kern: 5,
+            ])
+            let markSize = mark.size()
+            mark.draw(at: CGPoint(x: size.width - inset.right - markSize.width, y: size.height - 110))
         }
     }
 }
