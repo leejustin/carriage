@@ -24,6 +24,10 @@ final class TypewriterEngine {
 
     /// Called on any hardware key press, so the layout can hide the on-screen keys.
     @ObservationIgnored var onHardwareKeyPress: (() -> Void)?
+    /// Called after every save that changed the page, for the Files copy and widgets.
+    @ObservationIgnored var onSaved: ((Page) -> Void)?
+    /// Called when the same page was edited on another device; the message says what happened.
+    @ObservationIgnored var onSyncNotice: ((String) -> Void)?
 
     @ObservationIgnored private let settings: AppSettings
     @ObservationIgnored private let stats: WritingStats
@@ -39,6 +43,10 @@ final class TypewriterEngine {
     @ObservationIgnored private var lastSave = Date()
     /// The most words the open page has held, for counting words written today.
     @ObservationIgnored private var wordPeak = 0
+    /// What this device last read from or wrote to the page model. If the model differs, another device wrote it.
+    @ObservationIgnored private var lastSynced = PageText()
+    @ObservationIgnored private var lastVersionAt: Date = .distantPast
+    @ObservationIgnored private var lastKeyAt: Date = .distantPast
     @ObservationIgnored private lazy var textDelegate = PaperTextDelegate(engine: self)
     /// Key-to-ink timing, visible in Instruments' Points of Interest. The budget is about 20 ms.
     @ObservationIgnored private let signposter = OSSignposter(subsystem: "Carriage", category: .pointsOfInterest)
@@ -54,6 +62,7 @@ final class TypewriterEngine {
         paper.onRackTick = { SoundEngine.shared.play(.backspace, gain: 0.22) }
         paper.textView.delegate = textDelegate
         paper.onRestyle = { [weak self] in self?.scheduleSpellCheck() }
+        paper.onDoubleTap = { [weak self] index in self?.toggleUnderline(wordAt: index) }
     }
 
     func attach(_ context: ModelContext) {
@@ -68,12 +77,15 @@ final class TypewriterEngine {
         save()
         self.page = page
         wordPeak = page.wordCount
+        lastSynced = PageText(page)
+        lastVersionAt = .distantPast
+        if let context { PageHistory.snapshot(page, reason: "Opened", in: context, ifOlderThan: 30 * 60) }
         mode = page.mode
         keyboard.mode = mode
         setShift(.off)
         bellRungOnLine = false
         applyConfiguration()
-        let text = paper.styler.attributedText(body: page.body, strikes: page.strikes)
+        let text = paper.styler.attributedText(body: page.body, strikes: page.strikes, underlines: page.underlines)
         let storage = paper.textView.textStorage
         storage.beginEditing()
         storage.setAttributedString(text)
@@ -85,13 +97,27 @@ final class TypewriterEngine {
         wordCount = page.wordCount
         isBlank = storage.length == 0
         paper.layoutIfNeeded()
+        paper.textView.ensureLayoutNearEnd()
         paper.syncCarriage(.none)
+        settleCarriage()
         updateAutoShift()
         if feed {
             SoundEngine.shared.play(.paperFeed)
             paper.feedIn()
         }
         scheduleSpellCheck()
+    }
+
+    /// TextKit 2 refines its height estimates for a long page over the next few passes; line the typing line
+    /// back up once it has.
+    private func settleCarriage() {
+        for delay in [0.0, 0.15, 0.5] {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                guard let self, !self.isTyping else { return }
+                self.paper.textView.ensureLayoutNearEnd()
+                self.paper.syncCarriage(.none)
+            }
+        }
     }
 
     func setMode(_ newMode: TypingMode) {
@@ -118,7 +144,7 @@ final class TypewriterEngine {
     }
 
     /// Pushes settings and the page's own style into the paper and keyboard.
-    func applyConfiguration(presentation: PaperPresentation? = nil, reduceMotion: Bool? = nil) {
+    func applyConfiguration(presentation: PaperPresentation? = nil, reduceMotion: Bool? = nil, night: Bool? = nil) {
         var c = paper.configuration
         if let presentation, presentation != c.presentation {
             c.presentation = presentation
@@ -126,6 +152,7 @@ final class TypewriterEngine {
             paper.textView.undoManager?.removeAllActions()
         }
         if let reduceMotion { c.reduceMotion = reduceMotion }
+        if let night { c.night = night }
         c.face = settings.typeface
         c.lineWidth = settings.lineWidth
         c.spacing = settings.lineSpacing
@@ -151,6 +178,11 @@ final class TypewriterEngine {
         let interval = signposter.beginInterval("Key")
         defer { signposter.endInterval("Key", interval) }
         markTyping()
+        // Time spent typing, for words per minute. A pause over a minute is a break, not writing.
+        let now = Date()
+        let gap = now.timeIntervalSince(lastKeyAt)
+        if gap < 60 { stats.addActiveSeconds(gap) }
+        lastKeyAt = now
         switch action {
         case let .character(lower, shifted):
             let text = shift == .off ? lower : shifted
@@ -366,18 +398,24 @@ final class TypewriterEngine {
         saveWork?.cancel()
         lastSave = Date()
         guard let page else { return }
-        let storage = paper.textView.textStorage
-        let body = storage.string
-        var strikes: [NSRange] = []
-        storage.enumerateAttribute(.carriageStrike, in: NSRange(location: 0, length: storage.length)) { value, range, _ in
-            if value != nil { strikes.append(range) }
+        let local = PageText(paper.textView.textStorage)
+        let stored = PageText(page)
+        if stored != lastSynced, local != lastSynced {
+            // Both this device and another one changed the page since they last agreed. Keep both: the other
+            // version becomes its own page, and this one carries on.
+            keepOtherDevicesCopy(of: page, stored)
+        } else if stored != lastSynced {
+            // Only the other device changed it; nothing typed here to save.
+            lastSynced = stored
+            return
         }
-        let merged = StrikeRanges.merge(strikes)
-        guard body != page.body || merged != page.strikes else { return }
-        page.body = body
-        page.strikes = merged
+        guard local != stored else { return }
+        page.body = local.body
+        page.strikes = local.strikes
+        page.underlines = local.underlines
         page.modifiedAt = Date()
-        page.wordCount = TextExport.wordCount(body: body, strikes: merged)
+        page.wordCount = TextExport.wordCount(body: local.body, strikes: local.strikes)
+        lastSynced = local
         wordCount = page.wordCount
         // Words written today are new words beyond the most this page has held since it was opened, so
         // deleting and retyping, or x-ing out, never pads the goal.
@@ -386,7 +424,122 @@ final class TypewriterEngine {
             wordPeak = page.wordCount
         }
         stats.save()
+        if let context, Date().timeIntervalSince(lastVersionAt) > 10 * 60 {
+            lastVersionAt = Date()
+            PageHistory.snapshot(page, reason: "Session", in: context, ifOlderThan: 10 * 60)
+        }
         try? context?.save()
+        onSaved?(page)
+    }
+
+    /// Called when synced changes may have arrived. If only the other device changed the open page, show its
+    /// version; if both did, keep both.
+    func reconcileWithStore() {
+        guard let page else { return }
+        let stored = PageText(page)
+        guard stored != lastSynced else { return }
+        let local = PageText(paper.textView.textStorage)
+        if local == lastSynced {
+            reload(page)
+            onSyncNotice?("Updated from your other device")
+        } else {
+            save()
+        }
+    }
+
+    private func keepOtherDevicesCopy(of page: Page, _ text: PageText) {
+        guard let context else { return }
+        let copy = Page(mode: page.mode, paper: page.paper, ink: page.ink)
+        copy.title = page.displayTitle + " (other device)"
+        copy.body = text.body
+        copy.strikes = text.strikes
+        copy.underlines = text.underlines
+        copy.notebookID = page.notebookID
+        copy.wordCount = TextExport.wordCount(body: text.body, strikes: text.strikes)
+        context.insert(copy)
+        onSyncNotice?("Edited on two devices: the other version is saved as a separate page")
+    }
+
+    /// Re-reads the page into the paper without moving it out of the machine.
+    private func reload(_ page: Page) {
+        let storage = paper.textView.textStorage
+        storage.beginEditing()
+        storage.setAttributedString(paper.styler.attributedText(body: page.body, strikes: page.strikes, underlines: page.underlines))
+        storage.endEditing()
+        lastSynced = PageText(page)
+        wordPeak = max(wordPeak, page.wordCount)
+        wordCount = page.wordCount
+        isBlank = storage.length == 0
+        paper.textView.refreshStrikes()
+        paper.textView.selectedRange = NSRange(location: storage.length, length: 0)
+        paper.textView.ensureLayoutNearEnd()
+        paper.syncCarriage(.snap)
+    }
+
+    /// Puts an older version back. The current text is kept as a version first, so a restore can be undone.
+    func restore(_ version: PageVersion) {
+        guard let page, let context, version.pageID == page.id else { return }
+        save()
+        PageHistory.snapshot(page, reason: "Before restore", in: context, ifOlderThan: 0)
+        page.body = version.body
+        page.strikeData = version.strikeData
+        page.underlineData = version.underlineData
+        page.wordCount = version.wordCount
+        page.modifiedAt = Date()
+        try? context.save()
+        reload(page)
+        onSaved?(page)
+    }
+
+    // MARK: Underlining
+
+    /// Types underscores over the word at `index`, or takes them away if it's already underlined.
+    func toggleUnderline(wordAt index: Int) {
+        let storage = paper.textView.textStorage
+        guard let range = Self.wordRange(in: storage.string as NSString, at: index) else { return }
+        toggleUnderline(range)
+    }
+
+    func toggleUnderline(_ range: NSRange) {
+        let storage = paper.textView.textStorage
+        let range = NSIntersectionRange(range, NSRange(location: 0, length: storage.length))
+        guard range.length > 0 else { return }
+        var allUnderlined = true
+        storage.enumerateAttribute(.carriageUnderline, in: range) { value, _, stop in
+            if value == nil { allUnderlined = false; stop.pointee = true }
+        }
+        storage.beginEditing()
+        if allUnderlined {
+            paper.styler.removeUnderline(from: storage, range: range)
+        } else {
+            paper.styler.addUnderline(to: storage, range: range)
+        }
+        storage.endEditing()
+        // The sound of backing up and typing a row of underscores.
+        let count = min(range.length, 12)
+        for i in 0..<count {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.045) {
+                SoundEngine.shared.play(i == 0 ? .backspace : .key, gain: 0.8)
+                Haptics.shared.key()
+            }
+        }
+        didEdit()
+    }
+
+    /// The word around `index`: letters, digits and apostrophes.
+    static func wordRange(in text: NSString, at index: Int) -> NSRange? {
+        guard text.length > 0 else { return nil }
+        let isWord: (unichar) -> Bool = { c in
+            guard let scalar = Unicode.Scalar(c) else { return false }
+            return CharacterSet.alphanumerics.contains(scalar) || c == 0x27 || c == 0x2019
+        }
+        var i = min(max(index, 0), text.length - 1)
+        if !isWord(text.character(at: i)), i > 0, isWord(text.character(at: i - 1)) { i -= 1 }
+        guard isWord(text.character(at: i)) else { return nil }
+        var start = i, end = i + 1
+        while start > 0, isWord(text.character(at: start - 1)) { start -= 1 }
+        while end < text.length, isWord(text.character(at: end)) { end += 1 }
+        return NSRange(location: start, length: end - start)
     }
 
     // MARK: Spell check
@@ -481,6 +634,16 @@ private final class PaperTextDelegate: NSObject, UITextViewDelegate {
 
     func textViewDidChangeSelection(_ textView: UITextView) {
         engine.didChangeSelection()
+    }
+
+    /// Adds Underline to the edit menu when text is selected with the system keyboard.
+    func textView(_ textView: UITextView, editMenuForTextIn range: NSRange, suggestedActions: [UIMenuElement]) -> UIMenu? {
+        guard range.length > 0 else { return nil }
+        let engine = self.engine
+        let underline = UIAction(title: "Underline", image: UIImage(systemName: "underline")) { [weak engine] _ in
+            engine?.toggleUnderline(range)
+        }
+        return UIMenu(children: [underline] + suggestedActions)
     }
 
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
