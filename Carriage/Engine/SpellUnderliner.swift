@@ -15,7 +15,8 @@ enum SpellUnderliner {
             let range = checker.rangeOfMisspelledWord(in: text, range: NSRange(location: 0, length: length), startingAt: location, wrap: false, language: language)
             guard range.location != NSNotFound else { break }
             // Don't flag the word still being typed at the end of the page.
-            if NSMaxRange(range) < length, storage.attribute(.carriageStrike, at: range.location, effectiveRange: nil) == nil {
+            if NSMaxRange(range) < length, storage.attribute(.carriageStrike, at: range.location, effectiveRange: nil) == nil,
+               storage.attribute(.carriageUnderline, at: range.location, effectiveRange: nil) == nil {
                 storage.addAttributes([
                     .underlineStyle: NSUnderlineStyle.single.rawValue | NSUnderlineStyle.patternDot.rawValue,
                     .underlineColor: UIColor(hex: 0xC0392B, alpha: 0.75),
@@ -39,6 +40,11 @@ enum SpellUnderliner {
             storage.removeAttribute(.underlineStyle, range: range)
             storage.removeAttribute(.underlineColor, range: range)
             storage.removeAttribute(.carriageSpelling, range: range)
+            // Put back any real underline the spelling mark was covering.
+            storage.enumerateAttribute(.carriageUnderline, in: range) { value, underlined, _ in
+                guard value != nil else { return }
+                storage.addAttributes([.underlineStyle: NSUnderlineStyle.single.rawValue], range: underlined)
+            }
         }
     }
 }

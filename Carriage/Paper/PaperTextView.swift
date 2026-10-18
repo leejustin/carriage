@@ -50,9 +50,9 @@ final class PaperTextView: UITextView {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError() }
 
-    func setPaper(_ style: PaperStyle) {
-        sheet.backgroundColor = UIColor(patternImage: PaperTexture.paper(style))
-        sheet.alpha = style.opacity
+    func setPaper(_ style: PaperStyle, night: Bool = false) {
+        sheet.backgroundColor = UIColor(patternImage: night ? PaperTexture.nightPaper() : PaperTexture.paper(style))
+        sheet.alpha = night ? 1 : style.opacity
     }
 
     override func layoutSubviews() {
@@ -98,6 +98,16 @@ final class PaperTextView: UITextView {
         let start = content.offset(from: content.documentRange.location, to: viewport.location)
         let length = content.offset(from: viewport.location, to: viewport.endLocation)
         return NSIntersectionRange(NSRange(location: start, length: length), all)
+    }
+
+    /// Lays out the end of the page now, where typing happens. TextKit 2 otherwise estimates the height of a long
+    /// page and only lays out the end on the first key press, which drew a blank sheet and made that key slow.
+    func ensureLayoutNearEnd(characters: Int = 4000) {
+        guard let layout = textLayoutManager, let content = layout.textContentManager else { return }
+        let end = content.documentRange.endLocation
+        let back = min(characters, textStorage.length)
+        guard let start = content.location(end, offsetBy: -back), let range = NSTextRange(location: start, end: end) else { return }
+        layout.ensureLayout(for: range)
     }
 
     /// Where the next character will land, in content coordinates.

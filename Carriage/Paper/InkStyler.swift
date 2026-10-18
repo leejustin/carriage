@@ -5,6 +5,8 @@ extension NSAttributedString.Key {
     static let carriageStrike = NSAttributedString.Key("CarriageStrike")
     /// Marks a misspelling underline added by the spell checker, so it can be cleared without touching ink.
     static let carriageSpelling = NSAttributedString.Key("CarriageSpelling")
+    /// Marks a character typed over with an underscore.
+    static let carriageUnderline = NSAttributedString.Key("CarriageUnderline")
 }
 
 /// Gives every character its own bit of ink: a little lighter or darker, a hair above or below the line,
@@ -12,6 +14,8 @@ extension NSAttributedString.Key {
 struct InkStyler {
     let font: UIFont
     let ink: InkStyle
+    /// The colour the ribbon prints in: its own, or a light one on night paper.
+    let inkColor: UIColor
     let paper: PaperStyle
     let face: Typeface
     let seed: Int
@@ -24,7 +28,8 @@ struct InkStyler {
     private static let baselineSteps: [CGFloat] = [-0.45, -0.2, 0, 0.2, 0.45]
     private static let strokeSteps = 3
 
-    init(font: UIFont, ink: InkStyle, paper: PaperStyle, face: Typeface, seed: Int, lineSpacing: LineSpacing, advance: CGFloat) {
+    init(font: UIFont, ink: InkStyle, paper: PaperStyle, face: Typeface, seed: Int, lineSpacing: LineSpacing, advance: CGFloat, night: Bool = false) {
+        inkColor = night ? ink.nightColor : ink.color
         self.font = font
         self.ink = ink
         self.paper = paper
@@ -46,7 +51,7 @@ struct InkStyler {
             let s = NSShadow()
             s.shadowBlurRadius = paper.inkSpread
             s.shadowOffset = .zero
-            s.shadowColor = ink.color.withAlphaComponent(0.55)
+            s.shadowColor = (night ? ink.nightColor : ink.color).withAlphaComponent(0.55)
             return s
         }()
 
@@ -56,7 +61,7 @@ struct InkStyler {
         let lift = (lineHeight - natural) / 2
         for d in 0..<Self.densitySteps {
             let alpha = density.lowerBound + (density.upperBound - density.lowerBound) * CGFloat(d) / CGFloat(Self.densitySteps - 1)
-            let color = ink.color.withAlphaComponent(alpha)
+            let color = (night ? ink.nightColor : ink.color).withAlphaComponent(alpha)
             for baseline in Self.baselineSteps {
                 for s in 0..<Self.strokeSteps {
                     var attributes: [NSAttributedString.Key: Any] = [
@@ -95,8 +100,8 @@ struct InkStyler {
         return palette[(d * Self.baselineSteps.count + b) * Self.strokeSteps + s]
     }
 
-    /// Re-inks `range` of `storage`, keeping strike and spelling marks.
-    func style(_ storage: NSTextStorage, range: NSRange) {
+    /// Re-inks `range` of `storage`, keeping strike and underline marks.
+    func style(_ storage: NSMutableAttributedString, range: NSRange) {
         let length = storage.length
         let range = NSIntersectionRange(range, NSRange(location: 0, length: length))
         guard range.length > 0 else { return }
@@ -105,18 +110,39 @@ struct InkStyler {
         while i < NSMaxRange(range) {
             let composed = text.rangeOfComposedCharacterSequence(at: i)
             let strike = storage.attribute(.carriageStrike, at: i, effectiveRange: nil)
+            let underline = storage.attribute(.carriageUnderline, at: i, effectiveRange: nil) != nil
             storage.setAttributes(attributes(at: i), range: composed)
             if let strike { storage.addAttribute(.carriageStrike, value: strike, range: composed) }
+            if underline { addUnderline(to: storage, range: composed) }
             i = NSMaxRange(composed)
         }
     }
 
-    /// Builds the full attributed text for a page.
-    func attributedText(body: String, strikes: [NSRange]) -> NSAttributedString {
-        let storage = NSTextStorage(string: body)
+    /// Marks `range` as typed over with underscores, drawn as an inky rule under the letters.
+    func addUnderline(to storage: NSMutableAttributedString, range: NSRange) {
+        storage.addAttributes([
+            .carriageUnderline: true,
+            .underlineStyle: NSUnderlineStyle.single.rawValue,
+            .underlineColor: inkColor.withAlphaComponent(0.85),
+        ], range: range)
+    }
+
+    func removeUnderline(from storage: NSMutableAttributedString, range: NSRange) {
+        storage.removeAttribute(.carriageUnderline, range: range)
+        storage.removeAttribute(.underlineStyle, range: range)
+        storage.removeAttribute(.underlineColor, range: range)
+    }
+
+    /// Builds the full attributed text for a page. A plain attributed string, not a text storage: a storage would
+    /// re-process the whole text after every character, which made long pages take minutes to open.
+    func attributedText(body: String, strikes: [NSRange], underlines: [NSRange] = []) -> NSAttributedString {
+        let storage = NSMutableAttributedString(string: body)
         style(storage, range: NSRange(location: 0, length: storage.length))
         for range in strikes where NSMaxRange(range) <= storage.length {
             storage.addAttribute(.carriageStrike, value: true, range: range)
+        }
+        for range in underlines where NSMaxRange(range) <= storage.length {
+            addUnderline(to: storage, range: range)
         }
         return storage
     }

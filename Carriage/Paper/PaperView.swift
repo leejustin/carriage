@@ -20,6 +20,8 @@ struct PaperConfiguration: Equatable {
     var typebars = true
     var reduceMotion = false
     var inkSeed = 1
+    /// Night desk: dark paper and a light ribbon.
+    var night = false
 }
 
 /// The measurements everything on the paper is laid out from.
@@ -71,6 +73,8 @@ final class PaperView: UIView {
     private let clip = UIView()
 
     var onTap: (() -> Void)?
+    /// A double tap on the page, with the character index under the finger (for underlining a word).
+    var onDoubleTap: ((Int) -> Void)?
     /// Called after the whole page is re-inked (which clears spelling underlines).
     var onRestyle: (() -> Void)?
     var onReturnLever: (() -> Void)?
@@ -169,8 +173,14 @@ final class PaperView: UIView {
         // Scrolling the page waits to see whether a drag is a push on the carriage.
         textView.panGestureRecognizer.require(toFail: carriagePan)
 
+        let doubleTap = UITapGestureRecognizer(target: self, action: #selector(doubleTapped(_:)))
+        doubleTap.numberOfTapsRequired = 2
+        doubleTap.cancelsTouchesInView = false
+        addGestureRecognizer(doubleTap)
+
         let tap = UITapGestureRecognizer(target: self, action: #selector(tapped))
         tap.cancelsTouchesInView = false
+        tap.require(toFail: doubleTap)
         addGestureRecognizer(tap)
 
         isAccessibilityElement = false
@@ -189,13 +199,13 @@ final class PaperView: UIView {
         let presentationChanged = old.presentation != new.presentation
         if presentationChanged { applyPresentation() }
         if old.finish != new.finish || desk.colors == nil { applyFinish() }
-        if old.paper != new.paper || textView.sheet.backgroundColor == nil {
-            textView.setPaper(new.paper)
-            rearSheet.backgroundColor = UIColor(patternImage: PaperTexture.paper(new.paper))
-            rearSheet.alpha = new.paper.opacity
+        if old.paper != new.paper || old.night != new.night || textView.sheet.backgroundColor == nil {
+            textView.setPaper(new.paper, night: new.night)
+            rearSheet.backgroundColor = UIColor(patternImage: new.night ? PaperTexture.nightPaper() : PaperTexture.paper(new.paper))
+            rearSheet.alpha = new.night ? 1 : new.paper.opacity
         }
         let needsMetrics = presentationChanged || old.face != new.face || old.lineWidth != new.lineWidth || old.spacing != new.spacing
-        let needsInk = needsMetrics || old.ink != new.ink || old.paper != new.paper || old.inkSeed != new.inkSeed
+        let needsInk = needsMetrics || old.ink != new.ink || old.paper != new.paper || old.inkSeed != new.inkSeed || old.night != new.night
         if needsMetrics {
             lastLayoutSize = .zero
             needsRestyle = true
@@ -229,10 +239,10 @@ final class PaperView: UIView {
     private func rebuildStyler(restyle: Bool) {
         let c = configuration
         let font = c.face.font(size: metrics.fontSize)
-        styler = InkStyler(font: font, ink: c.ink, paper: c.paper, face: c.face, seed: c.inkSeed, lineSpacing: c.spacing, advance: metrics.advance)
+        styler = InkStyler(font: font, ink: c.ink, paper: c.paper, face: c.face, seed: c.inkSeed, lineSpacing: c.spacing, advance: metrics.advance, night: c.night)
         textView.typingAttributes = styler.baseAttributes
         textView.advance = metrics.advance
-        textView.inkColor = c.ink.color
+        textView.inkColor = styler.inkColor
         freshInk.font = font
         if restyle {
             let storage = textView.textStorage
@@ -303,13 +313,30 @@ final class PaperView: UIView {
     /// The hinge angle, when the system reports one. As the top half leans back, the light on the paper falls
     /// away toward the top, the way it does on a real machine's paper table.
     func setHingeAngle(_ degrees: Double?) {
+        hingeAngle = degrees
         let lean = degrees.map { CGFloat(max(0, min(1, (180 - $0) / 90))) } ?? 0.35
         CATransaction.begin()
         CATransaction.setAnimationDuration(0.25)
         vignette.colors = [UIColor(white: 0, alpha: 0.22 + 0.3 * lean).cgColor, UIColor(white: 0, alpha: 0).cgColor]
         rearShade.colors = [UIColor(white: 0, alpha: 0.08 + 0.16 * lean).cgColor, UIColor(white: 0, alpha: 0.02).cgColor, UIColor(white: 0, alpha: 0.09).cgColor]
+        // The paper leans back with the screen: a few degrees of perspective, hinged at the platen.
+        var transform = CATransform3DIdentity
+        if let degrees, configuration.presentation == .typing, !configuration.reduceMotion {
+            let tilt = max(0, min(1, (180 - CGFloat(degrees)) / 90)) * 5 * .pi / 180
+            let pivot = bounds.height / 2
+            transform.m34 = -1 / 1100
+            transform = CATransform3DTranslate(transform, 0, pivot, 0)
+            transform = CATransform3DRotate(transform, tilt, 1, 0, 0)
+            transform = CATransform3DTranslate(transform, 0, -pivot, 0)
+        }
+        layer.sublayerTransform = transform
         CATransaction.commit()
     }
+
+    private var hingeAngle: Double?
+
+    /// The colour of the sheet as shown, for views that blend into it.
+    var paperColor: UIColor { configuration.night ? PaperTexture.nightPaperColor : configuration.paper.color }
 
     // MARK: The carriage
 
@@ -354,6 +381,14 @@ final class PaperView: UIView {
         // Whatever the setting, keep the printing point on screen.
         let pad = min(56, w * 0.12)
         x = min(max(x, pad - caretX), w - pad - caretX)
+        // And when the whole line of text fits on screen, never slide any of it off (except in Classic, which
+        // travels the full line like the real thing): the carriage only travels
+        // as far as the room around the text allows (less on a narrow phone, more on the Duo's wide deck).
+        let edge: CGFloat = 8
+        let textLeft = metrics.margin, textRight = p - metrics.margin
+        if configuration.carriage != .classic, textRight - textLeft <= w - edge * 2 {
+            x = min(max(x, w - edge - textRight), edge - textLeft)
+        }
         return x.rounded()
     }
 
@@ -502,7 +537,7 @@ final class PaperView: UIView {
         guard !configuration.reduceMotion, let rect = textView.segmentRects(for: range).last else { return }
         freshInk.layer.removeAllAnimations()
         freshInk.text = character
-        freshInk.textColor = configuration.ink.color
+        freshInk.textColor = styler.inkColor
         freshInk.sizeToFit()
         freshInk.center = CGPoint(x: rect.midX, y: rect.midY + styler.lineHeight * 0.0)
         freshInk.alpha = 0.7
@@ -537,6 +572,13 @@ final class PaperView: UIView {
     @objc private func tapped() {
         onTap?()
         activateHardwareInput()
+    }
+
+    @objc private func doubleTapped(_ gesture: UITapGestureRecognizer) {
+        guard configuration.presentation == .typing else { return }
+        let point = gesture.location(in: textView)
+        guard let position = textView.closestPosition(to: point) else { return }
+        onDoubleTap?(textView.offset(from: textView.beginningOfDocument, to: position))
     }
 
     @objc private func leverPulled() {

@@ -47,6 +47,28 @@ enum PaperTexture {
         return image
     }
 
+    /// Night paper: a deep, faintly warm sheet with light grain, for typing light-on-dark.
+    static func nightPaper() -> UIImage {
+        let key = "paper-night"
+        if let image = cache[key] { return image }
+        let size = CGSize(width: 220, height: 220)
+        var rng = SplitMix64(seed: 99)
+        let image = UIGraphicsImageRenderer(size: size).image { context in
+            let cg = context.cgContext
+            UIColor(hex: 0x1F1E1B).setFill()
+            cg.fill(CGRect(origin: .zero, size: size))
+            for _ in 0..<4200 {
+                let x = rng.unit() * size.width, y = rng.unit() * size.height
+                UIColor(white: 1, alpha: CGFloat(rng.unit()) * 0.035).setFill()
+                cg.fill(CGRect(x: x, y: y, width: 1, height: 1))
+            }
+        }
+        cache[key] = image
+        return image
+    }
+
+    static let nightPaperColor = UIColor(hex: 0x1F1E1B)
+
     /// A tile of enamel paint with a fine speckle, for the machine body.
     static func enamel(_ finish: MachineFinish) -> UIImage {
         let key = "enamel-\(finish.rawValue)"
