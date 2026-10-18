@@ -23,6 +23,14 @@ final class Page {
     var wordCount: Int = 0
     /// Set when the page is moved to the wastebasket; it's emptied after 30 days.
     var trashedAt: Date?
+    /// Underlined characters (typed over with underscores), as UTF-16 ranges into `body`.
+    var underlineData: Data?
+    /// The notebook the page belongs to, if any.
+    var notebookID: UUID?
+    /// `yyyy-MM-dd` for a journal page: one per day.
+    var journalDay: String?
+    /// The file name of the page's Markdown copy in Files, so a renamed page replaces its old copy.
+    var mirrorName: String?
 
     init(mode: TypingMode = .free, paper: PaperStyle = .bond, ink: InkStyle = .black) {
         modeRaw = mode.rawValue
@@ -50,6 +58,11 @@ final class Page {
         set { strikeData = StrikeRanges.encode(newValue) }
     }
 
+    var underlines: [NSRange] {
+        get { StrikeRanges.decode(underlineData) }
+        set { underlineData = StrikeRanges.encode(newValue) }
+    }
+
     /// The title to show: the one the writer gave, or the first line typed.
     var displayTitle: String {
         let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -69,6 +82,8 @@ final class WritingDay {
     var day: String = ""
     var words: Int = 0
     var goal: Int = 0
+    /// Seconds spent actively typing (pauses over a minute don't count), for words per minute.
+    var activeSeconds: Double = 0
 
     init(day: String, words: Int = 0, goal: Int = 0) {
         self.day = day
@@ -79,6 +94,45 @@ final class WritingDay {
     static func key(for date: Date, calendar: Calendar = .current) -> String {
         let c = calendar.dateComponents([.year, .month, .day], from: date)
         return String(format: "%04d-%02d-%02d", c.year ?? 0, c.month ?? 0, c.day ?? 0)
+    }
+}
+
+/// A named group of pages: a novel, a course, a journal.
+@Model
+final class Notebook {
+    var id: UUID = UUID()
+    var name: String = ""
+    var createdAt: Date = Date()
+    /// Set for the notebook that holds daily journal pages.
+    var isJournal: Bool = false
+
+    init(name: String, isJournal: Bool = false) {
+        self.name = name
+        self.isJournal = isJournal
+    }
+}
+
+/// A saved copy of a page at a point in time, for rolling back.
+@Model
+final class PageVersion {
+    var id: UUID = UUID()
+    var pageID: UUID = UUID()
+    var body: String = ""
+    var strikeData: Data?
+    var underlineData: Data?
+    var savedAt: Date = Date()
+    var wordCount: Int = 0
+    /// Why it was saved: "Opened", "Session", "Before restore", "Other device".
+    var reason: String = ""
+
+    init(page: Page, reason: String, date: Date = .now) {
+        pageID = page.id
+        body = page.body
+        strikeData = page.strikeData
+        underlineData = page.underlineData
+        wordCount = page.wordCount
+        savedAt = date
+        self.reason = reason
     }
 }
 
