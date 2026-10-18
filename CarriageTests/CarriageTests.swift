@@ -1,6 +1,7 @@
 import CoreGraphics
 import Foundation
 import FoldKit
+import SwiftData
 import Testing
 @testable import Carriage
 
@@ -217,5 +218,94 @@ import Testing
     @Test func fanRunsLeftToRight() {
         #expect(KeyLayout.fan(for: "q") < KeyLayout.fan(for: "p"))
         #expect(KeyLayout.fan(for: "a") < 0.3)
+    }
+}
+
+@Suite struct UnderlineTests {
+    @Test func markdownUsesEmphasisForUnderlinesAndKeepsStrikes() {
+        // "a big red dog": "big" underlined, "red" struck.
+        let md = TextExport.markdown(title: "", body: "a big red dog", strikes: [NSRange(location: 6, length: 3)], underlines: [NSRange(location: 2, length: 3)])
+        #expect(md == "a _big_ ~~red~~ dog\n")
+    }
+
+    @Test func wordRangeFindsTheWordAroundAnIndex() {
+        let text = "Mara's kettle, boiling." as NSString
+        #expect(TypewriterEngine.wordRange(in: text, at: 2) == NSRange(location: 0, length: 6))
+        #expect(TypewriterEngine.wordRange(in: text, at: 13) == NSRange(location: 7, length: 6))
+        #expect(TypewriterEngine.wordRange(in: text, at: 14) == nil)
+    }
+
+    @Test func pageTextReadsMarksFromInk() {
+        let styler = InkStyler(font: .monospacedSystemFont(ofSize: 12, weight: .regular), ink: .black, paper: .bond, face: .courier,
+                               seed: 1, lineSpacing: .single, advance: 7)
+        let text = styler.attributedText(body: "one two three", strikes: [NSRange(location: 4, length: 3)], underlines: [NSRange(location: 8, length: 5)])
+        let read = PageText(text)
+        #expect(read.strikes == [NSRange(location: 4, length: 3)])
+        #expect(read.underlines == [NSRange(location: 8, length: 5)])
+    }
+}
+
+@Suite(.serialized) struct HistoryTests {
+    /// Kept alive for the test: a context outlives nothing without its container.
+    let container: ModelContainer
+
+    init() throws {
+        let schema = Schema([Page.self, WritingDay.self, Notebook.self, PageVersion.self])
+        container = try ModelContainer(for: schema, configurations: ModelConfiguration(schema: schema, isStoredInMemoryOnly: true, cloudKitDatabase: .none))
+    }
+
+    private func context() throws -> ModelContext {
+        ModelContext(container)
+    }
+
+    @Test func snapshotsSkipUnchangedTextAndThinOldVersions() throws {
+        let context = try context()
+        let page = Page()
+        page.body = "first"
+        context.insert(page)
+        PageHistory.snapshot(page, reason: "Opened", in: context, ifOlderThan: 0)
+        PageHistory.snapshot(page, reason: "Opened", in: context, ifOlderThan: 0)
+        #expect(PageHistory.versions(of: page, in: context).count == 1)
+        for n in 0..<(PageHistory.limit + 5) {
+            page.body = "edit \(n)"
+            PageHistory.snapshot(page, reason: "Session", in: context, ifOlderThan: 0)
+        }
+        #expect(PageHistory.versions(of: page, in: context).count == PageHistory.limit)
+    }
+
+    @Test func summaryCountsTotalsAndLongestStreak() throws {
+        let context = try context()
+        let calendar = Calendar(identifier: .gregorian)
+        let today = calendar.startOfDay(for: .now)
+        for (offset, words) in [(0, 600), (-1, 500), (-3, 700), (-4, 800), (-5, 900), (-6, 100)] {
+            let date = calendar.date(byAdding: .day, value: offset, to: today)!
+            let day = WritingDay(day: WritingDay.key(for: date, calendar: calendar), words: words, goal: 500)
+            day.activeSeconds = 600
+            context.insert(day)
+        }
+        let stats = WritingStats(goal: 500, calendar: calendar)
+        stats.attach(context)
+        let summary = stats.summary()
+        #expect(summary.totalWords == 3600)
+        #expect(summary.daysWritten == 6)
+        #expect(summary.longestStreak == 3)
+        #expect(summary.currentStreak == 2)
+        #expect(summary.wordsPerMinute == 60)
+    }
+}
+
+@Suite struct RenderingTests {
+    @Test func shareImageIsFourByFive() {
+        var snapshot = PageSnapshot(Page())
+        snapshot.body = String(repeating: "The rain had been going since Tuesday. ", count: 80)
+        let image = TypedPageImage.render(snapshot, face: .courier)
+        #expect(image.size == CGSize(width: 1080, height: 1350))
+    }
+
+    @Test func spreadPaginatesLongPages() {
+        var snapshot = PageSnapshot(Page())
+        snapshot.body = String(repeating: "Somewhere below, a door closed. ", count: 300)
+        let pages = SpreadRenderer.pages(for: snapshot, size: CGSize(width: 440, height: 640), face: .courier, scale: 1)
+        #expect(pages.count > 3)
     }
 }
