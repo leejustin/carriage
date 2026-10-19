@@ -60,6 +60,9 @@ struct TypewriterScreen: View {
             .onChange(of: PaperInsets(layout: layout, size: size, safe: safe), initial: true) { _, insets in
                 model.engine.paper.setChromeInsets(insets.value)
             }
+            .onChange(of: controlsFade(layout: layout, safe: safe), initial: true) { _, height in
+                model.engine.paper.setTopFade(height)
+            }
             .onChange(of: layout.kind) { old, new in
                 foldChanged(from: old, to: new)
             }
@@ -68,6 +71,12 @@ struct TypewriterScreen: View {
                 logLayout(layout, size: size)
             }
             #endif
+    }
+
+    /// How far the controls reach down over the paper, while they're showing.
+    private func controlsFade(layout: DeskLayout, safe: EdgeInsets) -> CGFloat {
+        guard !ControlsBar.isHidden(model: model, layout: layout) else { return 0 }
+        return Desk.controlsTop(layout: layout, safe: safe) + ControlsBar.height
     }
 
     #if DEBUG
@@ -217,8 +226,12 @@ private struct Desk: View {
 
     private var sheetWidth: CGFloat { min(layout.paper.width - 20, 720) }
 
+    static func controlsTop(layout: DeskLayout, safe: EdgeInsets) -> CGFloat {
+        layout.paper.minY > 0 ? 8 : max(safe.top, 8)
+    }
+
     private var controls: some View {
-        let top: CGFloat = layout.paper.minY > 0 ? 8 : max(safe.top, 8)
+        let top = Self.controlsTop(layout: layout, safe: safe)
         let leading: CGFloat = layout.paper.minX == 0 ? max(safe.leading, 10) : 10
         let trailing: CGFloat = layout.paper.maxX >= size.width ? max(safe.trailing, 10) : 10
         return ControlsBar(layout: layout)

@@ -9,11 +9,17 @@ struct ControlsBar: View {
     @State private var renaming = false
     @State private var draftTitle = ""
 
-    private var hidden: Bool {
+    private var hidden: Bool { Self.isHidden(model: model, layout: layout) }
+
+    /// The controls fade while you type, and stay away in focus until a tap on the paper.
+    static func isHidden(model: AppModel, layout: DeskLayout) -> Bool {
         guard layout.presentation == .typing else { return false }
         if model.focusMode.isOn { return !model.focusMode.isPeeking }
         return model.settings.autoHideControls && model.engine.isTyping
     }
+
+    /// The bar's height, not counting the padding above it.
+    static let height: CGFloat = 34
 
     var body: some View {
         HStack(spacing: 8) {

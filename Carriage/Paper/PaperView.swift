@@ -97,6 +97,9 @@ final class PaperView: UIView {
 
     /// Room to leave for system UI, set by the layout: the controls and status area on top, the home indicator below.
     private var chromeInsets = UIEdgeInsets.zero
+    /// Fades the typed lines out under the controls while they show, so text never runs underneath them.
+    private let topFade = CAGradientLayer()
+    private var topFadeHeight: CGFloat = 0
 
     /// The x of the paper's left edge relative to this view, which moves as the carriage travels.
     private var carriageX: CGFloat = 0
@@ -138,6 +141,7 @@ final class PaperView: UIView {
         rearSheet.layer.addSublayer(rearShade)
         addSubview(rearSheet)
         clip.clipsToBounds = true
+        clip.layer.mask = topFade
         addSubview(clip)
         clip.addSubview(textView)
         textView.isEditable = false
@@ -291,6 +295,7 @@ final class PaperView: UIView {
             textView.contentInset = UIEdgeInsets(top: size.height, left: 0, bottom: size.height, right: 0)
             textView.sheetTail = size.height
             clip.frame = CGRect(x: 0, y: 0, width: size.width, height: paperBottom)
+            updateTopFade(animated: false)
             textView.frame = CGRect(x: carriageX, y: 0, width: metrics.paperWidth, height: paperBottom)
             textView.isScrollEnabled = true
             scale.advance = metrics.advance
@@ -305,6 +310,7 @@ final class PaperView: UIView {
             textView.sheetTail = 0
             carriageX = ((size.width - metrics.paperWidth) / 2).rounded()
             clip.frame = bounds
+            updateTopFade(animated: false)
             textView.frame = CGRect(x: carriageX, y: 0, width: metrics.paperWidth, height: size.height)
         }
         keyCatcher.frame = CGRect(x: 0, y: 0, width: 1, height: 1)
@@ -562,6 +568,32 @@ final class PaperView: UIView {
         chromeInsets = insets
         lastLayoutSize = .zero
         setNeedsLayout()
+    }
+
+    /// How far down the controls reach over the paper while they're showing; zero while they're hidden.
+    func setTopFade(_ height: CGFloat) {
+        guard height != topFadeHeight else { return }
+        topFadeHeight = height
+        updateTopFade(animated: true)
+    }
+
+    private func updateTopFade(animated: Bool) {
+        CATransaction.begin()
+        CATransaction.setDisableActions(!animated)
+        CATransaction.setAnimationDuration(topFadeHeight > 0 ? 0.2 : 0.6)
+        topFade.frame = clip.bounds
+        let height = clip.bounds.height
+        if configuration.presentation == .typing, topFadeHeight > 0, height > 0 {
+            // Clear under the controls, then back to full ink a line below them.
+            let start = max(0, topFadeHeight - 4) / height
+            let end = min(1, (topFadeHeight + 18) / height)
+            topFade.colors = [UIColor.clear, .clear, .black, .black].map(\.cgColor)
+            topFade.locations = [0, start, end, 1].map { NSNumber(value: Double($0)) }
+        } else {
+            topFade.colors = [UIColor.black, .black].map(\.cgColor)
+            topFade.locations = [0, 1]
+        }
+        CATransaction.commit()
     }
 
     override func didMoveToWindow() {
