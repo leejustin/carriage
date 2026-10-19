@@ -32,7 +32,7 @@ shoot() {
   xcrun simctl install "$UDID" "$APP"
   xcrun simctl launch "$UDID" com.leejustin.carriage -seedDemo -seenOnboarding YES -foldSimulation "$FOLD" "$@" >/dev/null
   sleep 4
-  xcrun simctl io "$UDID" screenshot "$OUT/$name.png" >/dev/null
+  xcrun simctl io "$UDID" screenshot "$OUT/$name.png" >/dev/null 2>&1
   echo "  $name"
 }
 
@@ -42,4 +42,12 @@ shoot 02-focus -screenshotScene focus
 shoot 03-library -screenshotScene library
 shoot 04-night -nightDesk on -finish enamel
 shoot 05-cherry -finish cherry -keyboardStyle split
+
+# Review screenshots for the in-app purchases (App Store Connect › each purchase › Review Information).
+if [[ "$DEVICE" != *Duo* ]]; then
+  OUT="$ROOT/docs/screenshots/purchases"
+  mkdir -p "$OUT"
+  shoot unlock -screenshotScene paywall
+  shoot packs -screenshotScene shop
+fi
 xcrun simctl status_bar "$UDID" clear

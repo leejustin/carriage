@@ -56,7 +56,7 @@ enum DemoContent {
         try? context.save()
     }
 
-    /// Sets up a scene for App Store screenshots: `-screenshotScene library|focus|spread|history`.
+    /// Sets up a scene for App Store screenshots: `-screenshotScene library|focus|spread|paywall|shop`.
     static func stageScreenshotScene(_ model: AppModel) {
         guard let scene = UserDefaults.standard.string(forKey: "screenshotScene") else { return }
         UserDefaults.standard.set(true, forKey: "seenOnboarding")
@@ -67,6 +67,8 @@ enum DemoContent {
             case "library": model.showLibrary = true
             case "focus": model.focusMode.toggle()
             case "spread": model.showSpread = true
+            case "paywall": model.showPaywall = true
+            case "shop": model.showShop = true
             default: break
             }
         }

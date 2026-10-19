@@ -93,7 +93,7 @@ Data Not Collected. See docs/site/privacy.html, to be published at a public URL.
 | com.leejustin.carriage.pack.paperink | Paper and Ink Pack | Paper & Ink | Cream, onion skin and carbon copy paper, with red, faded and carbon blue ribbons. | $1.99 |
 | com.leejustin.carriage.pack.sounds | Machine Sounds Pack | Machine Sounds | Three more machines: an office upright, an electric and a tin traveller. | $1.99 |
 
-Each needs a review screenshot: the unlock letter (… › New Sheet after three pages), the Paper menu with locks, and Settings › Supply shop.
+Each needs a review screenshot. They're in `docs/screenshots/purchases/`: `unlock.png` (the unlock letter) for the unlock, and `packs.png` (the supply shop) for both packs. `scripts/screenshots.sh` makes them again.
 
 ## Screenshots
 
