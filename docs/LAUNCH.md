@@ -13,7 +13,7 @@ Target: submit to App Review by **Oct 21, 2026**, live for the Duo launch on Oct
    - `com.leejustin.carriage.pack.sounds`, $1.99, "Machine Sounds"
 5. **Pick the price model.** The code ships freemium (three free pages, then the $6.99 unlock). For $4.99 upfront, set `Monetization.current = .upfront` in `Carriage/Store/Store.swift` and set the app price in App Store Connect; the packs stay.
 6. **Typeface.** Courier Prime (SIL Open Font License) is bundled in `Carriage/Fonts` with its license file; nothing to do.
-7. **Privacy and support pages.** Written in `docs/site/`. Publish them (GitHub Pages works: Settings › Pages › branch `main`, folder `/docs`) and put the URLs in App Store Connect. Change `support@carriage.app` to an address you read.
+7. **Privacy and support pages.** Published with GitHub Pages from `docs/` on `main`: https://leejustin.github.io/carriage/site/privacy.html and https://leejustin.github.io/carriage/site/support.html. Put these in App Store Connect.
 8. **Store listing.** Copy, keywords and purchase descriptions are in [APP_STORE.md](APP_STORE.md).
 
 ## Submission checklist (from the spec)

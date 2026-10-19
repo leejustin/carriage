@@ -81,9 +81,9 @@ Data Not Collected. See docs/site/privacy.html, to be published at a public URL.
 
 ## URLs
 
-- Privacy policy: publish `docs/site/privacy.html` (for example with GitHub Pages: Settings › Pages › Deploy from branch `main`, folder `/docs`, then `https://leejustin.github.io/carriage/site/privacy.html`).
-- Support: `docs/site/support.html`, same way.
-- Change `support@carriage.app` in both pages to an address you read.
+- Privacy policy: https://leejustin.github.io/carriage/site/privacy.html
+- Support: https://leejustin.github.io/carriage/site/support.html
+- Contact: hello@leejustin.com
 
 ## In-app purchases
 
