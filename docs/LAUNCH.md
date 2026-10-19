@@ -4,7 +4,7 @@ Target: submit to App Review by **Oct 21, 2026**, live for the Duo launch on Oct
 
 ## Blockers that need you
 
-1. **Install Xcode 27.1.** This Mac has Xcode 27.0, which has neither the Duo APIs nor a Duo simulator. Built with 27.0, the app is letterboxed on the inner screen and FoldKit falls back to "regular iPhone". Once 27.1 is installed nothing needs changing: FoldKit's hinge and fold-line code switches on automatically. Then run once in the Duo simulator and in Device Hub and check the probe in Settings › Developer (debug builds) reports the hinge and posture.
+1. **Fold the Duo in Device Hub.** Built with Xcode 27.1, the real hinge reports closed and Carriage lays out for the closed Duo on its own. Half-folded, flat, book and the fold transitions still need a pass: in Device Hub, fold through each and check the page and keys land where they should (debug builds save a picture of each layout to Documents/FoldCapture).
 2. **Signing and bundle ID.** The project uses `com.leejustin.carriage` with no team set. Pick your team in Signing & Capabilities and change the bundle ID if you want another one. Product IDs and the iCloud container follow the same prefix (see below).
 3. **iCloud container and app group.** Create `iCloud.com.leejustin.carriage` (with both CloudKit and iCloud Documents, for the Markdown copies in iCloud Drive) and the app group `group.com.leejustin.carriage` (shared with the widget extension, `com.leejustin.carriage.widgets`). Xcode does this when you enable the capabilities with your team. Then, in the CloudKit Dashboard, **deploy the schema to Production** before release, or sync works in testing and fails for customers. Without iCloud the app falls back to local storage and keeps the Markdown copies in On My iPhone › Carriage.
 4. **App Store Connect products** (all non-consumable):
@@ -20,13 +20,15 @@ Target: submit to App Review by **Oct 21, 2026**, live for the Duo launch on Oct
 
 | Item | Status |
 | --- | --- |
-| Built with the iOS 27.1 SDK | ⛔ Needs Xcode 27.1 (blocker 1) |
-| Tested half-folded, flat, closed, portrait and landscape in Device Hub | 🟡 All postures checked with FoldKit's simulation; needs a pass in the real Duo simulator |
+| Built with the iOS 27.1 SDK | ✅ Xcode 27.1; Release build for device is clean |
+| Tested half-folded, flat, closed, portrait and landscape in Device Hub | 🟡 Closed checked on the real Duo simulator; the other postures checked with FoldKit's simulation and need a fold in Device Hub (blocker 1) |
 | Works on a regular iPhone | ✅ Checked on iPhone 18 Pro simulator |
 | Duo and regular screenshots | 🟡 Regular iPhone set in `docs/screenshots/` from `scripts/screenshots.sh`; run it again on the 27.1 Duo simulator |
 | Original name, icon and art | ✅ Icon and all art are drawn in code; sounds are synthesized |
 | App Review notes explain the fold features | ✅ [APP_REVIEW.md](APP_REVIEW.md) |
-| Privacy details filled in | 🟡 `PrivacyInfo.xcprivacy` included and the policy written (`docs/site/privacy.html`); in App Store Connect answer "Data Not Collected" |
+| Privacy details filled in | 🟡 Privacy manifests for the app and the widget declare every required-reason API (user defaults, app group, file dates); the policy is written (`docs/site/privacy.html`); in App Store Connect answer "Data Not Collected" |
+| Export compliance | ✅ `ITSAppUsesNonExemptEncryption = NO` (only Apple's HTTPS for iCloud), so uploads skip the encryption question |
+| Age rating | 🟡 Answer App Store Connect's questionnaire: no on everything; no web access, no user-generated content shared with others |
 | In-app purchases tested in the sandbox | 🟡 Works with `Carriage.storekit` locally; test in sandbox once products exist |
 
 ## Writing focus
