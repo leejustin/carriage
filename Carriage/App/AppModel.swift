@@ -42,6 +42,8 @@ final class AppModel {
         engine.onHardwareKeyPress = { [weak self] in self?.fold.noteHardwareKeyPress() }
         engine.onSaved = { [weak self] page in self?.mirror(page) }
         engine.onSyncNotice = { [weak self] message in self?.toast = Toast(text: message, symbol: "arrow.triangle.2.circlepath") }
+        engine.onMarginBell = { [weak self] in self?.teachCarriagePush() }
+        engine.onCarriagePushed = { UserDefaults.standard.set(true, forKey: "pushedCarriage") }
         stats.onChange = { [weak self] in self?.publishStats() }
         focus.onFinish = { [weak self] in self?.focusFinished() }
         #if DEBUG
@@ -67,6 +69,8 @@ final class AppModel {
         if ProcessInfo.processInfo.arguments.contains("-resetOnboarding") {
             UserDefaults.standard.removeObject(forKey: "seenOnboarding")
             UserDefaults.standard.removeObject(forKey: "hasSeenHinge")
+            UserDefaults.standard.removeObject(forKey: "pushedCarriage")
+            UserDefaults.standard.removeObject(forKey: "carriagePushHints")
         }
         #endif
         loadNextPage(feed: false, explainLimit: false)
@@ -129,6 +133,15 @@ final class AppModel {
                 showFocusSetup = true
             }
         }
+    }
+
+    /// The first few times the bell rings, show how to return the carriage by hand, until the writer has done it once.
+    func teachCarriagePush() {
+        let defaults = UserDefaults.standard
+        let shown = defaults.integer(forKey: "carriagePushHints")
+        guard !defaults.bool(forKey: "pushedCarriage"), shown < 3, !focusMode.isOn else { return }
+        defaults.set(shown + 1, forKey: "carriagePushHints")
+        toast = Toast(text: "Ding! Push the paper to the right to return the carriage", symbol: "arrow.right.to.line")
     }
 
     func paperTapped() {

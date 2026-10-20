@@ -28,6 +28,9 @@ final class TypewriterEngine {
     @ObservationIgnored var onSaved: ((Page) -> Void)?
     /// Called when the same page was edited on another device; the message says what happened.
     @ObservationIgnored var onSyncNotice: ((String) -> Void)?
+    /// The margin bell rang, so the end of the line is near.
+    @ObservationIgnored var onMarginBell: (() -> Void)?
+    @ObservationIgnored var onCarriagePushed: (() -> Void)?
 
     @ObservationIgnored private let settings: AppSettings
     @ObservationIgnored private let stats: WritingStats
@@ -59,6 +62,7 @@ final class TypewriterEngine {
         paper.keyCatcher.onDelete = { [weak self] in self?.press(.delete, fan: 0.9) }
         paper.keyCatcher.onHardwarePress = { [weak self] in self?.onHardwareKeyPress?() }
         paper.onReturnLever = { [weak self] in self?.press(.carriageReturn, fan: 0.05) }
+        paper.onCarriagePushed = { [weak self] in self?.onCarriagePushed?() }
         paper.onRackTick = { SoundEngine.shared.play(.backspace, gain: 0.22) }
         paper.textView.delegate = textDelegate
         paper.onRestyle = { [weak self] in self?.scheduleSpellCheck() }
@@ -344,6 +348,7 @@ final class TypewriterEngine {
         guard settings.marginBell, !bellRungOnLine, paper.currentColumn >= paper.metrics.bellColumn else { return }
         bellRungOnLine = true
         SoundEngine.shared.play(.bell)
+        onMarginBell?()
     }
 
     private var slideDuration: TimeInterval {
