@@ -4,7 +4,7 @@ import StoreKit
 
 /// How the app is sold. The spec leaves this open; flip `current` to match App Store Connect.
 enum Monetization {
-    /// Paid up front: everything in the base app is unlocked, packs are still sold.
+    /// Paid up front: everything is unlocked.
     case upfront
     /// Free to try: three pages, then a one-time unlock.
     case freemium(freePages: Int)
@@ -13,14 +13,13 @@ enum Monetization {
 }
 
 enum ProductID {
-    static let unlock = "com.leejustin.carriage.unlock"
-    static let paperInk = "com.leejustin.carriage.pack.paperink"
-    static let sounds = "com.leejustin.carriage.pack.sounds"
+    static let unlock = "com.carriage.app.unlock"
 
-    static let all = [unlock, paperInk, sounds]
+    static let all = [unlock]
 }
 
-/// StoreKit 2: one non-consumable unlock and two non-consumable packs. No subscriptions, no ads.
+/// StoreKit 2: one non-consumable unlock. Every paper, ribbon and machine is included from the first page;
+/// the free version only limits how many pages there are. No subscriptions, no ads.
 @Observable
 final class Store {
     private(set) var products: [String: Product] = [:]
@@ -46,17 +45,10 @@ final class Store {
         return purchased.contains(ProductID.unlock)
     }
 
-    var hasPaperInk: Bool { purchased.contains(ProductID.paperInk) }
-    var hasSounds: Bool { purchased.contains(ProductID.sounds) }
-
     var freePageLimit: Int? {
         if case let .freemium(pages) = Monetization.current, !isUnlocked { return pages }
         return nil
     }
-
-    func canUse(_ paper: PaperStyle) -> Bool { !paper.isPremium || hasPaperInk }
-    func canUse(_ ink: InkStyle) -> Bool { !ink.isPremium || hasPaperInk }
-    func canUse(_ sound: MachineSound) -> Bool { !sound.isPremium || hasSounds }
 
     func price(_ id: String) -> String? { products[id]?.displayPrice }
 

@@ -39,7 +39,7 @@ enum MachineFinish: String, CaseIterable, Identifiable, Codable {
     var printColor: UIColor { isDark ? UIColor(hex: 0xE9DFC6) : UIColor(hex: 0x2A2723) }
 }
 
-/// Paper stock. Bond is free; the rest come with the Paper & Ink pack.
+/// Paper stock. Every stock is included; bond is the default.
 enum PaperStyle: String, CaseIterable, Identifiable, Codable {
     case bond, cream, onionSkin, carbon
 
@@ -62,8 +62,6 @@ enum PaperStyle: String, CaseIterable, Identifiable, Codable {
         case .carbon: "The copy underneath, slightly smudged."
         }
     }
-
-    var isPremium: Bool { self != .bond }
 
     var color: UIColor {
         switch self {
@@ -91,7 +89,7 @@ enum PaperStyle: String, CaseIterable, Identifiable, Codable {
     var inkSpread: CGFloat { self == .carbon ? 0.9 : 0 }
 }
 
-/// Ribbon ink. Black is free; red and faded come with the Paper & Ink pack.
+/// Ribbon ink. Every ribbon is included; black is the default.
 enum InkStyle: String, CaseIterable, Identifiable, Codable {
     case black, red, faded, carbonBlue
 
@@ -105,8 +103,6 @@ enum InkStyle: String, CaseIterable, Identifiable, Codable {
         case .carbonBlue: "Carbon Blue"
         }
     }
-
-    var isPremium: Bool { self != .black }
 
     var color: UIColor {
         switch self {

@@ -146,18 +146,18 @@ struct ControlsBar: View {
             Menu("Paper", systemImage: "doc") {
                 ForEach(PaperStyle.allCases) { style in
                     Button {
-                        if model.store.canUse(style) { model.engine.setPaper(style) } else { model.showShop = true }
+                        model.engine.setPaper(style)
                     } label: {
-                        choiceLabel(style.name, selected: model.engine.page?.paper == style, locked: !model.store.canUse(style))
+                        choiceLabel(style.name, selected: model.engine.page?.paper == style)
                     }
                 }
             }
             Menu("Ribbon", systemImage: "paintbrush.pointed") {
                 ForEach(InkStyle.allCases) { ink in
                     Button {
-                        if model.store.canUse(ink) { model.engine.setInk(ink) } else { model.showShop = true }
+                        model.engine.setInk(ink)
                     } label: {
-                        choiceLabel(ink.name, selected: model.engine.page?.ink == ink, locked: !model.store.canUse(ink))
+                        choiceLabel(ink.name, selected: model.engine.page?.ink == ink)
                     }
                 }
             }
@@ -169,11 +169,9 @@ struct ControlsBar: View {
 }
 
 @ViewBuilder
-private func choiceLabel(_ name: String, selected: Bool, locked: Bool) -> some View {
+private func choiceLabel(_ name: String, selected: Bool) -> some View {
     if selected {
         Label(name, systemImage: "checkmark")
-    } else if locked {
-        Label(name, systemImage: "lock")
     } else {
         Text(name)
     }

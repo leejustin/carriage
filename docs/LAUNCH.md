@@ -5,16 +5,12 @@ Target: submit to App Review by **Oct 21, 2026**, live for the Duo launch on Oct
 ## Blockers that need you
 
 1. **Fold the Duo in Device Hub.** Built with Xcode 27.1, the real hinge reports closed and Carriage lays out for the closed Duo on its own. Half-folded, flat, book and the fold transitions still need a pass: in Device Hub, fold through each and check the page and keys land where they should (debug builds save a picture of each layout to Documents/FoldCapture).
-2. **Sign in to Xcode.** The project is set to your team (`2TWQYRZUDF`) with automatic signing, but Xcode has no account signed in, so it can't make the profiles. Add your Apple Account in Xcode › Settings › Accounts. Then Product › Archive registers the app ID (`com.leejustin.carriage`), the widget (`com.leejustin.carriage.widgets`), the iCloud container and the app group, and makes the profiles.
-3. **iCloud container and app group.** Create `iCloud.com.leejustin.carriage` (with both CloudKit and iCloud Documents, for the Markdown copies in iCloud Drive) and the app group `group.com.leejustin.carriage` (shared with the widget extension, `com.leejustin.carriage.widgets`). Xcode makes them on the first signed build (blocker 2). Then, in the CloudKit Dashboard, **deploy the schema to Production** before release, or sync works in testing and fails for customers. Without iCloud the app falls back to local storage and keeps the Markdown copies in On My iPhone › Carriage.
-4. **App Store Connect products** (all non-consumable):
-   - `com.leejustin.carriage.unlock`, $6.99, "Unlock Carriage"
-   - `com.leejustin.carriage.pack.paperink`, $1.99, "Paper & Ink"
-   - `com.leejustin.carriage.pack.sounds`, $1.99, "Machine Sounds"
-5. **Pick the price model.** The code ships freemium (three free pages, then the $6.99 unlock). For $4.99 upfront, set `Monetization.current = .upfront` in `Carriage/Store/Store.swift` and set the app price in App Store Connect; the packs stay.
-6. **Typeface.** Courier Prime (SIL Open Font License) is bundled in `Carriage/Fonts` with its license file; nothing to do.
-7. **Privacy and support pages.** Published with GitHub Pages from `docs/` on `main`: https://leejustin.github.io/carriage/site/privacy.html and https://leejustin.github.io/carriage/site/support.html. Put these in App Store Connect.
-8. **Store listing.** Copy, keywords and purchase descriptions are in [APP_STORE.md](APP_STORE.md).
+2. **Sign in to Xcode.** The project is set to your team (`2TWQYRZUDF`) with automatic signing, but Xcode has no account signed in, so it can't make the profiles. Add your Apple Account in Xcode › Settings › Accounts. Then Product › Archive registers the app ID (`com.carriage.app`), the widget (`com.carriage.app.widgets`), the iCloud container and the app group, and makes the profiles.
+3. **iCloud container and app group.** Create `iCloud.com.carriage.app` (with both CloudKit and iCloud Documents, for the Markdown copies in iCloud Drive) and the app group `group.com.carriage.app` (shared with the widget extension, `com.carriage.app.widgets`). Xcode makes them on the first signed build (blocker 2). Then, in the CloudKit Dashboard, **deploy the schema to Production** before release, or sync works in testing and fails for customers. Without iCloud the app falls back to local storage and keeps the Markdown copies in On My iPhone › Carriage.
+4. **App Store Connect product:** one non-consumable, `com.carriage.app.unlock`, $6.99, "Unlock Carriage". Everything else is free; the free version is three pages.
+5. **Typeface.** Courier Prime (SIL Open Font License) is bundled in `Carriage/Fonts` with its license file; nothing to do.
+6. **Privacy and support pages.** Published with GitHub Pages from `docs/` on `main`: https://leejustin.github.io/carriage/site/privacy.html and https://leejustin.github.io/carriage/site/support.html. Put these in App Store Connect.
+7. **Store listing.** Copy, keywords and purchase descriptions are in [APP_STORE.md](APP_STORE.md).
 
 ## Submission checklist (from the spec)
 

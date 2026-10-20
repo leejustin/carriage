@@ -35,7 +35,7 @@ struct CarriageApp: App {
         let inMemory = ProcessInfo.processInfo.arguments.contains("-uiTesting")
         if !inMemory {
             do {
-                let cloud = ModelConfiguration(schema: schema, cloudKitDatabase: .private("iCloud.com.leejustin.carriage"))
+                let cloud = ModelConfiguration(schema: schema, cloudKitDatabase: .private("iCloud.com.carriage.app"))
                 let container = try ModelContainer(for: schema, configurations: cloud)
                 storage = FileManager.default.ubiquityIdentityToken == nil ? .iCloudSignedOut : .iCloud
                 return container
@@ -96,7 +96,6 @@ private struct AppSheets: ViewModifier {
             .sheet(isPresented: $model.showLibrary, onDismiss: reactivate) { LibraryView() }
             .sheet(isPresented: $model.showSettings, onDismiss: reactivate) { SettingsView() }
             .sheet(isPresented: $model.showPaywall, onDismiss: reactivate) { PaywallView() }
-            .sheet(isPresented: $model.showShop, onDismiss: reactivate) { ShopView() }
             .sheet(isPresented: $model.showFocusSetup, onDismiss: reactivate) { FocusSetupView() }
             .sheet(isPresented: $model.showOnboarding, onDismiss: reactivate) { OnboardingView() }
             .sheet(item: $model.versionsPage, onDismiss: reactivate) { page in VersionHistoryView(page: page) }
@@ -139,10 +138,6 @@ private struct AppReactions: ViewModifier {
             .onChange(of: model.settings.dailyGoal) { _, goal in
                 model.stats.goal = goal
                 model.publishStats()
-            }
-            .onChange(of: model.store.purchased) {
-                model.enforceEntitlements()
-                model.applyPurchasedChoices()
             }
             .onChange(of: model.isPresentingSheet) { _, presenting in
                 // Keep hardware typing off the page while a sheet is up, and make sure the library, exports and

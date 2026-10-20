@@ -25,7 +25,7 @@ FoldKit has its own tests: open `Packages/FoldKit` or run `xcodebuild -scheme Fo
 | `Carriage/Keyboard` | The typewriter keys, drawn by the app |
 | `Carriage/Sound` | Sound synthesis and the low-latency `AVAudioEngine` player, haptics |
 | `Carriage/Typewriter` | The main screen and the layout for each posture |
-| `Carriage/Library`, `Settings`, `Store`, `Export` | Library, notebooks, version and writing history, settings, StoreKit 2 and the shop, TXT/Markdown/PDF/image export |
+| `Carriage/Library`, `Settings`, `Store`, `Export` | Library, notebooks, version and writing history, settings, StoreKit 2 and the unlock, TXT/Markdown/PDF/image export |
 | `Carriage/Duo` | Duo-only touches: the fold-shut cover, the outer-screen glance, the two-page reading spread |
 | `Carriage/Focus`, `Onboarding`, `Intents`, `Files` | Writing focus and its Focus Filter, the first-run tour and tips, Siri and Shortcuts actions, the Markdown copy in Files, widget data, on-device crash reports |
 | `CarriageWidgets` | Home and Lock Screen widgets for today's words and the streak |

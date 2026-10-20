@@ -16,7 +16,6 @@ final class AppModel {
     var showLibrary = false
     var showSettings = false
     var showPaywall = false
-    var showShop = false
     /// The first-run tour (on a regular iPhone it opens with the note that Carriage was made for iPhone Duo).
     var showOnboarding = false
     /// The page whose version history is open.
@@ -76,11 +75,7 @@ final class AppModel {
         DemoContent.exportPDFIfRequested(engine.page, settings: settings)
         DemoContent.stageScreenshotScene(self)
         #endif
-        Task {
-            await store.load()
-            enforceEntitlements()
-            applyPurchasedChoices()
-        }
+        Task { await store.load() }
         Task {
             // Give the hinge a moment to report, so the tour knows whether this is a Duo.
             try? await Task.sleep(for: .seconds(1.5))
@@ -175,7 +170,7 @@ final class AppModel {
     }
 
     var isPresentingSheet: Bool {
-        showLibrary || showSettings || showPaywall || showShop || showOnboarding || showFocusSetup || exportRequest != nil || filesRequest != nil || versionsPage != nil
+        showLibrary || showSettings || showPaywall || showOnboarding || showFocusSetup || exportRequest != nil || filesRequest != nil || versionsPage != nil
     }
 
     @ObservationIgnored private var isFiling = false
@@ -264,10 +259,8 @@ final class AppModel {
     }
 
     func makePage(notebookID: UUID? = nil) -> Page {
-        let paper = store.canUse(settings.defaultPaper) ? settings.defaultPaper : .bond
-        let ink = store.canUse(settings.defaultInk) ? settings.defaultInk : .black
         let used = pagesUsed
-        let page = Page(mode: settings.defaultMode, paper: paper, ink: ink)
+        let page = Page(mode: settings.defaultMode, paper: settings.defaultPaper, ink: settings.defaultInk)
         page.notebookID = notebookID
         context?.insert(page)
         UserDefaults.standard.set(used + 1, forKey: "pagesCreated")
@@ -311,31 +304,8 @@ final class AppModel {
     }
 
     func selectMachine(_ machine: MachineSound) {
-        guard store.canUse(machine) else {
-            showShop = true
-            return
-        }
         settings.machineSound = machine
         SoundEngine.shared.load(machine)
-    }
-
-    /// Once purchases are known, switch to the machine the writer picked (it may be from a pack).
-    func applyPurchasedChoices() {
-        let machine = store.canUse(settings.machineSound) ? settings.machineSound : .portable
-        if SoundEngine.shared.machine != machine { SoundEngine.shared.load(machine) }
-    }
-
-    /// If a pack was refunded, fall back to free styles. Only acts on a confirmed entitlement check, so being
-    /// offline at launch never resets anyone's choices; the chosen machine itself is kept in settings either way.
-    func enforceEntitlements() {
-        guard store.entitlementsChecked else { return }
-        if !store.canUse(settings.defaultPaper) { settings.defaultPaper = .bond }
-        if !store.canUse(settings.defaultInk) { settings.defaultInk = .black }
-        if let page = engine.page {
-            if !store.canUse(page.paper) { engine.setPaper(.bond) }
-            if !store.canUse(page.ink) { engine.setInk(.black) }
-        }
-        applyPurchasedChoices()
     }
 
     // MARK: Export

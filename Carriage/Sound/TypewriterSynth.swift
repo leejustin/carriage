@@ -25,7 +25,7 @@ nonisolated enum SoundKind: String, CaseIterable, Sendable {
     }
 }
 
-/// The voice of a machine. The portable comes free; the others are the Machine Sounds pack.
+/// The voice of a machine. Every machine is included; the portable is the default.
 nonisolated enum MachineSound: String, CaseIterable, Identifiable, Codable, Sendable {
     case portable, upright, electric, tin
 
@@ -48,8 +48,6 @@ nonisolated enum MachineSound: String, CaseIterable, Identifiable, Codable, Send
         case .tin: "A tin travel machine. Rattly and cheerful."
         }
     }
-
-    var isPremium: Bool { self != .portable }
 
     var profile: SynthProfile {
         switch self {

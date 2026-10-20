@@ -14,11 +14,7 @@ Carriage is a distraction-free writing app that turns iPhone into a small typewr
 
 **Modes.** Free mode works like a normal editor. Typewriter mode has no delete: the X-OUT key types an x over the last character, and exports leave struck text out (plain text) or show it as ~~strikethrough~~ (Markdown).
 
-**Purchases (all non-consumable, no subscriptions, no ads):**
-- Unlock Carriage (`com.leejustin.carriage.unlock`): the first three pages are free; the unlock removes the limit. To test: create three sheets (… › New Sheet), and the fourth shows the unlock letter.
-- Paper & Ink (`com.leejustin.carriage.pack.paperink`): extra paper stocks and ribbon colours. Locked items show a lock in … › Paper / Ribbon.
-- Machine Sounds (`com.leejustin.carriage.pack.sounds`): three more machine voices. Settings › Supply shop has previews.
-- Restore Purchases is in Settings and on the unlock screen.
+**Purchase (non-consumable, no subscriptions, no ads):** Unlock Carriage (`com.carriage.app.unlock`). Every paper, ribbon and machine sound is included in the free version; the free version is limited to three pages and the unlock removes the limit. To test: create three sheets (… › New Sheet), and the fourth shows the unlock letter. Restore Purchases is in Settings and on the unlock screen.
 
 **Sounds** are synthesized on the device; no recordings from other apps are used.
 

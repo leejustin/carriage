@@ -53,19 +53,11 @@ struct SettingsView: View {
                     Picker("Carriage", selection: $settings.carriage) {
                         ForEach(CarriageTravel.allCases) { Text($0.name).tag($0) }
                     }
-                    Picker("Default paper", selection: Binding(get: { settings.defaultPaper }, set: { style in
-                        if model.store.canUse(style) { settings.defaultPaper = style } else { model.showShop = true }
-                    })) {
-                        ForEach(PaperStyle.allCases) { style in
-                            Text(model.store.canUse(style) ? style.name : "\(style.name) 🔒").tag(style)
-                        }
+                    Picker("Default paper", selection: $settings.defaultPaper) {
+                        ForEach(PaperStyle.allCases) { Text($0.name).tag($0) }
                     }
-                    Picker("Default ribbon", selection: Binding(get: { settings.defaultInk }, set: { ink in
-                        if model.store.canUse(ink) { settings.defaultInk = ink } else { model.showShop = true }
-                    })) {
-                        ForEach(InkStyle.allCases) { ink in
-                            Text(model.store.canUse(ink) ? ink.name : "\(ink.name) 🔒").tag(ink)
-                        }
+                    Picker("Default ribbon", selection: $settings.defaultInk) {
+                        ForEach(InkStyle.allCases) { Text($0.name).tag($0) }
                     }
                 } header: {
                     header("The page")
@@ -152,8 +144,7 @@ struct SettingsView: View {
                     if model.store.freePageLimit != nil {
                         Button("Unlock Carriage") { model.showPaywall = true }
                     }
-                    Button("Supply shop: paper, ribbons and machines") { model.showShop = true }
-                    Button("Restore purchases") { Task { await model.store.restore(); model.enforceEntitlements() } }
+                    Button("Restore purchases") { Task { await model.store.restore() } }
                 } header: {
                     header("Purchases")
                 }
@@ -248,7 +239,7 @@ struct MachineSoundPicker: View {
             ForEach(MachineSound.allCases) { machine in
                 Button {
                     model.selectMachine(machine)
-                    if model.store.canUse(machine) { playDemo() }
+                    playDemo()
                 } label: {
                     HStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 3) {
@@ -258,8 +249,6 @@ struct MachineSoundPicker: View {
                         Spacer()
                         if model.settings.machineSound == machine {
                             Image(systemName: "checkmark").foregroundStyle(Color.ribbonRed)
-                        } else if !model.store.canUse(machine) {
-                            Image(systemName: "lock").foregroundStyle(.secondary)
                         }
                     }
                 }
