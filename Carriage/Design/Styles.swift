@@ -150,17 +150,8 @@ enum CarriageTravel: String, CaseIterable, Identifiable, Codable {
     var detail: String {
         switch self {
         case .classic: "The paper travels the full line, like the real thing."
-        case .gentle: "The paper drifts as you type; the line stays readable."
+        case .gentle: "The paper rests centred and eases along as you type."
         case .fixed: "The paper stays put and the type guide moves."
-        }
-    }
-
-    /// The share of the caret's travel taken up by moving the paper rather than the strike point.
-    var amount: CGFloat {
-        switch self {
-        case .classic: 1
-        case .gentle: 0.28
-        case .fixed: 0
         }
     }
 }

@@ -385,19 +385,23 @@ final class PaperView: UIView {
     private func restingCarriageX(forCaretX caretX: CGFloat) -> CGFloat {
         let w = bounds.width, p = metrics.paperWidth
         let centered = (w - p) / 2
-        var x = centered + configuration.carriage.amount * (p / 2 - caretX)
-        // Whatever the setting, keep the printing point on screen.
-        let pad = min(56, w * 0.12)
-        x = min(max(x, pad - caretX), w - pad - caretX)
-        // And when the whole line of text fits on screen, never slide any of it off (except in Classic, which
-        // travels the full line like the real thing): the carriage only travels
-        // as far as the room around the text allows (less on a narrow phone, more on the Duo's wide deck).
-        let edge: CGFloat = 8
         let textLeft = metrics.margin, textRight = p - metrics.margin
-        if configuration.carriage != .classic, textRight - textLeft <= w - edge * 2 {
-            x = min(max(x, edge - textLeft), w - edge - textRight)
+        switch configuration.carriage {
+        case .classic:
+            // The full line, like the real thing; only the printing point has to stay on screen.
+            let pad = min(56, w * 0.12)
+            let x = centered + (p / 2 - caretX)
+            return min(max(x, pad - caretX), w - pad - caretX).rounded()
+        case .gentle:
+            // The sheet rests centred at the start of every line and eases left as the line fills, as far as
+            // the typed words can go while keeping a little air from the screen's edge.
+            let edge: CGFloat = 24
+            let travel = max(0, centered - (edge - textLeft))
+            let progress = min(max((caretX - textLeft) / max(1, textRight - textLeft), 0), 1)
+            return (centered - travel * progress).rounded()
+        case .fixed:
+            return centered.rounded()
         }
-        return x.rounded()
     }
 
     /// Moves everything that rides on the carriage.
