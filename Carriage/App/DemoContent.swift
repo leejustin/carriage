@@ -40,7 +40,7 @@ enum DemoContent {
         let story = Page(mode: .typewriter, paper: .bond, ink: .black)
         let typo = "teh "
         let lead = "Chapter One\n\nThe rain had been going since Tuesday. Mara set the kettle on, fed a clean sheet into the old machine and sat with her hands in her lap, listening.\n\nSomewhere below, a door closed. The radiator ticked. She typed the first line slowly, the way her grandmother had taught her: no going back, only forward.\n\nIt was the summer "
-        story.body = lead + typo + "the river forgot its banks.\n"
+        story.body = lead + typo + "the river forgot its banks. The water came up past the mill, past the church steps, past the line her father had painted on the boathouse wall the year she was born.\n\nNobody in the village had seen anything like it, and nobody, afterwards, could agree on how it began.\n"
         story.strikes = [NSRange(location: (lead as NSString).length, length: 3)]
         story.wordCount = TextExport.wordCount(body: story.body, strikes: story.strikes)
         story.modifiedAt = Date()

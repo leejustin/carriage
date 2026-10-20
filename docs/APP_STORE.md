@@ -94,4 +94,4 @@ Upload `docs/screenshots/store-6.3/` (App Store Connect's main iPhone slot, 1206
 4. Write late, in peace. *Night desk: light ink on dark paper.*
 5. Every page, kept safe. *Notebooks, streaks, iCloud and Files.*
 
-iPhone Duo slot (2853 x 2007, or 2007 x 2853 turned for typing): to come. Typing is top and bottom only, so the shots need the Duo turned on its side in Device Hub (Rotate Left), half-folded like a laptop.
+iPhone Duo slot: upload `docs/screenshots/store-duo/` (2007 x 2853, the Duo on its side, half-folded: page on top, keys below). The raw captures are in `iPhone-Duo/`, taken on the Duo simulator with `-seedDemo -laptopPreview` and turned upright (`sips -r 270`); `swift scripts/StoreScreenshots.swift` frames them.

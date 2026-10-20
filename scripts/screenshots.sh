@@ -12,7 +12,8 @@ OUT="$ROOT/docs/screenshots/${DEVICE// /-}"
 DERIVED="${TMPDIR:-/tmp}/carriage-screenshots"
 mkdir -p "$OUT"
 
-UDID=$(xcrun simctl list devices available | grep -F "$DEVICE (" | head -1 | grep -oE '[0-9A-F-]{36}')
+# SIM_UDID picks a specific simulator (say, one kept just for these shots, so another app's session isn't disturbed).
+UDID=${SIM_UDID:-$(xcrun simctl list devices available | grep -F "$DEVICE (" | head -1 | grep -oE '[0-9A-F-]{36}')}
 [[ -n "$UDID" ]] || { echo "No simulator named $DEVICE"; exit 1; }
 xcrun simctl boot "$UDID" 2>/dev/null || true
 xcrun simctl status_bar "$UDID" override --time "9:41" --batteryState charged --batteryLevel 100 --cellularBars 4 --wifiBars 3
@@ -31,14 +32,14 @@ shoot() {
   xcrun simctl uninstall "$UDID" com.carriage.app 2>/dev/null || true
   xcrun simctl install "$UDID" "$APP"
   xcrun simctl launch "$UDID" com.carriage.app -seedDemo -seenOnboarding YES -foldSimulation "$FOLD" "$@" >/dev/null
-  sleep 4
+  sleep ${WAIT:-4}
   xcrun simctl io "$UDID" screenshot "$OUT/$name.png" >/dev/null 2>&1
   echo "  $name"
 }
 
 echo "Screenshots for $DEVICE → $OUT"
 shoot 01-typing
-shoot 02-focus -screenshotScene focus
+WAIT=10 shoot 02-focus -screenshotScene focus
 shoot 03-library -screenshotScene library
 shoot 04-night -nightDesk on -finish enamel
 shoot 05-cherry -finish cherry -keyboardStyle split

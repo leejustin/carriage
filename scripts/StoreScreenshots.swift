@@ -2,11 +2,13 @@
 //
 //   swift scripts/StoreScreenshots.swift   (from the repo root)
 //
-// Reads docs/screenshots/iPhone-18-Pro-Max and writes docs/screenshots/store-6.9 and store-6.3.
+// Reads docs/screenshots/iPhone-18-Pro-Max and writes store-6.9 and store-6.3; reads docs/screenshots/iPhone-Duo
+// (captured with -laptopPreview and turned upright) and writes store-duo.
 import AppKit
 import CoreText
 
 struct Shot {
+    var folder = "iPhone-18-Pro-Max"
     var source: String
     var title: String
     var line: String
@@ -21,8 +23,14 @@ let shots = [
     Shot(source: "03-library", title: "Every page,\nkept safe.", line: "NOTEBOOKS, STREAKS, ICLOUD AND FILES."),
 ]
 
+let duoShots = [
+    Shot(folder: "iPhone-Duo", source: "01-typing", title: "Half-fold it.\nStart typing.", line: "THE PAGE ON TOP, A FULL TYPEWRITER BELOW."),
+    Shot(folder: "iPhone-Duo", source: "02-focus", title: "Just you\nand the page.", line: "TAP THE MOON AND EVERYTHING ELSE FADES AWAY."),
+    Shot(folder: "iPhone-Duo", source: "03-cherry", title: "A beautiful\nlittle machine.", line: "CHROME KEYS, SOFT CLACKS, A BELL AT THE MARGIN."),
+    Shot(folder: "iPhone-Duo", source: "04-night", title: "Write late,\nin peace.", line: "NIGHT DESK: LIGHT INK ON DARK PAPER.", night: true),
+]
+
 let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-let input = root.appendingPathComponent("docs/screenshots/iPhone-18-Pro-Max")
 CTFontManagerRegisterFontsForURL(root.appendingPathComponent("Carriage/Fonts/CourierPrime-Regular.ttf") as CFURL, .process, nil)
 
 func color(_ hex: UInt32, _ alpha: CGFloat = 1) -> NSColor {
@@ -30,9 +38,11 @@ func color(_ hex: UInt32, _ alpha: CGFloat = 1) -> NSColor {
 }
 
 func render(_ shot: Shot, size: CGSize, to url: URL) throws {
+    let input = root.appendingPathComponent("docs/screenshots/\(shot.folder)")
     guard let screen = NSImage(contentsOf: input.appendingPathComponent(shot.source + ".png")) else {
         throw NSError(domain: "StoreScreenshots", code: 1, userInfo: [NSLocalizedDescriptionKey: "missing \(shot.source)"])
     }
+    let duo = shot.folder == "iPhone-Duo"
     let scale = size.width / 1320
     let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(size.width), pixelsHigh: Int(size.height), bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
     NSGraphicsContext.saveGraphicsState()
@@ -71,7 +81,8 @@ func render(_ shot: Shot, size: CGSize, to url: URL) throws {
     line.draw(with: CGRect(x: 60 * scale, y: size.height - 520 * scale, width: size.width - 120 * scale, height: 50 * scale), options: [.usesLineFragmentOrigin])
 
     // The screen, a little smaller than life, running off the bottom edge.
-    let width = size.width * 0.84
+    // The Duo's screen is wider for its height; keep the keys on the canvas.
+    let width = size.width * (duo ? 0.70 : 0.84)
     let height = width * screen.size.height / screen.size.width
     let frame = CGRect(x: (size.width - width) / 2, y: size.height - 580 * scale - height, width: width, height: height)
     let corner = 64 * scale
@@ -87,16 +98,24 @@ func render(_ shot: Shot, size: CGSize, to url: URL) throws {
     NSGraphicsContext.saveGraphicsState()
     NSBezierPath(roundedRect: frame, xRadius: corner, yRadius: corner).addClip()
     screen.draw(in: frame)
+    if duo {
+        // The quarter-turned capture shows the home indicator as a sliver down the right edge, between the
+        // keys and the screen's edge; cover it with the plain desk just beside it.
+        let px = screen.size.width / frame.width
+        let source = CGRect(x: screen.size.width - 22, y: screen.size.height * 0.25, width: 12, height: screen.size.height * 0.5)
+        let target = CGRect(x: frame.maxX - 52 / px, y: frame.minY + frame.height * 0.25, width: 44 / px, height: frame.height * 0.5)
+        screen.draw(in: target, from: source, operation: .copy, fraction: 1)
+    }
     NSGraphicsContext.restoreGraphicsState()
 
     NSGraphicsContext.restoreGraphicsState()
     try rep.representation(using: .png, properties: [:])!.write(to: url)
 }
 
-for (folder, size) in [("store-6.9", CGSize(width: 1320, height: 2868)), ("store-6.3", CGSize(width: 1206, height: 2622))] {
+for (folder, size, set) in [("store-6.9", CGSize(width: 1320, height: 2868), shots), ("store-6.3", CGSize(width: 1206, height: 2622), shots), ("store-duo", CGSize(width: 2007, height: 2853), duoShots)] {
     let out = root.appendingPathComponent("docs/screenshots/\(folder)")
     try FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
-    for (n, shot) in shots.enumerated() {
+    for (n, shot) in set.enumerated() {
         try render(shot, size: size, to: out.appendingPathComponent(String(format: "%02d-%@.png", n + 1, String(shot.source.dropFirst(3)))))
     }
     print("wrote \(folder)")
