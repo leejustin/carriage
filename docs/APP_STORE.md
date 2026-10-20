@@ -93,3 +93,5 @@ Upload `docs/screenshots/store-6.3/` (App Store Connect's main iPhone slot, 1206
 3. A beautiful little machine. *Chrome keys, soft clacks, a bell at the margin.*
 4. Write late, in peace. *Night desk: light ink on dark paper.*
 5. Every page, kept safe. *Notebooks, streaks, iCloud and Files.*
+
+iPhone Duo slot (2853 x 2007, the inner screen open flat): `docs/screenshots/iPhone-Duo/`, captured on the Duo simulator with `-seedDemo`. Focus, the seafoam machine, cherry and the night desk.
