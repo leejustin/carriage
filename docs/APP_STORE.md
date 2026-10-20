@@ -86,11 +86,10 @@ Review screenshot: `docs/screenshots/purchases/unlock.png` (the unlock letter). 
 
 ## Screenshots
 
-Run `scripts/screenshots.sh` (see the script for devices). Order:
-1. Half-folded Duo with a typed page: "Half-fold it. Start typing."
-2. Typewriter mode with an x-out: "No going back."
-3. Focus: "Just you and the page."
-4. Library with notebooks and the streak: "Every page, kept safe."
-5. Open flat, reading spread: "Read it like a book."
-6. Night desk.
-7. Regular iPhone: "A pocket machine on any iPhone."
+Upload `docs/screenshots/store-6.3/` (App Store Connect's main iPhone slot, 1206 x 2622) in order; `store-6.9/` is the same set at 1320 x 2868. To make them again: `scripts/screenshots.sh "iPhone 18 Pro Max"`, then `swift scripts/StoreScreenshots.swift` from the repo root, which frames each capture with its caption:
+
+1. A quiet place to write. *Your phone goes quiet. The words come out.*
+2. Just you and the page. *Tap the moon and everything else fades away.*
+3. A beautiful little machine. *Chrome keys, soft clacks, a bell at the margin.*
+4. Write late, in peace. *Night desk: light ink on dark paper.*
+5. Every page, kept safe. *Notebooks, streaks, iCloud and Files.*
