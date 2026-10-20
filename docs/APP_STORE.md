@@ -8,60 +8,49 @@ Carriage: Typewriter
 
 ## Subtitle (30)
 
-Half-fold it. Start typing.
+A quiet typewriter for focus
 
 ## Promotional text (170, can change without review)
 
-Made for iPhone Duo: fold it like a tiny laptop and the bottom half becomes a full typewriter. Tap the moon for Focus and it's just you and the page.
+Open Carriage and your iPhone goes quiet: just the page, the soft clack of the keys and the ring of the bell. Made for iPhone Duo, lovely on every iPhone.
 
 ## Description (4,000)
 
-Half-fold your iPhone Duo and it becomes a typewriter. The page rolls up on the top half; a full round-key typewriter keyboard fills the bottom. Every key strikes with its own sound and a tap you can feel, the carriage steps along as you type, and the bell rings near the margin.
+Carriage is a quiet place to write. Open it and your iPhone goes silent, the screen clears down to a sheet of paper, and every word you type lands with the soft clack of a real typewriter.
 
-Carriage is a distraction-free place to write: journals, letters, drafts, poems, homework, the first chapter of the novel.
+MADE TO HELP YOU FOCUS
+• Set it up once and your iPhone silences notifications whenever Carriage is open. Carriage walks you through it in a few taps.
+• Tap the moon and everything but the page and keys fades away.
+• Add Carriage's Focus Filter to any Focus, and the page clears itself whenever that Focus is on.
+• Typewriter mode: no going back. X-OUT types an x over a mistake and you keep going, the way first drafts should be written.
 
-THE MACHINE
-• A typewriter keyboard drawn by the app, with chrome-ringed keys that press down under your fingers. Full for ten fingers, or split for thumbs.
-• Sounds for every part of the machine: the keys, the space bar, the bell and the carriage slide. Four machines to choose from.
+A BEAUTIFUL MACHINE
+• Round, chrome-ringed keys that press down under your fingers, with a tap you can feel on every stroke.
+• Gentle, true-to-life sounds for every part of the machine: the keys, the space bar, the carriage slide and the bell near the margin. Four machines to choose from.
 • Ink that sits on the paper like real type, a little uneven from letter to letter.
+• Four paper stocks, from crisp bond to onion skin, four ribbon colours and five machine finishes, from seafoam to cherry. Night desk for light ink on dark paper.
 • Push the paper to return the carriage, like the real thing.
 
-TWO WAYS TO WRITE
-• Free mode: delete works.
-• Typewriter mode: no going back. X-OUT types an x over a mistake and you keep going.
-• Double-tap a word to underline it.
-
 MADE FOR IPHONE DUO
-• Half-folded: paper on top, keys below.
-• Open flat: paper and keys side by side, or read your draft as a two-page spread.
-• Closed: read and lightly edit on the outer screen. Fold it shut mid-sentence and your page is saved; open it and you're back where you were.
-• Works on every iPhone as a pocket machine.
-
-FOCUS
-• Tap the moon and everything but the page goes away.
-• Add Carriage's Focus Filter to Do Not Disturb or a Writing Focus and the page clears itself whenever that Focus is on.
+• Half-fold it like a tiny laptop: the page on the top half, a full typewriter keyboard on the bottom.
+• Open it flat for paper and keys side by side, or read your draft as a two-page spread.
+• Close it and read on the outer screen. Fold it shut mid-sentence and your page is saved; open it and you're back where you were.
+• On every other iPhone, Carriage is a lovely pocket machine.
 
 YOUR WRITING, KEPT SAFE
 • Saves as you type and syncs with iCloud.
 • Keeps a plain Markdown copy of every page in Files.
-• Version history for every page.
-• Edited the same page on two devices? Carriage keeps both.
-
-A REAL WRITING TOOL
-• Notebooks for projects, and a journal page for every day.
+• Version history for every page, notebooks for projects and a journal page for each day.
 • Daily word goals, streaks and a calendar of every day you wrote.
-• Export as a PDF that looks typed, as Markdown or plain text. Print it, share it as an image, or send it to Notes.
-• Import text and Markdown files.
-• Widgets for today's words and your streak, and Siri shortcuts to start writing.
-• Night desk: light ink on dark paper.
+• Export a PDF that looks typed, or Markdown and plain text. Print it, share it as an image or send it to Notes.
 
 No subscription. No ads. No accounts. Nothing collected.
 
-Your first three pages are free; unlock Carriage once to keep writing. Optional packs add paper stocks and ribbons, and more machines to type on.
+Your first three pages are free, with every paper, ribbon and machine included. Unlock Carriage once for unlimited pages, forever.
 
 ## Keywords (100)
 
-typewriter,writing,journal,distraction free,focus,writer,diary,novel,duo,foldable,notes,draft,poetry
+typewriter,focus,writing,journal,distraction free,quiet,mindful,diary,writer,novel,duo,aesthetic
 
 ## What's new (1.0)
 
@@ -87,13 +76,13 @@ Data Not Collected. See docs/site/privacy.html, to be published at a public URL.
 
 ## In-app purchases
 
-| Product ID | Reference name | Display name | Description | Price |
-| --- | --- | --- | --- | --- |
-| com.leejustin.carriage.unlock | Unlock | Unlock Carriage | Unlimited pages, forever. One purchase, no subscription. | $6.99 |
-| com.leejustin.carriage.pack.paperink | Paper and Ink Pack | Paper & Ink | Cream, onion skin and carbon copy paper, with red, faded and carbon blue ribbons. | $1.99 |
-| com.leejustin.carriage.pack.sounds | Machine Sounds Pack | Machine Sounds | Three more machines: an office upright, an electric and a tin traveller. | $1.99 |
+One non-consumable, nothing else. Every paper, ribbon and machine is in the free version; the free version is limited to three pages.
 
-Each needs a review screenshot. They're in `docs/screenshots/purchases/`: `unlock.png` (the unlock letter) for the unlock, and `packs.png` (the supply shop) for both packs. `scripts/screenshots.sh` makes them again.
+| Product ID | Reference name | Display name | Description (55) | Price |
+| --- | --- | --- | --- | --- |
+| com.carriage.app.unlock | Unlock | Unlock Carriage | Unlimited pages forever. One purchase, no subscription. | $6.99 |
+
+Review screenshot: `docs/screenshots/purchases/unlock.png` (the unlock letter). `scripts/screenshots.sh` makes it again.
 
 ## Screenshots
 
