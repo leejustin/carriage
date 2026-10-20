@@ -4,7 +4,12 @@ import TipKit
 /// The first-run tour: four typed cards. On a regular iPhone the first card says Carriage is made for iPhone Duo.
 struct OnboardingView: View {
     @Environment(AppModel.self) private var model
+    #if DEBUG
+    /// `-onboardingPage 2` opens the tour on that card, for checking it.
+    @State private var page = UserDefaults.standard.integer(forKey: "onboardingPage")
+    #else
     @State private var page = 0
+    #endif
 
     private var cards: [Card] {
         [
@@ -20,7 +25,8 @@ struct OnboardingView: View {
                  text: "In Free mode, delete works. In Typewriter mode there is no delete: X-OUT types an x over your mistake and you keep going. Switch with the lever at the top of the page."),
             Card(symbol: "arrow.right.to.line", kicker: "LIKE THE REAL THING",
                  title: "Push the carriage.",
-                 text: "Drag the paper to the right to return the carriage, or press RETURN. The bell rings near the margin. Double-tap a word to underline it."),
+                 text: "The bell rings near the margin. Drag the paper to the right to return the carriage, or press RETURN. How should the carriage move?",
+                 choosesCarriage: true),
             Card(symbol: "moon", kicker: "MAKE IT QUIET",
                  title: "Just you and the page.",
                  text: "Tap the moon for Focus: the controls, counts and messages go away until you tap the paper. Then let iOS silence your notifications whenever Carriage is open."),
@@ -90,10 +96,13 @@ struct OnboardingView: View {
         var kicker: String
         var title: String
         var text: String
+        /// Shows the carriage choices under the text.
+        var choosesCarriage = false
     }
 
     private struct CardView: View {
         var card: Card
+        @Environment(AppModel.self) private var model
 
         var body: some View {
             ScrollView {
@@ -112,6 +121,9 @@ struct OnboardingView: View {
                     Text(card.text)
                         .font(.typewriter(16))
                         .lineSpacing(3)
+                    if card.choosesCarriage {
+                        carriageChoices
+                    }
                 }
                 .foregroundStyle(Color.ink)
                 .padding(28)
@@ -128,6 +140,40 @@ struct OnboardingView: View {
                 .frame(maxWidth: .infinity)
             }
             .scrollBounceBehavior(.basedOnSize)
+        }
+
+        /// Gentle first: it's the default. The same choice lives in Settings › The page › Carriage.
+        private var carriageChoices: some View {
+            VStack(spacing: 8) {
+                ForEach([CarriageTravel.gentle, .classic, .fixed]) { travel in
+                    let chosen = model.settings.carriage == travel
+                    Button {
+                        model.settings.carriage = travel
+                        SoundEngine.shared.play(.carriageReturn, gain: 0.5)
+                    } label: {
+                        HStack(alignment: .top, spacing: 12) {
+                            Image(systemName: chosen ? "largecircle.fill.circle" : "circle")
+                                .foregroundStyle(chosen ? Color.ribbonRed : Color.inkSoft)
+                                .font(.system(size: 18))
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(travel == .gentle ? "\(travel.name) (recommended)" : travel.name)
+                                    .font(Legend.font(size: 14))
+                                    .tracking(1)
+                                Text(travel.detail)
+                                    .font(.typewriter(13))
+                                    .foregroundStyle(Color.inkSoft)
+                            }
+                            Spacer(minLength: 0)
+                        }
+                        .padding(12)
+                        .background(RoundedRectangle(cornerRadius: 10).stroke(chosen ? Color.ribbonRed : Color.inkSoft.opacity(0.3), lineWidth: chosen ? 1.5 : 1))
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(chosen ? .isSelected : [])
+                }
+            }
+            .padding(.top, 4)
         }
     }
 }
