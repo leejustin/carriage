@@ -31,7 +31,7 @@ shoot() {
   xcrun simctl terminate "$UDID" com.carriage.app 2>/dev/null || true
   xcrun simctl uninstall "$UDID" com.carriage.app 2>/dev/null || true
   xcrun simctl install "$UDID" "$APP"
-  xcrun simctl launch "$UDID" com.carriage.app -seedDemo -seenOnboarding YES -foldSimulation "$FOLD" "$@" >/dev/null
+  xcrun simctl launch "$UDID" com.carriage.app -seedDemo -seenOnboarding YES -foldSimulation "$FOLD" ${UNLOCKED--unlocked} "$@" >/dev/null
   sleep ${WAIT:-4}
   xcrun simctl io "$UDID" screenshot "$OUT/$name.png" >/dev/null 2>&1
   echo "  $name"
@@ -48,7 +48,7 @@ shoot 05-cherry -finish cherry -keyboardStyle split
 if [[ "$DEVICE" != *Duo* ]]; then
   OUT="$ROOT/docs/screenshots/purchases"
   mkdir -p "$OUT"
-  shoot unlock -screenshotScene paywall
+  UNLOCKED= shoot unlock -screenshotScene paywall
 fi
 xcrun simctl status_bar "$UDID" clear
 

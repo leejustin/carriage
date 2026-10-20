@@ -6,10 +6,11 @@ import StoreKit
 enum Monetization {
     /// Paid up front: everything is unlocked.
     case upfront
-    /// Free to try: three pages, then a one-time unlock.
-    case freemium(freePages: Int)
+    /// Free to try: the first words written, then a one-time unlock. Counted from the writing history, so
+    /// deleting never earns words back; imported text doesn't count.
+    case freemium(freeWords: Int)
 
-    static let current: Monetization = .freemium(freePages: 3)
+    static let current: Monetization = .freemium(freeWords: 5000)
 }
 
 enum ProductID {
@@ -19,7 +20,7 @@ enum ProductID {
 }
 
 /// StoreKit 2: one non-consumable unlock. Every paper, ribbon and machine is included from the first page;
-/// the free version only limits how many pages there are. No subscriptions, no ads.
+/// the free version only limits how many words are written. No subscriptions, no ads.
 @Observable
 final class Store {
     private(set) var products: [String: Product] = [:]
@@ -42,11 +43,15 @@ final class Store {
 
     var isUnlocked: Bool {
         if case .upfront = Monetization.current { return true }
+        #if DEBUG
+        // `-unlocked`: App Store screenshots of the machine, without the free-words note.
+        if ProcessInfo.processInfo.arguments.contains("-unlocked") { return true }
+        #endif
         return purchased.contains(ProductID.unlock)
     }
 
-    var freePageLimit: Int? {
-        if case let .freemium(pages) = Monetization.current, !isUnlocked { return pages }
+    var freeWordLimit: Int? {
+        if case let .freemium(words) = Monetization.current, !isUnlocked { return words }
         return nil
     }
 

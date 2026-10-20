@@ -44,6 +44,8 @@ final class AppModel {
         engine.onSyncNotice = { [weak self] message in self?.toast = Toast(text: message, symbol: "arrow.triangle.2.circlepath") }
         engine.onMarginBell = { [weak self] in self?.teachCarriagePush() }
         engine.onCarriagePushed = { UserDefaults.standard.set(true, forKey: "pushedCarriage") }
+        engine.onPause = { [weak self] endOfLine in self?.checkFreeWords(endOfLine: endOfLine) }
+        engine.onLockedKey = { [weak self] in self?.showPaywall = true }
         stats.onChange = { [weak self] in self?.publishStats() }
         focus.onFinish = { [weak self] in self?.focusFinished() }
         #if DEBUG
@@ -78,7 +80,10 @@ final class AppModel {
         DemoContent.exportPDFIfRequested(engine.page, settings: settings)
         DemoContent.stageScreenshotScene(self)
         #endif
-        Task { await store.load() }
+        Task {
+            await store.load()
+            updateTypingLock()
+        }
         Task {
             // Give the hinge a moment to report, so the tour knows whether this is a Duo.
             try? await Task.sleep(for: .seconds(1.5))
@@ -170,15 +175,28 @@ final class AppModel {
 
     /// Pages ever started, so deleting pages doesn't reset the free allowance.
     /// Synced pages count too, so a reinstall doesn't reset it either.
-    var pagesUsed: Int {
-        let all = (try? context?.fetchCount(FetchDescriptor<Page>())) ?? 0
-        return max(all, UserDefaults.standard.integer(forKey: "pagesCreated"))
+    /// Free words left before the unlock, or nil once unlocked.
+    var freeWordsLeft: Int? {
+        guard let limit = store.freeWordLimit else { return nil }
+        return max(0, limit - stats.totalWords)
     }
 
     /// Whether a fresh sheet is allowed without the unlock.
-    var canStartPage: Bool {
-        guard let limit = store.freePageLimit else { return true }
-        return pagesUsed < limit
+    var canStartPage: Bool { freeWordsLeft != 0 }
+
+    /// Past the free words, the writer finishes the line (or a short paragraph's grace) before the letter.
+    func checkFreeWords(endOfLine: Bool) {
+        guard let limit = store.freeWordLimit, !engine.typingLocked, stats.totalWords >= limit else { return }
+        guard endOfLine || stats.totalWords >= limit + 150 else { return }
+        engine.typingLocked = true
+        engine.save()
+        showPaywall = true
+    }
+
+    /// Rests the keys when the free words are already used up (at launch, on another device), and frees them
+    /// once the unlock arrives.
+    func updateTypingLock() {
+        engine.typingLocked = freeWordsLeft == 0
     }
 
     var isPresentingSheet: Bool {
@@ -271,11 +289,9 @@ final class AppModel {
     }
 
     func makePage(notebookID: UUID? = nil) -> Page {
-        let used = pagesUsed
         let page = Page(mode: settings.defaultMode, paper: settings.defaultPaper, ink: settings.defaultInk)
         page.notebookID = notebookID
         context?.insert(page)
-        UserDefaults.standard.set(used + 1, forKey: "pagesCreated")
         try? context?.save()
         return page
     }

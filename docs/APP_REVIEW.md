@@ -14,7 +14,7 @@ Carriage is a distraction-free writing app that turns iPhone into a small typewr
 
 **Modes.** Free mode works like a normal editor. Typewriter mode has no delete: the X-OUT key types an x over the last character, and exports leave struck text out (plain text) or show it as ~~strikethrough~~ (Markdown).
 
-**Purchase (non-consumable, no subscriptions, no ads):** Unlock Carriage (`com.carriage.app.unlock`). Every paper, ribbon and machine sound is included in the free version; the free version is limited to three pages and the unlock removes the limit. To test: create three sheets (… › New Sheet), and the fourth shows the unlock letter. Restore Purchases is in Settings and on the unlock screen.
+**Purchase (non-consumable, no subscriptions, no ads):** Unlock Carriage (`com.carriage.app.unlock`). Every paper, ribbon and machine sound is included in the free version; the free version is the first 5,000 words written. Past that, the writer finishes the line, then the unlock letter appears and the keys rest until the unlock (reading, exporting and the library stay free). To see the letter without typing 5,000 words: Settings › Purchases › Unlock Carriage. Restore Purchases is in Settings and on the unlock screen.
 
 **Sounds** are synthesized on the device; no recordings from other apps are used.
 

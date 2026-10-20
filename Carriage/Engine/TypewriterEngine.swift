@@ -31,6 +31,12 @@ final class TypewriterEngine {
     /// The margin bell rang, so the end of the line is near.
     @ObservationIgnored var onMarginBell: (() -> Void)?
     @ObservationIgnored var onCarriagePushed: (() -> Void)?
+    /// Set when the free words are used up: the keys rest until the unlock.
+    @ObservationIgnored var typingLocked = false
+    /// A key was pressed while the keys rest.
+    @ObservationIgnored var onLockedKey: (() -> Void)?
+    /// A word or a line was finished: a natural place to stop for the unlock letter.
+    @ObservationIgnored var onPause: ((_ endOfLine: Bool) -> Void)?
 
     @ObservationIgnored private let settings: AppSettings
     @ObservationIgnored private let stats: WritingStats
@@ -207,6 +213,10 @@ final class TypewriterEngine {
     }
 
     private func type(_ text: String, fan: CGFloat) {
+        guard !typingLocked else {
+            onLockedKey?()
+            return
+        }
         // Sound and touch first; they're what makes a key feel instant.
         let whitespace = text == " " || text == "\t"
         SoundEngine.shared.play(whitespace ? .space : .key, pan: Float(fan * 2 - 1))
@@ -229,6 +239,7 @@ final class TypewriterEngine {
         paper.strike(fan: fan, character: text, at: range)
         ringMarginBellIfNeeded()
         didEdit()
+        if whitespace { onPause?(false) }
     }
 
     private func carriageReturn() {
@@ -243,6 +254,7 @@ final class TypewriterEngine {
         paper.syncCarriage(.carriageReturn(slide))
         bellRungOnLine = false
         didEdit()
+        onPause?(true)
     }
 
     private func deleteBackward() {
@@ -570,6 +582,10 @@ final class TypewriterEngine {
     fileprivate func shouldChange(range: NSRange, replacement: String) -> Bool {
         let storage = paper.textView.textStorage
         if paper.configuration.presentation == .typing { return false }
+        if typingLocked, !replacement.isEmpty {
+            onLockedKey?()
+            return false
+        }
         // Composing (Japanese, Chinese, Korean and the like) replaces marked text step by step; let it through.
         let composing = paper.textView.markedTextRange != nil
         if mode == .typewriter, range.length > 0, !composing {

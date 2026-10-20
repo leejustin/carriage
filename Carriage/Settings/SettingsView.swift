@@ -141,7 +141,7 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    if model.store.freePageLimit != nil {
+                    if model.store.freeWordLimit != nil {
                         Button("Unlock Carriage") { model.showPaywall = true }
                     }
                     Button("Restore purchases") { Task { await model.store.restore() } }

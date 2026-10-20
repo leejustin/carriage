@@ -46,7 +46,7 @@ YOUR WRITING, KEPT SAFE
 
 No subscription. No ads. No accounts. Nothing collected.
 
-Your first three pages are free, with every paper, ribbon and machine included. Unlock Carriage once for unlimited pages, forever.
+Your first 5,000 words are free, with every paper, ribbon and machine included. Unlock Carriage once and keep writing, forever.
 
 ## Keywords (100)
 
@@ -76,11 +76,11 @@ Data Not Collected. See docs/site/privacy.html, to be published at a public URL.
 
 ## In-app purchases
 
-One non-consumable, nothing else. Every paper, ribbon and machine is in the free version; the free version is limited to three pages.
+One non-consumable, nothing else. Every paper, ribbon and machine is in the free version; the free version is the first 5,000 words written.
 
 | Product ID | Reference name | Display name | Description (55) | Price |
 | --- | --- | --- | --- | --- |
-| com.carriage.app.unlock | Unlock | Unlock Carriage | Unlimited pages forever. One purchase, no subscription. | $6.99 |
+| com.carriage.app.unlock | Unlock | Unlock Carriage | Unlimited words forever. One purchase, no subscription. | $4.99 launch price, $7.99 from Oct 30, 2026 |
 
 Review screenshot: `docs/screenshots/purchases/unlock.png` (the unlock letter). `scripts/screenshots.sh` makes it again.
 

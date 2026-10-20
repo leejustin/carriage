@@ -56,8 +56,8 @@ struct LibraryView: View {
                         .buttonStyle(.plain)
                         .accessibilityHint("Shows your writing history.")
                     }
-                    if let limit = model.store.freePageLimit {
-                        FreePagesNote(used: model.pagesUsed, limit: limit)
+                    if let limit = model.store.freeWordLimit, let left = model.freeWordsLeft {
+                        FreeWordsNote(left: left, limit: limit)
                     }
                     notebookBar
                     if let currentNotebook {
@@ -328,15 +328,15 @@ struct RecentDaysChart: View {
     }
 }
 
-struct FreePagesNote: View {
+struct FreeWordsNote: View {
     @Environment(AppModel.self) private var model
-    var used: Int
+    var left: Int
     var limit: Int
 
     var body: some View {
         Button { model.showPaywall = true } label: {
             HStack {
-                Text(used >= limit ? "You've used your \(limit) free pages." : "\(max(0, limit - used)) of \(limit) free pages left.")
+                Text(left == 0 ? "You've typed your \(limit.formatted()) free words." : "\(left.formatted()) of \(limit.formatted()) free words left.")
                 Spacer()
                 Text("UNLOCK")
                     .font(Legend.font(size: 11))

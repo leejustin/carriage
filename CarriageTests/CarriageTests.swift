@@ -294,6 +294,10 @@ import Testing
         #expect(summary.longestStreak == 3)
         #expect(summary.currentStreak == 2)
         #expect(summary.wordsPerMinute == 60)
+        // The free allowance counts every word ever written, and keeps counting as words are added.
+        #expect(stats.totalWords == 3600)
+        stats.addWords(250)
+        #expect(stats.totalWords == 3850)
     }
 }
 

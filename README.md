@@ -43,6 +43,7 @@ The hinge (`UIHingeInteraction`) and fold-line (`reservedRegions(kind: .division
 | --- | --- |
 | `-foldSimulation halfOpen` | Fake a posture: `regular`, `closed`, `halfOpen`, `flat`, `flatBook` (also in Settings › Developer) |
 | `-seedDemo` | Fill an empty library with sample pages and two weeks of writing history |
+| `-unlocked` | Act as if the unlock is bought, for screenshots |
 | `-hardwareKeyboard` | Act as if a hardware keyboard is attached |
 | `-uiTesting` | Use an in-memory store |
 | `-seedLongPage` | Start with a 20,000-word page, for checking speed |

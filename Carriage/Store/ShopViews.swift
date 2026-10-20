@@ -7,12 +7,14 @@ struct PaywallView: View {
     @State private var working = false
 
     var body: some View {
-        let limit = model.store.freePageLimit ?? 3
+        let limit = model.store.freeWordLimit ?? 5000
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 Text("Dear writer,")
-                Text("You've filled your \(limit) free pages. Thank you for typing them here.")
-                Text("Carriage is a one-time purchase: no subscription and no ads. Unlock it once and every sheet is yours, on all your devices, for as long as you keep writing.")
+                Text(model.freeWordsLeft == 0
+                     ? "You've typed your first \(limit.formatted()) words here. Thank you for writing them on Carriage."
+                     : "Your first \(limit.formatted()) words are on the house, with every paper, ribbon and machine.")
+                Text("Carriage is a one-time purchase: no subscription and no ads. Unlock it once and every word after is yours, on all your devices, for as long as you keep writing.")
                 Text("Yours,")
                     .padding(.top, 6)
                 Text("Carriage")
@@ -24,15 +26,15 @@ struct PaywallView: View {
                         working = true
                         if await model.store.purchase(ProductID.unlock) {
                             SoundEngine.shared.play(.bell)
+                            model.updateTypingLock()
                             dismiss()
-                            model.newSheet()
                         }
                         working = false
                     }
                 } label: {
                     HStack {
                         if working { ProgressView().tint(.white) }
-                        Text("Unlock Carriage · \(model.store.price(ProductID.unlock) ?? "$6.99")")
+                        Text(model.store.price(ProductID.unlock).map { "Unlock Carriage · \($0)" } ?? "Unlock Carriage")
                     }
                     .font(Legend.font(size: 15))
                     .tracking(1.5)

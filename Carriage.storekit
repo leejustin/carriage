@@ -13,12 +13,12 @@
   "nonRenewingSubscriptions": [],
   "products": [
     {
-      "displayPrice": "6.99",
+      "displayPrice": "4.99",
       "familyShareable": false,
       "internalID": "6C1A2B01",
       "localizations": [
         {
-          "description": "Unlimited pages forever. One purchase, no subscription.",
+          "description": "Unlimited words forever. One purchase, no subscription.",
           "displayName": "Unlock Carriage",
           "locale": "en_US"
         }

@@ -6,6 +6,8 @@ import SwiftData
 @Observable
 final class WritingStats {
     private(set) var wordsToday = 0
+    /// Every word written, on every device, for the free allowance.
+    private(set) var totalWords = 0
     private(set) var streak = 0
     var goal: Int {
         didSet {
@@ -37,6 +39,7 @@ final class WritingStats {
             today = fetchDay(key)
         }
         wordsToday = today?.words ?? 0
+        totalWords = ((try? context?.fetch(FetchDescriptor<WritingDay>())) ?? []).reduce(0) { $0 + $1.words }
         recomputeStreak()
     }
 
@@ -56,6 +59,7 @@ final class WritingStats {
         today.words += count
         today.goal = goal
         wordsToday = today.words
+        totalWords += count
         let reached = goal > 0 && before < goal && today.words >= goal
         if reached { recomputeStreak() }
         return reached

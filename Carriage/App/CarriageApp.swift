@@ -139,6 +139,7 @@ private struct AppReactions: ViewModifier {
                 model.stats.goal = goal
                 model.publishStats()
             }
+            .onChange(of: model.store.purchased) { model.updateTypingLock() }
             .onChange(of: model.isPresentingSheet) { _, presenting in
                 // Keep hardware typing off the page while a sheet is up, and make sure the library, exports and
                 // anything else in the sheet see the last few keystrokes.
