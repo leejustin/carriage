@@ -78,6 +78,8 @@ final class PaperView: UIView {
     /// Called after the whole page is re-inked (which clears spelling underlines).
     var onRestyle: (() -> Void)?
     var onReturnLever: (() -> Void)?
+    /// The writer pushed the paper by hand to return the carriage (rather than pressing RETURN).
+    var onCarriagePushed: (() -> Void)?
 
     private(set) var configuration = PaperConfiguration()
     private(set) var metrics = PaperMetrics(fontSize: 14, advance: 8.4, margin: 50, paperWidth: 620, columns: 62)
@@ -393,7 +395,7 @@ final class PaperView: UIView {
         let edge: CGFloat = 8
         let textLeft = metrics.margin, textRight = p - metrics.margin
         if configuration.carriage != .classic, textRight - textLeft <= w - edge * 2 {
-            x = min(max(x, w - edge - textRight), edge - textLeft)
+            x = min(max(x, edge - textLeft), w - edge - textRight)
         }
         return x.rounded()
     }
@@ -452,6 +454,7 @@ final class PaperView: UIView {
             let threshold = max(44, dragTravel * 0.4)
             UIView.animate(withDuration: 0.2) { self.lever.transform = .identity }
             if pulled >= threshold || pan.velocity(in: self).x > 700 {
+                onCarriagePushed?()
                 onReturnLever?()
             } else {
                 UIView.animate(withDuration: 0.25, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0, options: [.allowUserInteraction]) {
