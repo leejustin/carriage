@@ -25,7 +25,6 @@ final class FoldProbeView: UIView {
         super.init(frame: frame)
         isUserInteractionEnabled = false
         backgroundColor = .clear
-        installHingeInteraction()
         registerForTraitChanges([UITraitHorizontalSizeClass.self, UITraitVerticalSizeClass.self]) { (view: FoldProbeView, _) in
             view.report()
         }
@@ -36,6 +35,8 @@ final class FoldProbeView: UIView {
 
     override func didMoveToWindow() {
         super.didMoveToWindow()
+        // The hinge interaction registers with the window's scene, so add it once there's a window.
+        if window != nil, interactions.isEmpty { installHingeInteraction() }
         report()
     }
 
