@@ -48,6 +48,7 @@ The hinge (`UIHingeInteraction`) and fold-line (`reservedRegions(kind: .division
 | `-seedLongPage` | Start with a 20,000-word page, for checking speed |
 | `-screenshotScene library\|focus\|paywall` | Open straight into a scene, for screenshots |
 | `-resetOnboarding` | Show the first-run tour again |
+| `-laptopPreview` | Lay out as a Duo turned on its side (fold across), for screenshots; Device Hub holds it like a book |
 
 ## Screenshots and store listing
 

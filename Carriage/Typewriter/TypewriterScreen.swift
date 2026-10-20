@@ -25,7 +25,21 @@ struct TypewriterScreen: View {
         GeometryReader { outer in
             let safe = outer.safeAreaInsets
             GeometryReader { proxy in
+                #if DEBUG
+                if DemoContent.laptopPreview {
+                    // The simulator holds the Duo like a book; turn the machine a quarter so it lays out as it does
+                    // on its side, the way a writer sets it down like a laptop. Screenshots get turned back.
+                    let turned = CGSize(width: proxy.size.height, height: proxy.size.width)
+                    desk(size: turned, safe: EdgeInsets())
+                        .frame(width: turned.width, height: turned.height)
+                        .rotationEffect(.degrees(90))
+                        .frame(width: proxy.size.width, height: proxy.size.height)
+                } else {
+                    desk(size: proxy.size, safe: safe)
+                }
+                #else
                 desk(size: proxy.size, safe: safe)
+                #endif
             }
             .ignoresSafeArea(.container)
         }

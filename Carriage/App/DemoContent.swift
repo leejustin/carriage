@@ -56,6 +56,9 @@ enum DemoContent {
         try? context.save()
     }
 
+    /// `-laptopPreview`: lay out as a Duo turned on its side, for screenshots on a simulator that can't be turned.
+    static let laptopPreview = ProcessInfo.processInfo.arguments.contains("-laptopPreview")
+
     /// Sets up a scene for App Store screenshots: `-screenshotScene library|focus|paywall`.
     static func stageScreenshotScene(_ model: AppModel) {
         guard let scene = UserDefaults.standard.string(forKey: "screenshotScene") else { return }
