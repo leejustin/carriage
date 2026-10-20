@@ -11,6 +11,7 @@ struct TypewriterScreen: View {
     /// False for a moment after launch: a Duo's hinge reports a beat after the first layout, and that first
     /// correction (say, regular to closed) should snap into place rather than animate.
     @State private var settled = false
+    @State private var suggestedLaptop = false
 
     private var night: Bool {
         switch model.settings.nightDesk {
@@ -65,6 +66,12 @@ struct TypewriterScreen: View {
             }
             .onChange(of: layout.kind) { old, new in
                 foldChanged(from: old, to: new)
+            }
+            .onChange(of: layout.kind == .flatSplit && model.fold.state.posture == .halfOpen) { _, heldLikeBook in
+                // Half-folded with the fold down the middle, like a book. Typing is better turned like a laptop.
+                guard heldLikeBook, !suggestedLaptop else { return }
+                suggestedLaptop = true
+                model.toast = Toast(text: "Turn it so the fold runs across to type like a laptop", symbol: "rotate.right")
             }
             #if DEBUG
             .onChange(of: layout, initial: true) { _, layout in
