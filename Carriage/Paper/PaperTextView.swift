@@ -64,11 +64,25 @@ final class PaperTextView: UITextView {
             sheet.layer.shadowPath = UIBezierPath(rect: sheet.bounds).cgPath
         }
         sendSubviewToBack(sheet)
-        strikeOverlay.frame = bounds
         strikeOverlay.layer.zPosition = 10
-        if bounds != lastOverlayBounds {
-            lastOverlayBounds = bounds
-            strikeOverlay.setNeedsDisplay()
+        syncStrikeOverlay()
+    }
+
+    // The page scrolls itself to the typing line (and when it changes size), sometimes between layout passes;
+    // the x's follow every move, not just the next layout.
+    override var contentOffset: CGPoint {
+        didSet { syncStrikeOverlay() }
+    }
+
+    private func syncStrikeOverlay() {
+        guard bounds != lastOverlayBounds else { return }
+        let widthChanged = bounds.width != lastOverlayBounds.width
+        lastOverlayBounds = bounds
+        strikeOverlay.frame = bounds
+        strikeOverlay.setNeedsDisplay()
+        // A new width rewraps every line; draw again once the rewrap has settled.
+        if widthChanged {
+            DispatchQueue.main.async { [weak self] in self?.strikeOverlay.setNeedsDisplay() }
         }
     }
 
@@ -82,6 +96,9 @@ final class PaperTextView: UITextView {
               let start = content.location(content.documentRange.location, offsetBy: range.location),
               let end = content.location(start, offsetBy: range.length),
               let textRange = NSTextRange(location: start, end: end) else { return [] }
+        // After the page changes width (a fold, a turn), TextKit lays the new lines out lazily; make sure these
+        // are laid out, or the x's land where the words used to be.
+        layout.ensureLayout(for: textRange)
         var rects: [CGRect] = []
         layout.enumerateTextSegments(in: textRange, type: .standard, options: []) { _, frame, _, _ in
             rects.append(frame.offsetBy(dx: self.textContainerInset.left, dy: self.textContainerInset.top))
@@ -135,7 +152,9 @@ private final class StrikeOverlayView: UIView {
     override func draw(_ rect: CGRect) {
         guard let textView, textView.textStorage.length > 0 else { return }
         let storage = textView.textStorage
-        let visible = textView.bounds
+        // Where this overlay sits on the page, which can trail the page's scroll position by a layout pass.
+        // Measuring from the overlay itself keeps every x on its letter either way.
+        let visible = frame
         let font = (storage.attribute(.font, at: 0, effectiveRange: nil) as? UIFont) ?? .monospacedSystemFont(ofSize: 14, weight: .regular)
         let attributes: [NSAttributedString.Key: Any] = [
             .font: font,
