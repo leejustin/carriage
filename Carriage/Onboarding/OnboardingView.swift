@@ -11,7 +11,7 @@ struct OnboardingView: View {
             model.isDuo
                 ? Card(symbol: "rectangle.split.1x2", kicker: "HALF-FOLD IT",
                        title: "Your Duo is now a typewriter.",
-                       text: "Fold it like a tiny laptop: the page rolls up on top, a full typewriter waits below. Open it flat for paper and keys side by side. Close it to read on the outer screen.")
+                       text: "Fold it like a tiny laptop: the page rolls up on top, a full typewriter waits below. Hold it like a book to read your pages as a spread. Close it to read on the outer screen.")
                 : Card(symbol: "rectangle.split.1x2", kicker: "MADE FOR IPHONE DUO",
                        title: "This is the pocket machine.",
                        text: "Carriage was made for iPhone Duo: half-fold a Duo and the bottom half becomes a full typewriter. On this iPhone you get the same paper, ink and sounds on a smaller deck."),

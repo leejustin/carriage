@@ -114,13 +114,16 @@ import Testing
         #expect(layout.presentation == .typing)
     }
 
-    @Test func flatWithVerticalFoldSplitsSideBySide() throws {
+    @Test func heldLikeABookReadsAsASpreadWithNoKeys() throws {
         let division = FoldDivision(frame: CGRect(x: 461, y: 0, width: 28, height: 669))
-        let fold = FoldState(posture: .flat, hasHinge: true, division: division)
-        let layout = DeskLayout.make(size: CGSize(width: 951, height: 669), fold: fold, useSystemKeyboard: false)
-        #expect(layout.kind == .flatSplit)
-        #expect(layout.paper.maxX <= 461)
-        #expect(try #require(layout.keyboard).minX >= 489)
+        for posture in [FoldPosture.flat, .halfOpen] {
+            let fold = FoldState(posture: posture, hasHinge: true, division: division)
+            let layout = DeskLayout.make(size: CGSize(width: 951, height: 669), fold: fold, useSystemKeyboard: false)
+            #expect(layout.kind == .book)
+            #expect(layout.keyboard == nil)
+            #expect(layout.paper.maxX <= 461)
+            #expect(try #require(layout.facing).minX >= 489)
+        }
     }
 
     @Test func closedIsForReadingAndEditing() {

@@ -80,14 +80,13 @@ struct ReadingSpreadView: View {
             Color(uiColor: model.settings.finish.shadow.mixed(with: .black, amount: 0.45))
             pageImage(spread * 2, in: left)
             pageImage(spread * 2 + 1, in: right)
-            Button {
-                withAnimation { model.showSpread = false }
-            } label: {
-                KnobLabel(symbol: "xmark")
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Close the spread")
-            .offset(x: left.minX + 14, y: left.minY + 14)
+            // Typing happens with the phone on its side; say so at the foot of the right-hand page.
+            Label("Turn it on its side to type", systemImage: "rotate.right")
+                .font(.typewriterFixed(14))
+                .foregroundStyle(Color.inkSoft)
+                .frame(width: right.width - 24)
+                .offset(x: right.minX + 12, y: right.maxY - 64)
+                .allowsHitTesting(false)
         }
         .ignoresSafeArea()
         .contentShape(Rectangle())
@@ -111,7 +110,14 @@ struct ReadingSpreadView: View {
 
     @ViewBuilder
     private func pageImage(_ index: Int, in frame: CGRect) -> some View {
-        if index < pages.count {
+        if index >= pages.count, index == spread * 2 + 1 || pages.isEmpty {
+            // Past the end of the draft: a blank facing sheet, so the spread still reads as a book.
+            Rectangle()
+                .fill(Color.paperWhite)
+                .frame(width: frame.width - 24, height: frame.height - 24)
+                .shadow(color: .black.opacity(0.3), radius: 8, y: 3)
+                .offset(x: frame.minX + 12, y: frame.minY + 12)
+        } else if index < pages.count {
             Image(uiImage: pages[index])
                 .resizable()
                 .frame(width: frame.width - 24, height: frame.height - 24)

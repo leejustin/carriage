@@ -23,7 +23,6 @@ final class AppModel {
     /// Shown on the closed Duo for a moment after folding shut: the page was saved.
     var foldCurtain: FoldCurtain?
     /// The two-page reading spread on a Duo opened flat like a book.
-    var showSpread = false
     /// Set when it's a good moment to ask for an App Store rating.
     var reviewRequestedAt: Date?
     var showFocusSetup = false

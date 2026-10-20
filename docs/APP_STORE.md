@@ -33,7 +33,7 @@ A BEAUTIFUL MACHINE
 
 MADE FOR IPHONE DUO
 • Half-fold it like a tiny laptop: the page on the top half, a full typewriter keyboard on the bottom.
-• Open it flat for paper and keys side by side, or read your draft as a two-page spread.
+• Hold it like a book and your draft becomes a two-page spread to read.
 • Close it and read on the outer screen. Fold it shut mid-sentence and your page is saved; open it and you're back where you were.
 • On every other iPhone, Carriage is a lovely pocket machine.
 
@@ -94,4 +94,4 @@ Upload `docs/screenshots/store-6.3/` (App Store Connect's main iPhone slot, 1206
 4. Write late, in peace. *Night desk: light ink on dark paper.*
 5. Every page, kept safe. *Notebooks, streaks, iCloud and Files.*
 
-iPhone Duo slot (2853 x 2007, the inner screen open flat): `docs/screenshots/iPhone-Duo/`, captured on the Duo simulator with `-seedDemo`. Focus, the seafoam machine, cherry and the night desk.
+iPhone Duo slot (2853 x 2007, or 2007 x 2853 turned for typing): to come. Typing is top and bottom only, so the shots need the Duo turned on its side in Device Hub (Rotate Left), half-folded like a laptop.

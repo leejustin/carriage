@@ -39,13 +39,6 @@ struct ControlsBar: View {
 
             ModeSwitch(mode: model.engine.mode, compact: layout.paper.width < 520) { model.engine.setMode($0) }
 
-            // Open flat like a book: read the page as a two-page spread.
-            if layout.kind == .flatSplit {
-                KnobButton(symbol: "book", label: "Read as a spread", active: model.showSpread) {
-                    withAnimation { model.showSpread.toggle() }
-                }
-            }
-
             KnobButton(symbol: model.focusMode.isOn ? "moon.fill" : "moon", label: model.focusMode.isOn ? "Leave focus" : "Focus",
                        active: model.focusMode.isOn) {
                 model.toggleFocus()

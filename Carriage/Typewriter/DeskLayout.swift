@@ -8,8 +8,9 @@ struct DeskLayout: Equatable {
         case hero
         /// Open flat with the fold across: paper above, keys below.
         case flatStacked
-        /// Open flat with the fold down the middle: paper on the left, keys on the right.
-        case flatSplit
+        /// Held like a book, the fold down the middle: the page as a two-page spread to read. Typing is top and
+        /// bottom only, so the keys wait until the phone is turned on its side.
+        case book
         /// A regular iPhone: paper over a smaller keyboard.
         case regular
         /// The outer screen: read and lightly edit with the system keyboard.
@@ -25,6 +26,8 @@ struct DeskLayout: Equatable {
     var keyboard: CGRect?
     /// The fold line, for drawing the hinge between the halves.
     var crease: CGRect?
+    /// The right-hand page when held like a book.
+    var facing: CGRect?
 
     var presentation: PaperPresentation {
         switch kind {
@@ -38,7 +41,7 @@ struct DeskLayout: Equatable {
     /// The maker's plate only fits on a full-size deck.
     var showsBadge: Bool {
         switch kind {
-        case .hero, .flatStacked, .flatSplit: true
+        case .hero, .flatStacked: true
         default: false
         }
     }
@@ -60,7 +63,7 @@ struct DeskLayout: Equatable {
                 return DeskLayout(kind: fold.posture == .halfOpen ? .hero : .flatStacked,
                                   paper: panes.first, keyboard: panes.second, crease: fold.division?.frame)
             case .vertical:
-                return DeskLayout(kind: .flatSplit, paper: panes.first, keyboard: panes.second, crease: fold.division?.frame)
+                return DeskLayout(kind: .book, paper: panes.first, crease: fold.division?.frame, facing: panes.second)
             }
         }
         // A regular iPhone, or a fold with no line to split on.

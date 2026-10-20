@@ -46,7 +46,7 @@ The hinge (`UIHingeInteraction`) and fold-line (`reservedRegions(kind: .division
 | `-hardwareKeyboard` | Act as if a hardware keyboard is attached |
 | `-uiTesting` | Use an in-memory store |
 | `-seedLongPage` | Start with a 20,000-word page, for checking speed |
-| `-screenshotScene library\|focus\|spread` | Open straight into a scene, for screenshots |
+| `-screenshotScene library\|focus\|paywall` | Open straight into a scene, for screenshots |
 | `-resetOnboarding` | Show the first-run tour again |
 
 ## Screenshots and store listing
