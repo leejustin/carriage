@@ -51,3 +51,10 @@ if [[ "$DEVICE" != *Duo* ]]; then
   shoot packs -screenshotScene shop
 fi
 xcrun simctl status_bar "$UDID" clear
+
+# App Store Connect's main iPhone slot takes 6.3-inch sizes; the 6.9-inch shots scale to 1206x2622 exactly.
+if [[ "$DEVICE" == *"Pro Max"* ]]; then
+  SMALL="$ROOT/docs/screenshots/iPhone-6.3"
+  mkdir -p "$SMALL"
+  for f in "$ROOT/docs/screenshots/${DEVICE// /-}"/*.png; do sips -z 2622 1206 "$f" --out "$SMALL/${f:t}" >/dev/null; done
+fi
