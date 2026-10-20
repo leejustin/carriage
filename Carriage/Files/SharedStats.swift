@@ -2,7 +2,7 @@ import Foundation
 
 /// Today's numbers, shared with the widgets through the app group.
 nonisolated enum SharedStats {
-    static let suite = "group.com.leejustin.carriage"
+    static let suite = "group.com.carriage.app"
 
     static func write(wordsToday: Int, goal: Int, streak: Int, lastLine: String, date: Date = .now) {
         guard let defaults = UserDefaults(suiteName: suite) else { return }

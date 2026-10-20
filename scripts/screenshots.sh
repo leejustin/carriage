@@ -27,10 +27,10 @@ FOLD=regular
 
 shoot() {
   local name=$1; shift
-  xcrun simctl terminate "$UDID" com.leejustin.carriage 2>/dev/null || true
-  xcrun simctl uninstall "$UDID" com.leejustin.carriage 2>/dev/null || true
+  xcrun simctl terminate "$UDID" com.carriage.app 2>/dev/null || true
+  xcrun simctl uninstall "$UDID" com.carriage.app 2>/dev/null || true
   xcrun simctl install "$UDID" "$APP"
-  xcrun simctl launch "$UDID" com.leejustin.carriage -seedDemo -seenOnboarding YES -foldSimulation "$FOLD" "$@" >/dev/null
+  xcrun simctl launch "$UDID" com.carriage.app -seedDemo -seenOnboarding YES -foldSimulation "$FOLD" "$@" >/dev/null
   sleep 4
   xcrun simctl io "$UDID" screenshot "$OUT/$name.png" >/dev/null 2>&1
   echo "  $name"
@@ -48,7 +48,6 @@ if [[ "$DEVICE" != *Duo* ]]; then
   OUT="$ROOT/docs/screenshots/purchases"
   mkdir -p "$OUT"
   shoot unlock -screenshotScene paywall
-  shoot packs -screenshotScene shop
 fi
 xcrun simctl status_bar "$UDID" clear
 

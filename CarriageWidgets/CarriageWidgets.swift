@@ -30,7 +30,7 @@ struct WritingProvider: TimelineProvider {
     }
 
     private func entry(at date: Date) -> WritingEntry {
-        let defaults = UserDefaults(suiteName: "group.com.leejustin.carriage")
+        let defaults = UserDefaults(suiteName: "group.com.carriage.app")
         let components = Calendar.current.dateComponents([.year, .month, .day], from: date)
         let key = String(format: "%04d-%02d-%02d", components.year ?? 0, components.month ?? 0, components.day ?? 0)
         let isToday = defaults?.string(forKey: "day") == key
