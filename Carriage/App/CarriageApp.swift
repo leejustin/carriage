@@ -81,7 +81,10 @@ struct RootView: View {
     }
 
     private func reactivate() {
-        DispatchQueue.main.async { model.engine.paper.activateHardwareInput() }
+        DispatchQueue.main.async {
+            model.engine.paper.activateHardwareInput()
+            model.engine.resettle()
+        }
     }
 }
 
@@ -131,7 +134,10 @@ private struct AppReactions: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .onChange(of: AppearanceSignature(model.settings)) { model.engine.applyConfiguration() }
+            .onChange(of: AppearanceSignature(model.settings)) {
+                model.engine.applyConfiguration()
+                model.engine.resettle()
+            }
             .onChange(of: AudioSignature(model.settings)) { model.applyAudioSettings() }
             .onChange(of: model.settings.spellCheck) { model.engine.refreshSpellCheck() }
             .onChange(of: model.settings.mirrorToFiles) { _, on in if on { model.mirrorAllPages() } }
@@ -146,6 +152,8 @@ private struct AppReactions: ViewModifier {
                 if presenting {
                     model.engine.save()
                     model.engine.paper.keyCatcher.resignFirstResponder()
+                } else {
+                    model.engine.resettle()
                 }
             }
             .onChange(of: model.engine.goalReachedAt) { _, date in

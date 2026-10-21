@@ -256,6 +256,9 @@ final class PaperView: UIView {
             styler.style(storage, range: NSRange(location: 0, length: storage.length))
             storage.endEditing()
             textView.refreshStrikes()
+            // Re-inking every character drops TextKit's layout; lay the typing end out again so the page
+            // doesn't sit blank until the next key.
+            textView.ensureLayoutNearEnd()
             onRestyle?()
         }
     }

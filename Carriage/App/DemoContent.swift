@@ -70,6 +70,16 @@ enum DemoContent {
             case "library": model.showLibrary = true
             case "focus": model.focusMode.toggle()
             case "paywall": model.showPaywall = true
+            case "settings":
+                // `-screenshotScene settings`: opens Settings and closes it again three seconds later, for
+                // checking what the page looks like after a sheet.
+                model.showSettings = true
+                if UserDefaults.standard.bool(forKey: "changeSetting") {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                        model.settings.lineSpacing = model.settings.lineSpacing == .single ? .oneAndHalf : .single
+                    }
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) { model.showSettings = false }
             default: break
             }
         }

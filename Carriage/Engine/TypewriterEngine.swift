@@ -121,6 +121,13 @@ final class TypewriterEngine {
 
     /// TextKit 2 refines its height estimates for a long page over the next few passes; line the typing line
     /// back up once it has.
+    /// Lines the page back up with the typing line, for after anything that may have moved or re-inked it
+    /// (a sheet, a menu, a settings change) without a key being pressed.
+    func resettle() {
+        guard page != nil else { return }
+        settleCarriage()
+    }
+
     private func settleCarriage() {
         for delay in [0.0, 0.15, 0.5] {
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
