@@ -171,7 +171,7 @@ private struct AppearanceSignature: Equatable {
     var values: [String]
 
     init(_ s: AppSettings) {
-        values = [s.finish.rawValue, s.typeface.rawValue, s.carriage.rawValue, "\(s.lineWidth.rawValue)", "\(s.lineSpacing.rawValue)", "\(s.typebarsOn)", s.keyboardStyle.rawValue, s.nightDesk.rawValue]
+        values = [s.finish.rawValue, s.typeface.rawValue, s.carriage.rawValue, "\(s.lineWidth.rawValue)", "\(s.lineSpacing.rawValue)", "\(s.typebarsOn)", s.keyboardStyle.rawValue, s.nightDesk.rawValue, s.engraving]
     }
 }
 
@@ -198,6 +198,6 @@ private struct AudioSignature: Equatable {
     var values: [String]
 
     init(_ s: AppSettings) {
-        values = ["\(s.soundsOn)", "\(s.volume)", "\(s.playsInSilentMode)", "\(s.hapticsOn)"]
+        values = ["\(s.soundsOn)", "\(s.volume)", "\(s.playsInSilentMode)", "\(s.hapticsOn)", s.ambience.rawValue]
     }
 }

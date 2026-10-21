@@ -4,9 +4,11 @@ import UniformTypeIdentifiers
 import WidgetKit
 
 /// Shown over the closed Duo for a moment after it folds shut: the cover comes down and the page is saved.
+/// Also the machine's first unveiling on first launch: its plate and serial number, then the cover lifts.
 struct FoldCurtain: Identifiable, Equatable {
     let id = UUID()
     var closing: Bool
+    var unveiling = false
 }
 
 extension AppModel {

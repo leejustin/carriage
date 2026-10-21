@@ -175,6 +175,7 @@ final class TypewriterEngine {
         c.inkSeed = page?.inkSeed ?? 1
         paper.configure(c)
         keyboard.finish = settings.finish
+        keyboard.engraving = settings.engraving
         keyboard.style = settings.keyboardStyle
         keyboard.reduceMotion = c.reduceMotion
         if c.presentation == .typing {

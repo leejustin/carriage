@@ -23,6 +23,14 @@ struct SettingsView: View {
                     } label: {
                         LabeledContent("Machine sound", value: model.settings.machineSound.name)
                     }
+                    TextField("Engrave your name on the plate", text: $settings.engraving)
+                        .textInputAutocapitalization(.words)
+                        .autocorrectionDisabled()
+                        .onChange(of: settings.engraving) { _, value in
+                            if value.count > 18 { settings.engraving = String(value.prefix(18)) }
+                        }
+                    LabeledContent("Serial number", value: String(format: "No. %06d", settings.serialNumber))
+                        .font(.typewriter(14))
                 } header: {
                     header("The machine")
                 }
@@ -76,7 +84,11 @@ struct SettingsView: View {
                         .accessibilityElement(children: .combine)
                         .accessibilityLabel("Volume")
                         Toggle("Play in Silent Mode", isOn: $settings.playsInSilentMode)
+                        Picker("Desk sound", selection: $settings.ambience) {
+                            ForEach(Ambience.allCases) { Text($0.name).tag($0) }
+                        }
                     }
+                    Toggle("Desk lamp", isOn: $settings.deskLamp)
                     Toggle("Haptics", isOn: $settings.hapticsOn)
                     Toggle("Margin bell", isOn: $settings.marginBell)
                     Toggle("Bell on return", isOn: $settings.bellOnReturn)

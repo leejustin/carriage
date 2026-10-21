@@ -38,6 +38,15 @@ final class AppSettings {
     /// Dark paper with light ink.
     var nightDesk: NightDesk { didSet { save(nightDesk.rawValue, "nightDesk") } }
 
+    /// A name engraved on the machine's brass plate, beside CARRIAGE. Empty for a plain plate.
+    var engraving: String { didSet { save(engraving, "engraving") } }
+    /// This machine's serial number, stamped once on first launch.
+    let serialNumber: Int
+    /// The ambient sound under the keys.
+    var ambience: Ambience { didSet { save(ambience.rawValue, "ambience") } }
+    /// A warm lamp over the desk that follows the time of day.
+    var deskLamp: Bool { didSet { save(deskLamp, "deskLamp") } }
+
     /// Daily word goal; 0 means no goal.
     var dailyGoal: Int { didSet { save(dailyGoal, "dailyGoal") } }
     var focusMinutes: Int { didSet { save(focusMinutes, "focusMinutes") } }
@@ -74,6 +83,15 @@ final class AppSettings {
         keyboardStyle = value("keyboardStyle", .full)
         mirrorToFiles = bool("mirrorToFiles", true)
         nightDesk = value("nightDesk", .system)
+        engraving = defaults.string(forKey: "engraving") ?? ""
+        if let serial = defaults.object(forKey: "serialNumber") as? Int {
+            serialNumber = serial
+        } else {
+            serialNumber = Int.random(in: 1_000...99_999)
+            defaults.set(serialNumber, forKey: "serialNumber")
+        }
+        ambience = value("ambience", .off)
+        deskLamp = bool("deskLamp", true)
         dailyGoal = defaults.object(forKey: "dailyGoal") as? Int ?? 500
         focusMinutes = defaults.object(forKey: "focusMinutes") as? Int ?? 25
     }

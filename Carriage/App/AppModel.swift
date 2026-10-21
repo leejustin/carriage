@@ -73,6 +73,7 @@ final class AppModel {
             UserDefaults.standard.removeObject(forKey: "hasSeenHinge")
             UserDefaults.standard.removeObject(forKey: "pushedCarriage")
             UserDefaults.standard.removeObject(forKey: "carriagePushHints")
+            UserDefaults.standard.removeObject(forKey: "unveiled")
         }
         #endif
         loadNextPage(feed: false, explainLimit: false)
@@ -83,6 +84,11 @@ final class AppModel {
         Task {
             await store.load()
             updateTypingLock()
+        }
+        // A new machine arrives under its cover.
+        if !UserDefaults.standard.bool(forKey: "unveiled"), !UserDefaults.standard.bool(forKey: "seenOnboarding") {
+            UserDefaults.standard.set(true, forKey: "unveiled")
+            foldCurtain = FoldCurtain(closing: false, unveiling: true)
         }
         Task {
             // Give the hinge a moment to report, so the tour knows whether this is a Duo.
@@ -327,6 +333,7 @@ final class AppModel {
 
     func applyAudioSettings() {
         SoundEngine.shared.isEnabled = settings.soundsOn
+        SoundEngine.shared.ambience = settings.ambience
         SoundEngine.shared.volume = Float(settings.volume)
         SoundEngine.shared.playsInSilentMode = settings.playsInSilentMode
         Haptics.shared.isEnabled = settings.hapticsOn

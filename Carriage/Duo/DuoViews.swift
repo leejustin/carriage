@@ -13,7 +13,7 @@ struct FoldCurtainView: View {
                 .fill(LinearGradient(colors: [Color(uiColor: finish.highlight), Color(uiColor: finish.body), Color(uiColor: finish.shadow)],
                                      startPoint: .top, endPoint: .bottom))
             VStack(spacing: 14) {
-                Text("CARRIAGE")
+                Text(plate)
                     .font(Legend.fixedFont(size: 13))
                     .tracking(5)
                     .foregroundStyle(Color(hex: 0x3B2A12))
@@ -25,18 +25,33 @@ struct FoldCurtainView: View {
                         .font(Legend.fixedFont(size: 12))
                         .tracking(4)
                         .foregroundStyle(Color(uiColor: finish.printColor).opacity(0.8))
+                } else if curtain.unveiling {
+                    Text(String(format: "No. %06d", model.settings.serialNumber))
+                        .font(.typewriterFixed(13))
+                        .tracking(2)
+                        .foregroundStyle(Color(uiColor: finish.printColor).opacity(0.75))
                 }
             }
         }
         .ignoresSafeArea()
         .transition(.move(edge: .top))
         .task(id: curtain.id) {
-            try? await Task.sleep(for: .seconds(curtain.closing ? 0.9 : 0.5))
-            withAnimation(.easeInOut(duration: 0.45)) {
+            try? await Task.sleep(for: .seconds(curtain.closing ? 0.9 : curtain.unveiling ? 1.3 : 0.5))
+            if curtain.unveiling {
+                // The case latches let go and the lid comes off.
+                SoundEngine.shared.play(.shift)
+                Haptics.shared.paperRelease()
+            }
+            withAnimation(.easeInOut(duration: curtain.unveiling ? 0.7 : 0.45)) {
                 if model.foldCurtain?.id == curtain.id { model.foldCurtain = nil }
             }
         }
         .accessibilityLabel(curtain.closing ? "Page saved" : "")
+    }
+
+    private var plate: String {
+        let name = model.settings.engraving.trimmingCharacters(in: .whitespacesAndNewlines)
+        return name.isEmpty ? "CARRIAGE" : "CARRIAGE · \(name.uppercased())"
     }
 }
 

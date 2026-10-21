@@ -13,6 +13,15 @@ final class KeyboardView: UIView {
     var shiftState: ShiftState = .off { didSet { if shiftState != oldValue { refreshCaps() } } }
     var reduceMotion = false
     var showsBadge = true { didSet { badge.isHidden = !showsBadge } }
+    /// The writer's name on the plate, beside CARRIAGE.
+    var engraving = "" {
+        didSet {
+            guard engraving != oldValue else { return }
+            badge.engraving = engraving
+            lastLayoutSize = .zero
+            setNeedsLayout()
+        }
+    }
     /// Full or split. Split only applies where the deck is wide enough (see `KeyLayout.Variant`).
     var style: KeyboardStyle = .full {
         didSet {
@@ -165,12 +174,13 @@ final class KeyboardView: UIView {
             }
         }
         let gap = blocks.count == 2 ? (origins[1] - origins[0] - blockWidth) : 0
+        let plateWidth = min(badge.preferredWidth(height: 18), max(104, (blocks.count == 2 ? gap - 8 : area.width * 0.6)))
         if badgeHeight > 0 {
             badge.isHidden = !showsBadge
-            badge.frame = CGRect(x: bounds.midX - 52, y: originY + usedHeight + 2, width: 104, height: 18)
+            badge.frame = CGRect(x: bounds.midX - plateWidth / 2, y: originY + usedHeight + 2, width: plateWidth, height: 18)
         } else if gap > 112, area.height > 300 {
             badge.isHidden = !showsBadge
-            badge.frame = CGRect(x: bounds.midX - 52, y: originY + usedHeight / 2 - 9, width: 104, height: 18)
+            badge.frame = CGRect(x: bounds.midX - plateWidth / 2, y: originY + usedHeight / 2 - 9, width: plateWidth, height: 18)
         } else {
             badge.isHidden = true
         }
@@ -411,6 +421,26 @@ final class KeyCapView: UIView {
 /// The little brass maker's plate on the deck.
 final class BadgeView: UIView {
     var finish: MachineFinish = .seafoam { didSet { setNeedsDisplay() } }
+    var engraving = "" { didSet { setNeedsDisplay() } }
+
+    private var text: String {
+        let name = engraving.trimmingCharacters(in: .whitespacesAndNewlines)
+        return name.isEmpty ? "CARRIAGE" : "CARRIAGE · \(name.uppercased())"
+    }
+
+    private func attributes(height: CGFloat) -> [NSAttributedString.Key: Any] {
+        [
+            .font: Legend.uiFont(size: (height - 2) * 0.56),
+            .foregroundColor: UIColor(hex: 0x3B2A12),
+            .kern: (height - 2) * 0.24,
+        ]
+    }
+
+    /// Wide enough for the engraving, with brass to spare at the ends.
+    func preferredWidth(height: CGFloat) -> CGFloat {
+        let size = NSAttributedString(string: text, attributes: attributes(height: height)).size()
+        return max(104, (size.width + height * 1.6).rounded(.up))
+    }
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -439,13 +469,13 @@ final class BadgeView: UIView {
         ] as CFArray, locations: [0, 0.45, 0.6, 1])!
         cg.drawLinearGradient(brass, start: CGPoint(x: 0, y: plate.minY), end: CGPoint(x: 0, y: plate.maxY), options: [])
         cg.restoreGState()
-        let attributes: [NSAttributedString.Key: Any] = [
-            .font: Legend.uiFont(size: plate.height * 0.56),
-            .foregroundColor: UIColor(hex: 0x3B2A12),
-            .kern: plate.height * 0.24,
-        ]
-        let text = NSAttributedString(string: "CARRIAGE", attributes: attributes)
-        let size = text.size()
-        text.draw(at: CGPoint(x: plate.midX - size.width / 2 + plate.height * 0.12, y: plate.midY - size.height / 2))
+        // Stamped into the brass: a light edge below each letter, then the dark fill.
+        let label = NSMutableAttributedString(string: text, attributes: attributes(height: bounds.height))
+        let size = label.size()
+        let origin = CGPoint(x: plate.midX - size.width / 2 + plate.height * 0.12, y: plate.midY - size.height / 2)
+        let highlight = NSMutableAttributedString(attributedString: label)
+        highlight.addAttribute(.foregroundColor, value: UIColor(white: 1, alpha: 0.35), range: NSRange(location: 0, length: highlight.length))
+        highlight.draw(at: CGPoint(x: origin.x, y: origin.y + 0.6))
+        label.draw(at: origin)
     }
 }
