@@ -221,6 +221,7 @@ final class KeyboardView: UIView {
             guard let cap = active.removeValue(forKey: touch) else { continue }
             if !active.values.contains(where: { $0 === cap }) {
                 cap.setPressed(false, reduceMotion: reduceMotion)
+                Haptics.shared.keyUp()
             }
             if cap.spec.action == .delete { stopRepeat() }
         }

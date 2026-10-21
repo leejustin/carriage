@@ -226,7 +226,8 @@ final class AppModel {
         guard let page = engine.page, !isFiling else { return }
         isFiling = true
         engine.save()
-        SoundEngine.shared.play(.paperFeed, gain: 0.8)
+        SoundEngine.shared.play(.paperRelease)
+        Haptics.shared.paperRelease()
         engine.paper.pullOut { [self] in
             page.isFiled = true
             try? context?.save()

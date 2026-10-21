@@ -113,6 +113,7 @@ final class TypewriterEngine {
         updateAutoShift()
         if feed {
             SoundEngine.shared.play(.paperFeed)
+            Haptics.shared.paperFeed()
             paper.feedIn()
         }
         scheduleSpellCheck()
@@ -360,6 +361,7 @@ final class TypewriterEngine {
         guard settings.marginBell, !bellRungOnLine, paper.currentColumn >= paper.metrics.bellColumn else { return }
         bellRungOnLine = true
         SoundEngine.shared.play(.bell)
+        Haptics.shared.bell()
         onMarginBell?()
     }
 
