@@ -26,7 +26,9 @@ struct TypewriterScreen: View {
             let safe = outer.safeAreaInsets
             GeometryReader { proxy in
                 #if DEBUG
-                if DemoContent.laptopPreview {
+                // Only while the window is sideways (the Duo held like a book), so a Duo that has really been turned
+                // on its side is never turned twice.
+                if DemoContent.laptopPreview, proxy.size.width > proxy.size.height {
                     // The simulator holds the Duo like a book; turn the machine a quarter so it lays out as it does
                     // on its side, the way a writer sets it down like a laptop. Screenshots get turned back.
                     let turned = CGSize(width: proxy.size.height, height: proxy.size.width)
