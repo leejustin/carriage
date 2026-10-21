@@ -1,4 +1,6 @@
 import Foundation
+import UIKit
+import UniformTypeIdentifiers
 
 /// Turns a page into plain text and Markdown.
 nonisolated enum TextExport {
@@ -88,5 +90,28 @@ nonisolated enum TextExport {
             atLineStart = character == "\n" || (atLineStart && (character == " " || character == "\t"))
         }
         return out
+    }
+
+    /// A pasteboard item with the page as rich text, struck and underlined runs marked, and a plain-text fallback
+    /// that keeps the strikes as ~~Markdown~~.
+    static func richPasteboardItem(body: String, strikes: [NSRange], underlines: [NSRange]) -> [String: Any] {
+        let text = NSMutableAttributedString(string: body, attributes: [.font: UIFont(name: "CourierPrime-Regular", size: 14) ?? UIFont.monospacedSystemFont(ofSize: 14, weight: .regular)])
+        let all = NSRange(location: 0, length: text.length)
+        for range in StrikeRanges.merge(strikes) {
+            let r = NSIntersectionRange(range, all)
+            if r.length > 0 { text.addAttribute(.strikethroughStyle, value: NSUnderlineStyle.single.rawValue, range: r) }
+        }
+        for range in StrikeRanges.merge(underlines) {
+            let r = NSIntersectionRange(range, all)
+            if r.length > 0 { text.addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: r) }
+        }
+        var item: [String: Any] = [UTType.utf8PlainText.identifier: markdown(title: "", body: body, strikes: strikes, underlines: underlines).trimmingCharacters(in: .whitespacesAndNewlines)]
+        if let rtf = try? text.data(from: all, documentAttributes: [.documentType: NSAttributedString.DocumentType.rtf]) {
+            item[UTType.rtf.identifier] = rtf
+        }
+        if let html = try? text.data(from: all, documentAttributes: [.documentType: NSAttributedString.DocumentType.html]) {
+            item[UTType.html.identifier] = html
+        }
+        return item
     }
 }

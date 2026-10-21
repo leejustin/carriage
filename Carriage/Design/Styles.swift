@@ -189,7 +189,8 @@ enum KeyboardStyle: String, CaseIterable, Identifiable, Codable {
 }
 
 enum TypingMode: String, CaseIterable, Identifiable, Codable {
-    /// Delete works as you'd expect.
+    /// Delete works as you'd expect. Called Correcting, after the typewriters that could lift a letter off the page;
+    /// stored as "free" from before the rename.
     case free
     /// No delete: the delete key types an x over the last character instead.
     case typewriter
@@ -198,15 +199,15 @@ enum TypingMode: String, CaseIterable, Identifiable, Codable {
 
     var name: String {
         switch self {
-        case .free: "Free"
+        case .free: "Correcting"
         case .typewriter: "Typewriter"
         }
     }
 
     var detail: String {
         switch self {
-        case .free: "Delete works."
-        case .typewriter: "No delete. Strike through with x and keep going."
+        case .free: "Backspace lifts the letter off, like a correcting typewriter."
+        case .typewriter: "No delete, like the real thing: X-OUT strikes through with an x and you keep going."
         }
     }
 }

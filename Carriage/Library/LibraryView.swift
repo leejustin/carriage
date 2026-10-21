@@ -259,7 +259,10 @@ struct LibraryView: View {
         }
         Button("Print", systemImage: "printer") { model.print(page) }
         Button("Send to Notes", systemImage: "note.text") { model.sendToNotes(page) }
-        Button("Copy Text", systemImage: "doc.on.doc") { model.copyText(page) }
+        Menu("Copy Text", systemImage: "doc.on.doc") {
+            Button("Clean Copy", systemImage: "doc.on.doc") { model.copyText(page, asTyped: false) }
+            Button("As Typed, with Strikes", systemImage: "strikethrough") { model.copyText(page, asTyped: true) }
+        }
         Divider()
         if page.isFiled {
             Button("Move to Drafts", systemImage: "tray.and.arrow.up") { page.isFiled = false }

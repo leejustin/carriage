@@ -12,7 +12,7 @@ Carriage is a distraction-free writing app that turns iPhone into a small typewr
 
 **Also in the app:** notebooks and a daily journal page; version history and Markdown copies in Files (iCloud Drive › Carriage); import of text files; print and share-as-image; widgets and Siri shortcuts ("Start writing in Carriage"); a night desk; a two-page reading spread when the Duo is held like a book.
 
-**Modes.** Free mode works like a normal editor. Typewriter mode has no delete: the X-OUT key types an x over the last character, and exports leave struck text out (plain text) or show it as ~~strikethrough~~ (Markdown).
+**Modes.** Typewriter mode is the default. Correcting mode works like a normal editor (backspace works). Typewriter mode has no delete: the X-OUT key types an x over the last character, and exports leave struck text out (plain text) or show it as ~~strikethrough~~ (Markdown).
 
 **Purchase (non-consumable, no subscriptions, no ads):** Unlock Carriage (`com.carriage.app.unlock`). Every paper, ribbon and machine sound is included in the free version; the free version is the first 5,000 words written. Past that, the writer finishes the line, then the unlock letter appears and the keys rest until the unlock (reading, exporting and the library stay free). To see the letter without typing 5,000 words: Settings › Purchases › Unlock Carriage. Restore Purchases is in Settings and on the unlock screen.
 

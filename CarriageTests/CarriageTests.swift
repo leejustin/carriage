@@ -4,6 +4,8 @@ import FoldKit
 import SwiftData
 import Testing
 @testable import Carriage
+import UniformTypeIdentifiers
+import UIKit
 
 @Suite struct ExportTests {
     @Test func plainTextDropsStruckWordsAndTheirGap() {
@@ -333,5 +335,23 @@ import Testing
             #expect(rms > 0.002 && rms < 0.2, "\(ambience) RMS \(rms)")
             #expect(abs(samples[10]) < 0.01, "\(ambience) should fade in")
         }
+    }
+}
+
+@Suite struct CopyTests {
+    /// "As typed" keeps the x-ed out word, struck through in rich text and as ~~Markdown~~ in plain text.
+    @Test func copyAsTypedKeepsStrikes() throws {
+        let body = "It was the teh summer."
+        let strike = NSRange(location: 11, length: 3)
+        let item = TextExport.richPasteboardItem(body: body, strikes: [strike], underlines: [])
+        let plain = try #require(item[UTType.utf8PlainText.identifier] as? String)
+        #expect(plain.contains("~~teh~~"))
+        let rtf = try #require(item[UTType.rtf.identifier] as? Data)
+        let text = try NSAttributedString(data: rtf, options: [.documentType: NSAttributedString.DocumentType.rtf], documentAttributes: nil)
+        let style = text.attribute(.strikethroughStyle, at: 12, effectiveRange: nil) as? Int
+        #expect(style == NSUnderlineStyle.single.rawValue)
+        #expect(text.attribute(.strikethroughStyle, at: 3, effectiveRange: nil) == nil)
+        // The clean copy leaves it out.
+        #expect(TextExport.plainText(body: body, strikes: [strike]) == "It was the summer.")
     }
 }

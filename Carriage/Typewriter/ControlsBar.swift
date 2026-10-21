@@ -137,7 +137,10 @@ struct ControlsBar: View {
             }
             Button("Print", systemImage: "printer") { model.print() }
             Button("Send to Notes", systemImage: "note.text") { model.sendToNotes() }
-            Button("Copy Text", systemImage: "doc.on.doc") { model.copyText() }
+            Menu("Copy Text", systemImage: "doc.on.doc") {
+                Button("Clean Copy", systemImage: "doc.on.doc") { model.copyText(asTyped: false) }
+                Button("As Typed, with Strikes", systemImage: "strikethrough") { model.copyText(asTyped: true) }
+            }
             Divider()
             Menu("Paper", systemImage: "doc") {
                 ForEach(PaperStyle.allCases) { style in
@@ -215,9 +218,9 @@ struct ModeSwitch: View {
         } label: {
             HStack(spacing: 0) {
                 if compact {
-                    segment(mode == .free ? "FREE" : "TYPEWRITER", active: true)
+                    segment(mode == .free ? "CORRECTING" : "TYPEWRITER", active: true)
                 } else {
-                    segment("FREE", active: mode == .free)
+                    segment("CORRECTING", active: mode == .free)
                     segment("TYPEWRITER", active: mode == .typewriter)
                 }
             }
@@ -228,7 +231,7 @@ struct ModeSwitch: View {
         .buttonStyle(.plain)
         .accessibilityLabel("Mode")
         .accessibilityValue(mode.name)
-        .accessibilityHint(mode == .free ? "Switches to Typewriter mode: no delete." : "Switches to Free mode: delete works.")
+        .accessibilityHint(mode == .free ? "Switches to Typewriter mode: no delete." : "Switches to Correcting mode: backspace works.")
     }
 
     private func segment(_ text: String, active: Bool) -> some View {
