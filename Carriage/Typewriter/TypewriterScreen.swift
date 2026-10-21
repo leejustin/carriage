@@ -150,6 +150,7 @@ private struct Desk: View {
             paper
             keys
             hinge
+            lamp
             hint
             readingFade
             glance
@@ -210,6 +211,33 @@ private struct Desk: View {
                 .offset(x: crease.minX, y: crease.minY)
                 .allowsHitTesting(false)
         }
+    }
+
+    /// The desk lamp: a warm pool over the paper that follows the hour, and the room falling off into shadow.
+    @ViewBuilder
+    private var lamp: some View {
+        if model.settings.deskLamp, layout.kind != .closed, layout.kind != .book {
+            TimelineView(.periodic(from: .now, by: 300)) { context in
+                DeskLight(hour: lampHour(at: context.date), center: lampCenter)
+            }
+            .frame(width: size.width, height: size.height)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+        }
+    }
+
+    private func lampHour(at date: Date) -> Int {
+        #if DEBUG
+        // `-lampHour 21`: see the lamp at another time of day.
+        if let hour = UserDefaults.standard.object(forKey: "lampHour") as? Int { return hour }
+        #endif
+        return Calendar.current.component(.hour, from: date)
+    }
+
+    /// Over the middle of the paper, a little above the typing line.
+    private var lampCenter: UnitPoint {
+        guard size.width > 0, size.height > 0 else { return .center }
+        return UnitPoint(x: layout.paper.midX / size.width, y: (layout.paper.minY + layout.paper.height * 0.45) / size.height)
     }
 
     @ViewBuilder
@@ -386,3 +414,30 @@ enum FoldCapture {
     }
 }
 #endif
+
+/// Light on the desk for the hour: barely there at midday, golden towards evening, a lamp's pool at night.
+struct DeskLight: View {
+    var hour: Int
+    var center: UnitPoint
+
+    private var tone: (warmth: Color, glow: Double, shade: Double) {
+        switch hour {
+        case 5..<9: (Color(red: 1, green: 0.95, blue: 0.86), 0.08, 0.10)
+        case 9..<17: (Color(red: 1, green: 0.98, blue: 0.94), 0.03, 0.07)
+        case 17..<20: (Color(red: 1, green: 0.76, blue: 0.46), 0.2, 0.26)
+        default: (Color(red: 1, green: 0.7, blue: 0.4), 0.24, 0.42)
+        }
+    }
+
+    var body: some View {
+        GeometryReader { proxy in
+            let reach = max(proxy.size.width, proxy.size.height)
+            ZStack {
+                RadialGradient(colors: [tone.warmth.opacity(tone.glow), tone.warmth.opacity(0)], center: center,
+                               startRadius: 0, endRadius: reach * 0.55)
+                RadialGradient(colors: [.clear, .clear, .black.opacity(tone.shade)], center: center,
+                               startRadius: 0, endRadius: reach * 0.85)
+            }
+        }
+    }
+}

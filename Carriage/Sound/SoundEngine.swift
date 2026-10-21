@@ -7,10 +7,16 @@ import os
 final class SoundEngine {
     static let shared = SoundEngine()
 
-    var isEnabled = true
+    var isEnabled = true { didSet { updateAmbience() } }
     var volume: Float = 0.85 {
-        didSet { engine.mainMixerNode.outputVolume = volume }
+        didSet {
+            engine.mainMixerNode.outputVolume = volume
+            updateAmbience()
+        }
     }
+    /// The sound of the room, under the keys.
+    var ambience: Ambience = .off { didSet { updateAmbience() } }
+    private let ambienceGenerator = AmbienceGenerator()
     /// Play even with the ring/silent switch set to silent.
     var playsInSilentMode = false {
         didSet { if oldValue != playsInSilentMode { configureSession() } }
@@ -58,6 +64,9 @@ final class SoundEngine {
             return player
         }
         nextVoice = 0
+        let room = AmbienceNode.make(format: format, generator: ambienceGenerator)
+        engine.attach(room)
+        try? engine.connectNode(room, to: engine.mainMixerNode, format: format)
         engine.mainMixerNode.outputVolume = volume
         engine.prepare()
         configurationObserver = NotificationCenter.default.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main) { [weak self] _ in
@@ -101,6 +110,11 @@ final class SoundEngine {
                 if let take = demo[kind]?.randomElement() { self?.play(take) }
             }
         }
+    }
+
+    /// The room sits well under the keys: it should be felt more than heard.
+    private func updateAmbience() {
+        ambienceGenerator.target = (ambience, isEnabled && ambience != .off ? 0.55 : 0)
     }
 
     /// Plays `kind` now. `pan` runs from -1 (left) to 1 (right) so keys sound where they sit.

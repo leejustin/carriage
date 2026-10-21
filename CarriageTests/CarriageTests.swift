@@ -316,3 +316,22 @@ import Testing
         #expect(pages.count > 3)
     }
 }
+
+@Suite struct AmbienceTests {
+    /// Every desk sound is there but quiet, never clips, and fades in rather than starting at full level.
+    @Test func ambienceIsAudibleQuietAndNeverClips() {
+        for ambience in [Ambience.room, .rain, .fire] {
+            let generator = AmbienceGenerator()
+            generator.prepare(sampleRate: 48_000)
+            generator.target = (ambience, 0.55)
+            var samples = [Float](repeating: 0, count: 96_000)
+            samples.withUnsafeMutableBufferPointer { generator.render(into: $0.baseAddress!, frames: $0.count) }
+            let peak = samples.map(abs).max() ?? 0
+            let settled = samples[48_000...]
+            let rms = (settled.reduce(0) { $0 + $1 * $1 } / Float(settled.count)).squareRoot()
+            #expect(peak < 0.9, "\(ambience) peaks at \(peak)")
+            #expect(rms > 0.002 && rms < 0.2, "\(ambience) RMS \(rms)")
+            #expect(abs(samples[10]) < 0.01, "\(ambience) should fade in")
+        }
+    }
+}
