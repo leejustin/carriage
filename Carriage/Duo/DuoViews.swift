@@ -73,7 +73,15 @@ struct GlanceStrip: View {
                     Text("· \(model.stats.streak)-day streak")
                 }
             }
-            Text("Open your Duo to keep typing.")
+            // The machine is at its best opened up; say so plainly, without taking typing away from here.
+            HStack(spacing: 6) {
+                Image(systemName: "laptopcomputer")
+                    .font(.system(size: 12, weight: .semibold))
+                Text("Open your Duo for the full typewriter")
+            }
+            .foregroundStyle(Color.ribbonRed)
+            .padding(.top, 2)
+            Text("Or keep typing here with the keyboard.")
                 .foregroundStyle(Color.inkSoft)
         }
         .font(.typewriterFixed(12, face: model.settings.typeface))
