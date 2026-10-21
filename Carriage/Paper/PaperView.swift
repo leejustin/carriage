@@ -375,6 +375,7 @@ final class PaperView: UIView {
             }
         case .carriageReturn(let duration):
             // Line feed first, then the long slide back to the margin.
+            if !reduce { platen.turn(ridges: 2, over: 0.12) }
             UIView.animate(withDuration: reduce ? 0 : 0.11, delay: 0, options: [.beginFromCurrentState, .curveEaseOut, .allowUserInteraction], animations: scroll)
             UIView.animate(withDuration: reduce ? 0 : duration, delay: reduce ? 0 : 0.06, usingSpringWithDamping: 0.86, initialSpringVelocity: 0.2,
                            options: [.beginFromCurrentState, .allowUserInteraction], animations: apply)
@@ -495,6 +496,7 @@ final class PaperView: UIView {
     /// A fresh sheet rolls up from behind the platen.
     func feedIn() {
         guard configuration.presentation == .typing, !configuration.reduceMotion else { return }
+        platen.turn(ridges: 9, over: 0.7)
         let target = textView.contentOffset
         textView.setContentOffset(CGPoint(x: 0, y: target.y - bounds.height * 0.85), animated: false)
         UIView.animate(withDuration: 0.7, delay: 0.04, options: [.curveEaseOut, .allowUserInteraction]) {
@@ -505,6 +507,7 @@ final class PaperView: UIView {
     /// The finished sheet is pulled up and out of the machine.
     func pullOut(completion: @escaping () -> Void) {
         guard configuration.presentation == .typing, !configuration.reduceMotion else { return completion() }
+        platen.turn(ridges: -5, over: 0.45)
         let start = textView.contentOffset
         UIView.animate(withDuration: 0.45, delay: 0, options: [.curveEaseIn]) {
             self.textView.contentOffset = CGPoint(x: 0, y: start.y + self.textView.contentSize.height + self.bounds.height)
@@ -543,6 +546,17 @@ final class PaperView: UIView {
         }
         guard let range, !character.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         flashInk(character, range: range)
+        jolt()
+    }
+
+    /// The sheet shivers on the platen as the slug hits it: half a point, gone in a few frames.
+    private func jolt() {
+        guard !configuration.reduceMotion else { return }
+        let shake = CAKeyframeAnimation(keyPath: "transform.translation.y")
+        shake.values = [0, -0.6, 0.25, 0]
+        shake.keyTimes = [0, 0.25, 0.6, 1]
+        shake.duration = 0.07
+        clip.layer.add(shake, forKey: "jolt")
     }
 
     /// A freshly struck character is darkest for an instant, then settles into the ribbon's colour.

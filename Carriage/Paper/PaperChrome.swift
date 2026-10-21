@@ -3,6 +3,29 @@ import UIKit
 /// The rubber platen the paper wraps around, with bakelite knobs at each end.
 final class PlatenView: UIView {
     var knobWidth: CGFloat = 26 { didSet { setNeedsDisplay() } }
+    /// How far the knobs' grip ridges have turned, in points; animates as the roller advances the paper.
+    private var ridgePhase: CGFloat = 0 { didSet { setNeedsDisplay() } }
+    private var turnTimer: Timer?
+
+    /// Turns the roller, as when a line feeds or a sheet rolls in: the knob ridges scroll by `ridges` notches.
+    func turn(ridges: CGFloat, over duration: TimeInterval) {
+        turnTimer?.invalidate()
+        let start = ridgePhase
+        let began = Date()
+        turnTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 60, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                let x = min(1, Date().timeIntervalSince(began) / max(0.01, duration))
+                // Ease out, like a ratchet coming to rest.
+                let eased = 1 - pow(1 - x, 3)
+                self.ridgePhase = (start + ridges * 3 * CGFloat(eased)).truncatingRemainder(dividingBy: 3)
+                if x >= 1 {
+                    self.turnTimer?.invalidate()
+                    self.turnTimer = nil
+                }
+            }
+        }
+    }
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -53,7 +76,7 @@ final class PlatenView: UIView {
         // Grip ridges.
         cg.setStrokeColor(UIColor(white: 1, alpha: 0.07).cgColor)
         cg.setLineWidth(1)
-        var y = knob.minY + 3
+        var y = knob.minY + 3 - ridgePhase
         while y < knob.maxY - 2 {
             cg.move(to: CGPoint(x: knob.minX + 2, y: y))
             cg.addLine(to: CGPoint(x: knob.maxX - 2, y: y))

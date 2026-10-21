@@ -2,7 +2,7 @@ import Foundation
 
 /// Every sound the machine makes.
 nonisolated enum SoundKind: String, CaseIterable, Sendable {
-    case key, strike, space, backspace, shift, bell, carriageReturn, paperFeed
+    case key, strike, space, backspace, shift, bell, carriageReturn, paperFeed, paperRelease
 
     /// How many distinct takes to synthesize. Each take has its own randomized resonances.
     var takes: Int {
@@ -10,7 +10,7 @@ nonisolated enum SoundKind: String, CaseIterable, Sendable {
         case .key: 8
         case .strike, .space: 4
         case .backspace, .shift, .bell, .carriageReturn: 2
-        case .paperFeed: 1
+        case .paperFeed, .paperRelease: 1
         }
     }
 
@@ -20,7 +20,7 @@ nonisolated enum SoundKind: String, CaseIterable, Sendable {
         case .key, .strike: [0.955, 0.98, 1.0, 1.02, 1.045]
         case .space, .backspace, .shift: [0.97, 1.0, 1.03]
         case .bell: [0.993, 1.0, 1.007]
-        case .carriageReturn, .paperFeed: [0.98, 1.0, 1.02]
+        case .carriageReturn, .paperFeed, .paperRelease: [0.98, 1.0, 1.02]
         }
     }
 }
@@ -109,6 +109,7 @@ nonisolated struct TypewriterSynth {
         case .bell: bell()
         case .carriageReturn: carriageReturn()
         case .paperFeed: paperFeed()
+        case .paperRelease: paperRelease()
         }
     }
 
@@ -251,6 +252,31 @@ nonisolated struct TypewriterSynth {
             t += (0.07 - min(0.035, Double(i) * 0.003)) * jitter(0.1)
         }
         normalize(&out, peak: 0.45)
+        return out
+    }
+
+    /// The paper bail lifting off the sheet, then the sheet sliding up and out past the platen.
+    private mutating func paperRelease() -> [Float] {
+        let p = profile
+        var out = buffer(seconds: 0.62)
+        // The bail: a light spring click and a little metal.
+        noiseBurst(&out, at: 0.002, amp: 0.55, decay: 0.0016, center: 3400 * p.bright, q: 1.3)
+        dampedSine(&out, at: 0.002, freq: p.impact * 1.1 * jitter(0.05), amp: 0.12, decay: 0.01)
+        // The release lever easing the platen's grip.
+        dampedSine(&out, at: 0.045, freq: p.body * 1.1, amp: 0.3, decay: 0.03)
+        noiseBurst(&out, at: 0.045, amp: 0.25, decay: 0.004, center: 900 * p.bright, q: 0.8)
+        // Paper sliding: soft noise that rises in pitch and fades as the sheet clears the rollers.
+        let n0 = index(0.08), n1 = min(out.count, index(0.58))
+        // Two bands crossfading low to high stand in for the pitch rising as the sheet speeds up.
+        var low = Biquad.bandpass(center: 1700 * p.bright, q: 0.5, sampleRate: sampleRate)
+        var high = Biquad.bandpass(center: 4200 * p.bright, q: 0.5, sampleRate: sampleRate)
+        for n in n0..<n1 {
+            let x = Double(n - n0) / Double(max(1, n1 - n0))
+            let env = pow(sin(.pi * min(1, x * 1.15)), 1.4) * (1 - x * 0.6)
+            let noise = rng.signed()
+            out[n] += Float((low.process(noise) * (1 - x) + high.process(noise) * x) * env * 0.12)
+        }
+        normalize(&out, peak: 0.42)
         return out
     }
 
