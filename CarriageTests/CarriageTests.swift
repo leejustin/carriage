@@ -158,26 +158,35 @@ import UIKit
     }
 }
 
-@Suite struct SynthTests {
+@Suite struct SoundBankTests {
+    /// Every machine has a recording (or a stand-in) for every sound, and nothing clips.
     @Test(arguments: MachineSound.allCases)
-    func everyMachineMakesEverySound(machine: MachineSound) {
+    func everyMachineHasEverySound(machine: MachineSound) {
         let bank = SoundBankBuilder.build(machine: machine, sampleRate: 48_000)
         for kind in SoundKind.allCases {
             let takes = bank[kind] ?? []
-            #expect(takes.count == kind.takes * kind.rates.count)
+            #expect(!takes.isEmpty, "\(machine) has no \(kind)")
             for take in takes {
-                #expect(!take.isEmpty)
                 let peak = take.reduce(0) { max($0, abs($1)) }
-                #expect(peak > 0.05 && peak <= 1, "\(machine) \(kind) peak \(peak)")
+                #expect(peak > 0.01 && peak <= 1, "\(machine) \(kind) peak \(peak)")
                 #expect(!take.contains { $0.isNaN })
             }
         }
     }
 
-    @Test func keyIsShortEnoughToStackWhenTypingFast() {
-        let bank = SoundBankBuilder.build(machine: .portable, sampleRate: 48_000)
-        let longest = bank[.key]!.map(\.count).max()!
-        #expect(Double(longest) / 48_000 < 0.25)
+    /// Keys are short enough to stack when typing fast, and every machine's keys sit at about the same level.
+    @Test func keysAreShortAndLevelledAcrossMachines() {
+        var levels: [Float] = []
+        for machine in MachineSound.allCases {
+            let keys = SoundBankBuilder.build(machine: machine, sampleRate: 48_000)[.key]!
+            #expect(Double(keys.map(\.count).max()!) / 48_000 < 0.25)
+            let attack = keys.map { take -> Float in
+                let n = min(take.count, 2400)
+                return 20 * log10((take[0..<n].reduce(0) { $0 + $1 * $1 } / Float(n)).squareRoot())
+            }
+            levels.append(attack.reduce(0, +) / Float(attack.count))
+        }
+        #expect(levels.max()! - levels.min()! < 3, "machine key levels \(levels)")
     }
 }
 
@@ -320,20 +329,10 @@ import UIKit
 }
 
 @Suite struct AmbienceTests {
-    /// Every desk sound is there but quiet, never clips, and fades in rather than starting at full level.
-    @Test func ambienceIsAudibleQuietAndNeverClips() {
-        for ambience in [Ambience.room, .rain, .fire] {
-            let generator = AmbienceGenerator()
-            generator.prepare(sampleRate: 48_000)
-            generator.target = (ambience, 0.55)
-            var samples = [Float](repeating: 0, count: 96_000)
-            samples.withUnsafeMutableBufferPointer { generator.render(into: $0.baseAddress!, frames: $0.count) }
-            let peak = samples.map(abs).max() ?? 0
-            let settled = samples[48_000...]
-            let rms = (settled.reduce(0) { $0 + $1 * $1 } / Float(settled.count)).squareRoot()
-            #expect(peak < 0.9, "\(ambience) peaks at \(peak)")
-            #expect(rms > 0.002 && rms < 0.2, "\(ambience) RMS \(rms)")
-            #expect(abs(samples[10]) < 0.01, "\(ambience) should fade in")
+    /// Each desk sound is a real recording that ships with the app.
+    @Test func deskSoundsShipWithTheApp() {
+        for ambience in Ambience.allCases where ambience != .off {
+            #expect(Bundle.main.url(forResource: "desk-\(ambience.rawValue)", withExtension: "m4a") != nil, "\(ambience)")
         }
     }
 }

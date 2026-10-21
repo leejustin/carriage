@@ -257,8 +257,9 @@ struct MachineSoundPicker: View {
         List {
             ForEach(MachineSound.allCases) { machine in
                 Button {
+                    let unlocked = model.store.canUse(machine)
                     model.selectMachine(machine)
-                    playDemo()
+                    if unlocked { playDemo() }
                 } label: {
                     HStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 3) {
@@ -266,10 +267,27 @@ struct MachineSoundPicker: View {
                             Text(machine.blurb).font(.footnote).foregroundStyle(.secondary)
                         }
                         Spacer()
-                        if model.settings.machineSound == machine {
+                        if !model.store.canUse(machine) {
+                            Label("Listen", systemImage: "lock.fill")
+                                .labelStyle(.titleAndIcon)
+                                .font(Legend.font(size: 11))
+                                .foregroundStyle(.secondary)
+                        } else if model.settings.machineSound == machine {
                             Image(systemName: "checkmark").foregroundStyle(Color.ribbonRed)
                         }
                     }
+                }
+                .accessibilityHint(model.store.canUse(machine) ? "" : "Plays a sample. Comes with Unlock Carriage.")
+            }
+            if !model.store.isUnlocked {
+                Section {
+                    Button("Unlock every machine") {
+                        model.showSettings = false
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { model.showPaywall = true }
+                    }
+                    .foregroundStyle(Color.ribbonRed)
+                } footer: {
+                    Text("The Italian portable comes with Carriage. Tap any other machine to hear it; Unlock Carriage plays them all, with unlimited words.")
                 }
             }
         }

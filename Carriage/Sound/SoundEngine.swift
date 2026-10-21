@@ -16,7 +16,9 @@ final class SoundEngine {
     }
     /// The sound of the room, under the keys.
     var ambience: Ambience = .off { didSet { updateAmbience() } }
-    private let ambienceGenerator = AmbienceGenerator()
+    private var ambiencePlayer = AVAudioPlayerNode()
+    private var ambienceLoops: [Ambience: AVAudioPCMBuffer] = [:]
+    private var playingAmbience: Ambience = .off
     /// Play even with the ring/silent switch set to silent.
     var playsInSilentMode = false {
         didSet { if oldValue != playsInSilentMode { configureSession() } }
@@ -64,9 +66,11 @@ final class SoundEngine {
             return player
         }
         nextVoice = 0
-        let room = AmbienceNode.make(format: format, generator: ambienceGenerator)
-        engine.attach(room)
-        try? engine.connectNode(room, to: engine.mainMixerNode, format: format)
+        ambiencePlayer = AVAudioPlayerNode()
+        engine.attach(ambiencePlayer)
+        try? engine.connectNode(ambiencePlayer, to: engine.mainMixerNode, format: format)
+        ambienceLoops = [:]
+        playingAmbience = .off
         engine.mainMixerNode.outputVolume = volume
         engine.prepare()
         configurationObserver = NotificationCenter.default.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main) { [weak self] _ in
@@ -112,9 +116,24 @@ final class SoundEngine {
         }
     }
 
-    /// The room sits well under the keys: it should be felt more than heard.
+    /// The desk sound loops seamlessly under the keys, at a level already set when it was cut.
     private func updateAmbience() {
-        ambienceGenerator.target = (ambience, isEnabled && ambience != .off ? 0.55 : 0)
+        let wanted: Ambience = isEnabled ? ambience : .off
+        guard wanted != playingAmbience else { return }
+        playingAmbience = wanted
+        ambiencePlayer.stop()
+        guard wanted != .off, let format, ensureRunning() else { return }
+        if ambienceLoops[wanted] == nil { ambienceLoops[wanted] = Self.loop(wanted, format: format) }
+        guard let loop = ambienceLoops[wanted] else { return }
+        ambiencePlayer.volume = 0.9
+        ambiencePlayer.scheduleBuffer(loop, at: nil, options: [.loops])
+        try? ambiencePlayer.playAudio()
+    }
+
+    private static func loop(_ ambience: Ambience, format: AVAudioFormat) -> AVAudioPCMBuffer? {
+        guard let url = Bundle.main.url(forResource: "desk-\(ambience.rawValue)", withExtension: "m4a"),
+              let samples = RecordedSamples.read(url, sampleRate: format.sampleRate) else { return nil }
+        return buffer(samples, format: format)
     }
 
     /// Plays `kind` now. `pan` runs from -1 (left) to 1 (right) so keys sound where they sit.
@@ -169,6 +188,7 @@ final class SoundEngine {
         do {
             try engine.start()
             for voice in voices { try? voice.playAudio() }
+            if playingAmbience != .off { try? ambiencePlayer.playAudio() }
         } catch {
             log.error("Audio engine failed to start: \(error.localizedDescription)")
         }
@@ -203,35 +223,33 @@ final class SoundEngine {
     }
 }
 
-/// Builds every take of every sound for a machine, as raw mono samples.
+/// Every take of every sound for a machine, as raw mono samples, from the recordings in the app.
 nonisolated enum SoundBankBuilder {
     static func build(machine: MachineSound, sampleRate: Double) -> [SoundKind: [[Float]]] {
+        var recordings: [SoundKind: [[Float]]] = [:]
+        for kind in SoundKind.allCases {
+            recordings[kind] = RecordedSamples.load(machine: machine, kind: kind, sampleRate: sampleRate)
+                // A machine missing a sound uses the default machine's, so nothing is ever silent.
+                ?? RecordedSamples.load(machine: .portable, kind: kind, sampleRate: sampleRate)
+        }
         var bank: [SoundKind: [[Float]]] = [:]
         for kind in SoundKind.allCases {
-            if let recorded = RecordedSamples.load(machine: machine, kind: kind, sampleRate: sampleRate), !recorded.isEmpty {
-                bank[kind] = recorded.flatMap { take in kind.rates.map { TypewriterSynth.resample(take, rate: $0) } }
-                continue
-            }
-            var takes: [[Float]] = []
-            for take in 0..<kind.takes {
-                let seed = UInt64(abs(machine.rawValue.hashValueStable &+ kind.rawValue.hashValueStable &* 31 &+ take &* 977))
-                var synth = TypewriterSynth(sampleRate: sampleRate, profile: machine.profile, seed: seed)
-                let base = synth.render(kind)
-                takes += kind.rates.map { TypewriterSynth.resample(base, rate: $0) }
-            }
-            bank[kind] = takes
+            guard let takes = recordings[kind] ?? kind.standIn.flatMap({ recordings[$0] }) else { continue }
+            var shaped = takes
+            // Backspace is a lighter press than a full strike.
+            if kind == .backspace { shaped = takes.map { $0.map { $0 * 0.6 } } }
+            bank[kind] = shaped.flatMap { take in kind.rates.map { Resample.by($0, take) } }
         }
         return bank
     }
 }
 
-/// Real recordings, when they exist, replace the synthesized takes. Drop files named
-/// `<machine>-<kind>-<n>.wav` (for example `portable-key-1.wav`) into the app bundle. They're read at launch,
-/// never on a key press.
+/// The recordings, named `<machine>-<kind>-<n>.wav` (for example `portable-key-1.wav`), made by
+/// scripts/sounds/CutSamples.swift. They're read when a machine is chosen, never on a key press.
 nonisolated enum RecordedSamples {
     static func load(machine: MachineSound, kind: SoundKind, sampleRate: Double) -> [[Float]]? {
         var takes: [[Float]] = []
-        for n in 1...12 {
+        for n in 1...20 {
             let name = "\(machine.rawValue)-\(kind.rawValue)-\(n)"
             guard let url = Bundle.main.url(forResource: name, withExtension: "wav")
                 ?? Bundle.main.url(forResource: name, withExtension: "caf") else { break }
@@ -240,7 +258,7 @@ nonisolated enum RecordedSamples {
         return takes.isEmpty ? nil : takes
     }
 
-    private static func read(_ url: URL, sampleRate: Double) -> [Float]? {
+    static func read(_ url: URL, sampleRate: Double) -> [Float]? {
         guard let file = try? AVAudioFile(forReading: url),
               let target = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 1),
               let source = AVAudioPCMBuffer(pcmFormat: file.processingFormat, frameCapacity: AVAudioFrameCount(file.length)),

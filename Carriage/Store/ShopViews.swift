@@ -14,7 +14,7 @@ struct PaywallView: View {
                 Text(model.freeWordsLeft == 0
                      ? "You've typed your first \(limit.formatted()) words here. Thank you for writing them on Carriage."
                      : "Your first \(limit.formatted()) words are on the house, with every paper, ribbon and machine.")
-                Text("Carriage is a one-time purchase: no subscription and no ads. Unlock it once and every word after is yours, on all your devices, for as long as you keep writing.")
+                Text("Carriage is a one-time purchase: no subscription and no ads. Unlock it once for every word after, on all your devices, and every machine: the Swiss portable, the office electric and the American portable.")
                 Text("Yours,")
                     .padding(.top, 6)
                 Text("Carriage")

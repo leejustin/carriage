@@ -60,4 +60,4 @@ The hinge (`UIHingeInteraction`) and fold-line (`reservedRegions(kind: .division
 
 ## Sounds
 
-Every sound is synthesized on device (`TypewriterSynth`), so there's nothing to license. To use real recordings, add files named `<machine>-<kind>-<n>.wav` (for example `portable-key-1.wav`) to the app target; they replace the synthesized takes automatically.
+Every sound is a real CC0 recording from Freesound, cut and levelled by `scripts/sounds/CutSamples.swift` into `Carriage/Sounds` (`<machine>-<kind>-<n>.wav`, plus looped `desk-rain.m4a` and `desk-fire.m4a`). Nothing is synthesized. Sources and how to recut them: [docs/sounds/SOURCES.md](docs/sounds/SOURCES.md). The Italian portable is free; the other machines come with the unlock.

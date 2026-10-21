@@ -19,8 +19,8 @@ enum ProductID {
     static let all = [unlock]
 }
 
-/// StoreKit 2: one non-consumable unlock. Every paper, ribbon and machine is included from the first page;
-/// the free version only limits how many words are written. No subscriptions, no ads.
+/// StoreKit 2: one non-consumable unlock, for unlimited words and every machine's sound. Every paper and ribbon
+/// is included from the first page. No subscriptions, no ads.
 @Observable
 final class Store {
     private(set) var products: [String: Product] = [:]
@@ -56,6 +56,9 @@ final class Store {
         #endif
         return purchased.contains(ProductID.unlock)
     }
+
+    /// The Italian portable comes with Carriage; the other machines come with the unlock.
+    func canUse(_ machine: MachineSound) -> Bool { machine.isIncluded || isUnlocked }
 
     var freeWordLimit: Int? {
         if case let .freemium(words) = Monetization.current, !isUnlocked { return words }

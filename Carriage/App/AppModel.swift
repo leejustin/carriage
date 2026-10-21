@@ -70,7 +70,7 @@ final class AppModel {
         stats.attach(context)
         applyAudioSettings()
         // Purchases aren't known yet; the chosen machine is re-applied once they load.
-        SoundEngine.shared.start(machine: .portable)
+        SoundEngine.shared.start(machine: activeMachine)
         Haptics.shared.prepare()
         emptyOldTrash()
         #if DEBUG
@@ -96,6 +96,7 @@ final class AppModel {
         Task {
             await store.load()
             updateTypingLock()
+            applyMachine()
         }
         // A new machine arrives under its cover.
         if !UserDefaults.standard.bool(forKey: "unveiled"), !UserDefaults.standard.bool(forKey: "seenOnboarding") {
@@ -360,9 +361,22 @@ final class AppModel {
         Haptics.shared.isEnabled = settings.hapticsOn
     }
 
+    /// The machine that sounds: the writer's choice, or the included portable if their choice needs the unlock.
+    var activeMachine: MachineSound { store.canUse(settings.machineSound) ? settings.machineSound : .portable }
+
+    /// Chooses a machine, or lets the writer hear one that needs the unlock first.
     func selectMachine(_ machine: MachineSound) {
+        guard store.canUse(machine) else {
+            SoundEngine.shared.preview(machine)
+            return
+        }
         settings.machineSound = machine
         SoundEngine.shared.load(machine)
+    }
+
+    /// After a purchase, a restore or a refund, play the machine the writer is entitled to.
+    func applyMachine() {
+        if SoundEngine.shared.machine != activeMachine { SoundEngine.shared.load(activeMachine) }
     }
 
     // MARK: Export

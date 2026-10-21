@@ -125,7 +125,7 @@ enum DemoContent {
                 var t = 0.4
                 var n = 0
                 for (i, character) in line.enumerated() {
-                    if character == " " { add(.space, at: t, take: n) } else { add(.key, at: t, take: n * 7) }
+                    if character == " " { add(.space, at: t, take: n) } else { add(.key, at: t, take: n * 5 + i) }
                     if line.count - i == 7 { add(.bell, at: t + 0.02, gain: 0.9) }
                     t += character == " " ? 0.17 : [0.11, 0.14, 0.09, 0.16, 0.12][n % 5]
                     n += 1
@@ -142,12 +142,11 @@ enum DemoContent {
                 write(out, rate: rate, to: folder.appendingPathComponent("machine-\(machine.rawValue).wav"))
             }
             for ambience in Ambience.allCases where ambience != .off {
-                let generator = AmbienceGenerator()
-                generator.prepare(sampleRate: rate)
-                generator.target = (ambience, 0.55)
-                var out = [Float](repeating: 0, count: Int(rate * 8))
-                out.withUnsafeMutableBufferPointer { generator.render(into: $0.baseAddress!, frames: $0.count) }
-                write(out, rate: rate, to: folder.appendingPathComponent("desk-\(ambience.rawValue).wav"))
+                if let url = Bundle.main.url(forResource: "desk-\(ambience.rawValue)", withExtension: "m4a") {
+                    let target = folder.appendingPathComponent("desk-\(ambience.rawValue).m4a")
+                    try? FileManager.default.removeItem(at: target)
+                    try? FileManager.default.copyItem(at: url, to: target)
+                }
             }
             try? "done".write(to: folder.appendingPathComponent("done.txt"), atomically: true, encoding: .utf8)
         }
@@ -158,8 +157,9 @@ enum DemoContent {
               let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(samples.count)),
               let file = try? AVAudioFile(forWriting: url, settings: format.settings) else { return }
         buffer.frameLength = AVAudioFrameCount(samples.count)
+        // Written at the app's own level (the samples are already levelled), only kept from clipping.
         let peak = max(1, samples.map(abs).max() ?? 1)
-        for i in samples.indices { buffer.floatChannelData![0][i] = samples[i] / peak * 0.9 }
+        for i in samples.indices { buffer.floatChannelData![0][i] = samples[i] / peak }
         try? file.write(from: buffer)
     }
 
