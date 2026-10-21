@@ -39,7 +39,14 @@ final class AppModel {
         self.settings = settings
         stats = WritingStats(goal: settings.dailyGoal)
         engine = TypewriterEngine(settings: settings, stats: stats)
-        engine.onHardwareKeyPress = { [weak self] in self?.fold.noteHardwareKeyPress() }
+        engine.onHardwareKeyPress = { [weak self] in
+            #if targetEnvironment(simulator)
+            // The Simulator routes the Mac's keyboard here; typing on it shouldn't hide the typewriter keys.
+            // `-hardwareKeyboard` still shows the hardware layout.
+            guard ProcessInfo.processInfo.arguments.contains("-hardwareKeyboard") else { return }
+            #endif
+            self?.fold.noteHardwareKeyPress()
+        }
         engine.onSaved = { [weak self] page in self?.mirror(page) }
         engine.onSyncNotice = { [weak self] message in self?.toast = Toast(text: message, symbol: "arrow.triangle.2.circlepath") }
         engine.onMarginBell = { [weak self] in self?.teachCarriagePush() }
