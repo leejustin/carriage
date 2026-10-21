@@ -24,6 +24,8 @@ struct InkStyler {
 
     /// A small palette of attribute sets, so a long page has a handful of distinct runs, not thousands.
     private let palette: [[NSAttributedString.Key: Any]]
+    /// A faint second impression, offset a hair, for the odd key that bounced and struck twice.
+    private let ghost: NSShadow
     private static let densitySteps = 7
     private static let baselineSteps: [CGFloat] = [-0.45, -0.2, 0, 0.2, 0.45]
     private static let strokeSteps = 3
@@ -79,6 +81,11 @@ struct InkStyler {
             }
         }
         self.palette = palette
+        let ghost = NSShadow()
+        ghost.shadowBlurRadius = 0
+        ghost.shadowOffset = CGSize(width: 0.6, height: -0.35)
+        ghost.shadowColor = (night ? ink.nightColor : ink.color).withAlphaComponent(0.3)
+        self.ghost = ghost
     }
 
     /// Attributes for typing at the end of the page, before the character's own texture is known.
@@ -97,7 +104,12 @@ struct InkStyler {
         if heavy { d = Self.densitySteps - 1 }
         let b = Int((h >> 16) % UInt64(Self.baselineSteps.count))
         let s = heavy ? Self.strokeSteps - 1 : Int((h >> 24) % 2)
-        return palette[(d * Self.baselineSteps.count + b) * Self.strokeSteps + s]
+        let attributes = palette[(d * Self.baselineSteps.count + b) * Self.strokeSteps + s]
+        // About one key in 55 bounces and prints a second, fainter impression beside the first.
+        guard !heavy, (h >> 40) % 55 == 0 else { return attributes }
+        var doubled = attributes
+        doubled[.shadow] = ghost
+        return doubled
     }
 
     /// Re-inks `range` of `storage`, keeping strike and underline marks.
