@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		CA0000000000000000002001 /* CarriageWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CA0000000000000000002002 /* CarriageWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		CA0000000000000000000301 /* FoldKit in Frameworks */ = {isa = PBXBuildFile; productRef = CA0000000000000000000401 /* FoldKit */; };
+		CA0000000000000000002001 /* CarriageWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CA0000000000000000002002 /* CarriageWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -47,8 +47,8 @@
 		CA0000000000000000000602 /* CarriageTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CarriageTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		CA0000000000000000000603 /* Carriage.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Carriage.entitlements; sourceTree = "<group>"; };
 		CA0000000000000000000604 /* Carriage.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = Carriage.storekit; sourceTree = "<group>"; };
-		CA0000000000000000000606 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		CA0000000000000000000605 /* FoldKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = FoldKit; sourceTree = "<group>"; };
+		CA0000000000000000000606 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		CA0000000000000000002002 /* CarriageWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CarriageWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		CA0000000000000000002005 /* CarriageWidgets-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "CarriageWidgets-Info.plist"; sourceTree = "<group>"; };
 		CA0000000000000000002006 /* CarriageWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CarriageWidgets.entitlements; sourceTree = "<group>"; };
@@ -383,9 +383,9 @@
 				DEVELOPMENT_TEAM = 2TWQYRZUDF;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Config/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Carriage;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
-				INFOPLIST_FILE = Config/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -417,9 +417,9 @@
 				DEVELOPMENT_TEAM = 2TWQYRZUDF;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Config/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Carriage;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
-				INFOPLIST_FILE = Config/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

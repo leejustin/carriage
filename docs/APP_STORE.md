@@ -22,15 +22,15 @@ MADE TO HELP YOU FOCUS
 • Set it up once and your iPhone silences notifications whenever Carriage is open. Carriage walks you through it in a few taps.
 • Tap the moon and everything but the page and keys fades away.
 • Add Carriage's Focus Filter to any Focus, and the page clears itself whenever that Focus is on.
-• Typewriter mode: no going back. X-OUT types an x over a mistake and you keep going, the way first drafts should be written.
+• It types like a typewriter: no delete (X-OUT strikes through with an x) and the keys stop at the margin until you return the carriage. Prefer backspace and automatic line wrap? They're a setting away.
 
 A BEAUTIFUL MACHINE
 • Round, chrome-ringed keys that press down under your fingers, with a tap you can feel on every stroke.
-• Gentle, true-to-life sounds for every part of the machine: the keys, the space bar, the carriage slide and the bell near the margin. Four machines to choose from.
+• Real typewriters, recorded: every key, the space bar, the bell near the margin and the carriage sliding home. A 1950s Italian portable comes with Carriage; three more machines come with the unlock.
 • Ink that sits on the paper like real type, a little uneven from letter to letter.
 • Four paper stocks, from crisp bond to onion skin, four ribbon colours and five machine finishes, from seafoam to cherry. Night desk for light ink on dark paper.
 • Push the paper to return the carriage, like the real thing, and feel every part of it: the keys, the ratchet, the bell.
-• Desk sounds under the keys: a quiet room, rain on the window or a fireplace. A warm desk lamp that follows the hour.
+• Recorded rain on the window or a fire in the grate under the keys. A warm desk lamp that follows the hour.
 • Engrave your name on the brass plate.
 
 MADE FOR IPHONE DUO
@@ -48,7 +48,7 @@ YOUR WRITING, KEPT SAFE
 
 No subscription. No ads. No accounts. Nothing collected.
 
-Your first 5,000 words are free, with every paper, ribbon and machine included. Unlock Carriage once and keep writing, forever.
+Your first 5,000 words are free, with every paper and ribbon. Unlock Carriage once for unlimited words and every machine, forever.
 
 ## Keywords (100)
 
@@ -82,7 +82,7 @@ One non-consumable, nothing else. Every paper, ribbon and machine is in the free
 
 | Product ID | Reference name | Display name | Description (55) | Price |
 | --- | --- | --- | --- | --- |
-| com.carriage.app.unlock | Unlock | Unlock Carriage | Unlimited words forever. One purchase, no subscription. | $4.99 launch price, $7.99 from Oct 30, 2026 |
+| com.carriage.app.unlock | Unlock | Unlock Carriage | Unlimited words and every machine. No subscription. | $4.99 launch price, $7.99 from Oct 30, 2026 |
 
 Review screenshot: `docs/screenshots/purchases/unlock.png` (the unlock letter). `scripts/screenshots.sh` makes it again.
 
