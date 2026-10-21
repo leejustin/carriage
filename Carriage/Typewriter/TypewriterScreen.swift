@@ -258,10 +258,12 @@ private struct Desk: View {
     private var readingFade: some View {
         if layout.presentation == .editing {
             let paper = Color(uiColor: model.engine.paper.paperColor)
-            LinearGradient(stops: [.init(color: paper, location: 0), .init(color: paper, location: 0.6), .init(color: paper.opacity(0), location: 1)],
+            // On the closed Duo the glance line sits under the controls too; keep the page solid behind both.
+            let closed = layout.kind == .closed
+            LinearGradient(stops: [.init(color: paper, location: 0), .init(color: paper, location: closed ? 0.8 : 0.6), .init(color: paper.opacity(0), location: 1)],
                            startPoint: .top, endPoint: .bottom)
                 // Matches the reading sheet's width (see PaperMetrics for .editing).
-                .frame(width: sheetWidth, height: safe.top + 64 + (layout.kind == .closed ? 46 : 0))
+                .frame(width: sheetWidth, height: safe.top + 64 + (closed ? 66 : 0))
                 .offset(x: layout.paper.minX + ((layout.paper.width - sheetWidth) / 2).rounded(), y: layout.paper.minY)
                 .allowsHitTesting(false)
         }
