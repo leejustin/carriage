@@ -46,6 +46,7 @@ The hinge (`UIHingeInteraction`) and fold-line (`reservedRegions(kind: .division
 | `-unlocked` | Act as if the unlock is bought, for screenshots |
 | `-lampHour 21` | Light the desk lamp for that hour |
 | `-engraving "J. Lee"` | Engrave a name on the plate |
+| `-exportSounds` | Write a listening demo of every machine and desk sound to Documents/sounds (copies are in `docs/sounds/`) |
 | `-hardwareKeyboard` | Act as if a hardware keyboard is attached |
 | `-uiTesting` | Use an in-memory store |
 | `-seedLongPage` | Start with a 20,000-word page, for checking speed |
