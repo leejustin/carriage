@@ -35,6 +35,8 @@ final class TypewriterEngine {
     @ObservationIgnored var typingLocked = false
     /// A key was pressed while the keys rest.
     @ObservationIgnored var onLockedKey: (() -> Void)?
+    /// A key was pressed at the right margin, where a real machine's keys stop until the carriage returns.
+    @ObservationIgnored var onMarginStop: (() -> Void)?
     /// A word or a line was finished: a natural place to stop for the unlock letter.
     @ObservationIgnored var onPause: ((_ endOfLine: Bool) -> Void)?
 
@@ -237,6 +239,16 @@ final class TypewriterEngine {
         storage.append(NSAttributedString(string: text, attributes: paper.styler.attributes(at: location)))
         let range = NSRange(location: location, length: (text as NSString).length)
 
+        if paper.currentLineY > lineBefore + 1, !settings.autoReturn, paper.configuration.presentation == .typing {
+            // At the margin: like a real machine, the key won't print until the carriage is returned. The
+            // typebar jams against the stop with a dull clack.
+            storage.deleteCharacters(in: range)
+            SoundEngine.shared.play(.shift, gain: 0.45)
+            Haptics.shared.marginStop()
+            paper.syncCarriage(.none)
+            onMarginStop?()
+            return
+        }
         if paper.currentLineY > lineBefore + 1 {
             // The word ran past the margin and wrapped: the carriage returns on its own.
             SoundEngine.shared.play(.carriageReturn, gain: 0.55)

@@ -52,6 +52,7 @@ struct SettingsView: View {
                     Picker("New sheets start in", selection: $settings.defaultMode) {
                         ForEach(TypingMode.allCases) { Text($0.name).tag($0) }
                     }
+                    Toggle("Wrap lines automatically", isOn: $settings.autoReturn)
                     Picker("Line width", selection: $settings.lineWidth) {
                         ForEach(LineWidth.allCases) { Text($0.name).tag($0) }
                     }
@@ -70,7 +71,13 @@ struct SettingsView: View {
                 } header: {
                     header("The page")
                 } footer: {
-                    Text(model.settings.carriage.detail + " " + model.settings.defaultMode.detail)
+                    Text([
+                        model.settings.carriage.detail,
+                        model.settings.defaultMode.detail,
+                        model.settings.autoReturn
+                            ? "Lines wrap and the carriage returns by itself."
+                            : "Like a real machine, the keys stop at the margin until you return the carriage.",
+                    ].joined(separator: " "))
                 }
 
                 Section {

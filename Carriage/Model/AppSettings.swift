@@ -22,6 +22,9 @@ final class AppSettings {
     var playsInSilentMode: Bool { didSet { save(playsInSilentMode, "playsInSilentMode") } }
     var hapticsOn: Bool { didSet { save(hapticsOn, "hapticsOn") } }
     var typebarsOn: Bool { didSet { save(typebarsOn, "typebarsOn") } }
+    /// Off, like a real machine: at the right margin the keys stop until the carriage is returned. On, a line
+    /// that runs past the margin wraps and the carriage returns by itself.
+    var autoReturn: Bool { didSet { save(autoReturn, "autoReturn") } }
     /// Ring the bell a few characters before the right margin.
     var marginBell: Bool { didSet { save(marginBell, "marginBell") } }
     var bellOnReturn: Bool { didSet { save(bellOnReturn, "bellOnReturn") } }
@@ -66,7 +69,8 @@ final class AppSettings {
         carriage = value("carriage", .gentle)
         lineWidth = value("lineWidth", .standard)
         lineSpacing = value("lineSpacing", .single)
-        defaultMode = value("defaultMode", .free)
+        // As real as possible by default: no delete, and the keys stop at the margin. Both are a setting away.
+        defaultMode = value("defaultMode", .typewriter)
         defaultPaper = value("defaultPaper", .bond)
         defaultInk = value("defaultInk", .black)
         soundsOn = bool("soundsOn", true)
@@ -74,6 +78,7 @@ final class AppSettings {
         playsInSilentMode = bool("playsInSilentMode", false)
         hapticsOn = bool("hapticsOn", true)
         typebarsOn = bool("typebarsOn", true)
+        autoReturn = bool("autoReturn", false)
         marginBell = bool("marginBell", true)
         bellOnReturn = bool("bellOnReturn", true)
         spellCheck = bool("spellCheck", false)

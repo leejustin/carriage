@@ -85,6 +85,21 @@ enum DemoContent {
         }
     }
 
+    /// `-autoType`: presses keys through the engine, as if typed, to check the margin stop on a simulator.
+    @MainActor
+    static func autoTypeIfRequested(_ model: AppModel) {
+        guard ProcessInfo.processInfo.arguments.contains("-autoType") else { return }
+        let text = "The carriage stops at the margin, the way a real machine does, until you send it home again"
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(2))
+            for character in text {
+                let key = String(character)
+                model.engine.press(key == " " ? .space : .character(key, shifted: key.uppercased()), fan: 0.5)
+                try? await Task.sleep(for: .milliseconds(60))
+            }
+        }
+    }
+
     /// Writes the current page's share images to Documents (`-exportShareImages`), for eyeballing them.
     static func exportShareImagesIfRequested(_ page: Page?, settings: AppSettings) {
         guard ProcessInfo.processInfo.arguments.contains("-exportShareImages"), let page,

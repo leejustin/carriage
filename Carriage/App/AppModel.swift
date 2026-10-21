@@ -50,6 +50,7 @@ final class AppModel {
         engine.onSaved = { [weak self] page in self?.mirror(page) }
         engine.onSyncNotice = { [weak self] message in self?.toast = Toast(text: message, symbol: "arrow.triangle.2.circlepath") }
         engine.onMarginBell = { [weak self] in self?.teachCarriagePush() }
+        engine.onMarginStop = { [weak self] in self?.explainMarginStop() }
         engine.onCarriagePushed = { UserDefaults.standard.set(true, forKey: "pushedCarriage") }
         engine.onPause = { [weak self] endOfLine in self?.checkFreeWords(endOfLine: endOfLine) }
         engine.onLockedKey = { [weak self] in self?.showPaywall = true }
@@ -81,12 +82,14 @@ final class AppModel {
             UserDefaults.standard.removeObject(forKey: "pushedCarriage")
             UserDefaults.standard.removeObject(forKey: "carriagePushHints")
             UserDefaults.standard.removeObject(forKey: "unveiled")
+            UserDefaults.standard.removeObject(forKey: "marginStopHints")
         }
         #endif
         loadNextPage(feed: false, explainLimit: false)
         #if DEBUG
         DemoContent.exportPDFIfRequested(engine.page, settings: settings)
         DemoContent.exportShareImagesIfRequested(engine.page, settings: settings)
+        DemoContent.autoTypeIfRequested(self)
         DemoContent.stageScreenshotScene(self)
         #endif
         Task {
@@ -161,6 +164,15 @@ final class AppModel {
         guard !defaults.bool(forKey: "pushedCarriage"), shown < 3, !focusMode.isOn else { return }
         defaults.set(shown + 1, forKey: "carriagePushHints")
         toast = Toast(text: "Ding! Push the paper to the right to return the carriage", symbol: "arrow.right.to.line")
+    }
+
+    /// The first few times the keys stop at the margin, say why and how to go on.
+    func explainMarginStop() {
+        let defaults = UserDefaults.standard
+        let shown = defaults.integer(forKey: "marginStopHints")
+        guard shown < 3 || !defaults.bool(forKey: "pushedCarriage") && shown < 6 else { return }
+        defaults.set(shown + 1, forKey: "marginStopHints")
+        toast = Toast(text: "End of the line. Push the paper right or press RETURN", symbol: "arrow.right.to.line")
     }
 
     func paperTapped() {
@@ -407,11 +419,19 @@ final class AppModel {
         exportRequest = ExportRequest(items: [snapshot.title + "\n\n" + snapshot.plainText], notesHint: true)
     }
 
-    func copyText(_ page: Page? = nil) {
+    /// Copies the page. Clean leaves x-ed out words out, ready to use anywhere. As typed keeps them, struck
+    /// through in apps that take rich text (Notes, Mail, Pages) and marked ~~like this~~ where only plain text goes.
+    func copyText(_ page: Page? = nil, asTyped: Bool = false) {
         guard let page = page ?? engine.page else { return }
         engine.save()
-        UIPasteboard.general.string = PageSnapshot(page).plainText
-        toast = Toast(text: "Copied", symbol: "doc.on.doc")
+        let snapshot = PageSnapshot(page)
+        if asTyped {
+            UIPasteboard.general.setItems([TextExport.richPasteboardItem(body: snapshot.body, strikes: snapshot.strikes, underlines: snapshot.underlines)])
+            toast = Toast(text: "Copied as typed, with strikes", symbol: "strikethrough")
+        } else {
+            UIPasteboard.general.string = snapshot.plainText
+            toast = Toast(text: "Copied, without the x-outs", symbol: "doc.on.doc")
+        }
     }
 
     // MARK: Focus timer

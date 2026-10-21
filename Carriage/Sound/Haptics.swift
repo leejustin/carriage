@@ -19,7 +19,7 @@ final class Haptics {
     private let stop = UIImpactFeedbackGenerator(style: .rigid)
     private let notice = UINotificationFeedbackGenerator()
 
-    private enum Kind: Hashable { case key, keyUp, space, bell, feed, release, carriage }
+    private enum Kind: Hashable { case key, keyUp, space, bell, feed, release, carriage, stop }
 
     private init() {
         guard CHHapticEngine.capabilitiesForHardware().supportsHaptics, let engine = try? CHHapticEngine() else { return }
@@ -35,6 +35,10 @@ final class Haptics {
                 .transient(0.028, intensity: 0.22, sharpness: 0.95),
             ]),
             .keyUp: Self.pattern([.transient(0, intensity: 0.16, sharpness: 0.55)]),
+            .stop: Self.pattern([
+                .transient(0, intensity: 0.95, sharpness: 0.2),
+                .transient(0.018, intensity: 0.35, sharpness: 0.4),
+            ]),
             .space: Self.pattern([
                 .transient(0, intensity: 0.74, sharpness: 0.32),
                 .transient(0.014, intensity: 0.3, sharpness: 0.9),
@@ -104,6 +108,13 @@ final class Haptics {
         guard isEnabled else { return }
         if play(.bell) { return }
         notice.notificationOccurred(.success)
+    }
+
+    /// A key pressed at the margin: the typebar stopped short, a hard little knock.
+    func marginStop() {
+        guard isEnabled else { return }
+        if play(.stop) { return }
+        stop.impactOccurred(intensity: 0.9)
     }
 
     /// A fresh sheet ratcheting in around the platen.
