@@ -31,7 +31,7 @@ shoot() {
   xcrun simctl terminate "$UDID" com.carriage.app 2>/dev/null || true
   xcrun simctl uninstall "$UDID" com.carriage.app 2>/dev/null || true
   xcrun simctl install "$UDID" "$APP"
-  xcrun simctl launch "$UDID" com.carriage.app -seedDemo -seenOnboarding YES -foldSimulation "$FOLD" ${UNLOCKED--unlocked} "$@" >/dev/null
+  xcrun simctl launch "$UDID" com.carriage.app -seedDemo -seenOnboarding YES -foldSimulation "$FOLD" ${UNLOCKED--unlocked} -lampHour ${LAMP_HOUR:-13} "$@" >/dev/null
   sleep ${WAIT:-4}
   xcrun simctl io "$UDID" screenshot "$OUT/$name.png" >/dev/null 2>&1
   echo "  $name"
@@ -41,7 +41,7 @@ echo "Screenshots for $DEVICE → $OUT"
 shoot 01-typing
 WAIT=10 shoot 02-focus -screenshotScene focus
 shoot 03-library -screenshotScene library
-shoot 04-night -nightDesk on -finish enamel
+LAMP_HOUR=21 shoot 04-night -nightDesk on -finish enamel
 shoot 05-cherry -finish cherry -keyboardStyle split
 
 # Review screenshots for the in-app purchases (App Store Connect › each purchase › Review Information).

@@ -29,7 +29,9 @@ A BEAUTIFUL MACHINE
 • Gentle, true-to-life sounds for every part of the machine: the keys, the space bar, the carriage slide and the bell near the margin. Four machines to choose from.
 • Ink that sits on the paper like real type, a little uneven from letter to letter.
 • Four paper stocks, from crisp bond to onion skin, four ribbon colours and five machine finishes, from seafoam to cherry. Night desk for light ink on dark paper.
-• Push the paper to return the carriage, like the real thing.
+• Push the paper to return the carriage, like the real thing, and feel every part of it: the keys, the ratchet, the bell.
+• Desk sounds under the keys: a quiet room, rain on the window or a fireplace. A warm desk lamp that follows the hour.
+• Engrave your name on the brass plate.
 
 MADE FOR IPHONE DUO
 • Half-fold it like a tiny laptop: the page on the top half, a full typewriter keyboard on the bottom.
