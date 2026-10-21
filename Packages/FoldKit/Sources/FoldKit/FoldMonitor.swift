@@ -56,6 +56,11 @@ public final class FoldMonitor {
     @ObservationIgnored private var reportedKeyPress = false
 
     public init() {
+        #if targetEnvironment(simulator)
+        // The Simulator always presents the Mac's keyboard to GameController, so "connected" means nothing there;
+        // only a real key press counts (see `noteHardwareKeyPress`).
+        recompute()
+        #else
         hardwareKeyboard = GCKeyboard.coalesced != nil
         let center = NotificationCenter.default
         keyboardObservers = [
@@ -70,6 +75,7 @@ public final class FoldMonitor {
             },
         ]
         recompute()
+        #endif
     }
 
     /// Call when a hardware key press arrives. GameController doesn't see every keyboard (or the Simulator's),
