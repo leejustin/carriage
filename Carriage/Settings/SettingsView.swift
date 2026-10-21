@@ -287,7 +287,11 @@ struct DeveloperSection: View {
 
     var body: some View {
         @Bindable var fold = model.fold
+        @Bindable var store = model.store
         Section {
+            Toggle("Free version limit", isOn: $store.debugFreeLimit)
+                .onChange(of: store.debugFreeLimit) { model.updateTypingLock() }
+            LabeledContent("Words written", value: model.stats.totalWords.formatted())
             Picker("Simulate posture", selection: Binding(get: { fold.simulation }, set: { value in
                 fold.simulation = value
                 UserDefaults.standard.set(value.rawValue, forKey: "foldSimulation")

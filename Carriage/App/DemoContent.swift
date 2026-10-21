@@ -51,7 +51,7 @@ enum DemoContent {
         }
         for offset in 0..<9 {
             let date = Calendar.current.date(byAdding: .day, value: -offset, to: .now)!
-            context.insert(WritingDay(day: WritingDay.key(for: date), words: [620, 540, 810, 505, 700, 230, 900, 515, 640][offset], goal: 500))
+            context.insert(WritingDay(day: WritingDay.key(for: date), words: [620, 480, 560, 505, 410, 230, 520, 415, 460][offset], goal: 500))
         }
         try? context.save()
     }

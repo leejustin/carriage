@@ -29,6 +29,12 @@ final class Store {
     /// True once the App Store has answered at least once, so a refund check can trust `purchased`.
     private(set) var entitlementsChecked = false
     var lastError: String?
+    #if DEBUG
+    /// Debug builds only: whether the free version's word limit applies.
+    var debugFreeLimit = UserDefaults.standard.bool(forKey: "debugFreeLimit") {
+        didSet { UserDefaults.standard.set(debugFreeLimit, forKey: "debugFreeLimit") }
+    }
+    #endif
 
     @ObservationIgnored private var updates: Task<Void, Never>?
     @ObservationIgnored private let log = Logger(subsystem: "Carriage", category: "Store")
@@ -44,8 +50,9 @@ final class Store {
     var isUnlocked: Bool {
         if case .upfront = Monetization.current { return true }
         #if DEBUG
-        // `-unlocked`: App Store screenshots of the machine, without the free-words note.
-        if ProcessInfo.processInfo.arguments.contains("-unlocked") { return true }
+        // Debug builds are for trying the machine, so they type without limit unless Settings › Developer turns
+        // the free version on (or `-debugFreeLimit YES`). `-unlocked` forces it off, for screenshots.
+        if ProcessInfo.processInfo.arguments.contains("-unlocked") || !debugFreeLimit { return true }
         #endif
         return purchased.contains(ProductID.unlock)
     }

@@ -48,7 +48,7 @@ shoot 05-cherry -finish cherry -keyboardStyle split
 if [[ "$DEVICE" != *Duo* ]]; then
   OUT="$ROOT/docs/screenshots/purchases"
   mkdir -p "$OUT"
-  UNLOCKED= shoot unlock -screenshotScene paywall
+  UNLOCKED= shoot unlock -screenshotScene paywall -debugFreeLimit YES
 fi
 xcrun simctl status_bar "$UDID" clear
 
