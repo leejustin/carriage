@@ -162,10 +162,10 @@ extension AppModel {
     }
 
     /// A typed-page picture for sharing: the opening of the page on paper, signed "Typed on Carriage".
-    func shareImage(_ page: Page? = nil) {
+    func shareImage(_ page: Page? = nil, format: TypedPageImage.Format = .post) {
         guard let page = page ?? engine.page else { return }
         engine.save()
-        let image = TypedPageImage.render(PageSnapshot(page), face: settings.typeface)
+        let image = TypedPageImage.render(PageSnapshot(page), face: settings.typeface, format: format, finish: settings.finish, engraving: settings.engraving)
         exportRequest = ExportRequest(items: [image])
     }
 

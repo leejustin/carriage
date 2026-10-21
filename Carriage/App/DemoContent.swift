@@ -75,6 +75,16 @@ enum DemoContent {
         }
     }
 
+    /// Writes the current page's share images to Documents (`-exportShareImages`), for eyeballing them.
+    static func exportShareImagesIfRequested(_ page: Page?, settings: AppSettings) {
+        guard ProcessInfo.processInfo.arguments.contains("-exportShareImages"), let page,
+              let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
+        for format in TypedPageImage.Format.allCases {
+            let image = TypedPageImage.render(PageSnapshot(page), face: settings.typeface, format: format, finish: settings.finish, engraving: settings.engraving)
+            try? image.pngData()?.write(to: documents.appendingPathComponent("share-\(format).png"))
+        }
+    }
+
     /// Writes the current page's PDF to Documents, for eyeballing the export.
     static func exportPDFIfRequested(_ page: Page?, settings: AppSettings) {
         guard ProcessInfo.processInfo.arguments.contains("-exportDemoPDF"), let page,

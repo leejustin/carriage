@@ -131,7 +131,10 @@ struct ControlsBar: View {
                     Button(format.name, systemImage: format.symbol) { model.export(format) }
                 }
             }
-            Button("Share as Image", systemImage: "photo") { model.shareImage() }
+            Menu("Share as Image", systemImage: "photo") {
+                Button("Post (4:5)", systemImage: "rectangle.portrait") { model.shareImage(format: .post) }
+                Button("Story (9:16)", systemImage: "iphone") { model.shareImage(format: .story) }
+            }
             Button("Print", systemImage: "printer") { model.print() }
             Button("Send to Notes", systemImage: "note.text") { model.sendToNotes() }
             Button("Copy Text", systemImage: "doc.on.doc") { model.copyText() }

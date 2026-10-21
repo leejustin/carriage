@@ -192,17 +192,33 @@ enum TypedPagePDF {
 
 /// A typed page as a picture for sharing: 4:5, the opening of the page on paper, signed "Typed on Carriage".
 enum TypedPageImage {
-    static let size = CGSize(width: 1080, height: 1350)
+    /// The shapes people post in: a feed post and a full-screen story.
+    enum Format: CaseIterable {
+        case post, story
 
-    static func render(_ page: PageSnapshot, face: Typeface) -> UIImage {
-        let font = face.font(size: 30)
-        let advance = face.advance(size: 30)
+        var size: CGSize {
+            switch self {
+            case .post: CGSize(width: 1080, height: 1350)
+            case .story: CGSize(width: 1080, height: 1920)
+            }
+        }
+    }
+
+    static let size = Format.post.size
+
+    /// The page as a typed sheet resting on the desk, a little askew, with the machine's brass plate below it.
+    static func render(_ page: PageSnapshot, face: Typeface, format: Format = .post, finish: MachineFinish = .seafoam, engraving: String = "") -> UIImage {
+        let size = format.size
+        // The sheet: most of the width, its height set by the format, with room for the plate underneath.
+        let sheet = CGRect(x: 90, y: format == .story ? 240 : 110, width: size.width - 180, height: size.height - (format == .story ? 520 : 330))
+        let font = face.font(size: 28)
+        let advance = face.advance(size: 28)
         let styler = InkStyler(font: font, ink: page.ink, paper: page.paper, face: face, seed: page.inkSeed, lineSpacing: .oneAndHalf, advance: advance)
         let storage = NSTextStorage(attributedString: styler.attributedText(body: page.body, strikes: page.strikes, underlines: page.underlines))
         let layout = NSLayoutManager()
         storage.addLayoutManager(layout)
-        let inset = UIEdgeInsets(top: 120, left: 110, bottom: 190, right: 110)
-        let container = NSTextContainer(size: CGSize(width: size.width - inset.left - inset.right, height: size.height - inset.top - inset.bottom))
+        let inset = UIEdgeInsets(top: 80, left: 72, bottom: 90, right: 72)
+        let container = NSTextContainer(size: CGSize(width: sheet.width - inset.left - inset.right, height: sheet.height - inset.top - inset.bottom))
         container.lineFragmentPadding = 0
         container.lineBreakMode = .byWordWrapping
         layout.addTextContainer(container)
@@ -212,11 +228,26 @@ enum TypedPageImage {
         return UIGraphicsImageRenderer(size: size, format: format).image { context in
             let cg = context.cgContext
             let bounds = CGRect(origin: .zero, size: size)
+            // The desk, in the machine's enamel, with light falling from above.
+            let desk = CGGradient(colorsSpace: nil, colors: [finish.highlight.cgColor, finish.body.cgColor, finish.shadow.cgColor] as CFArray, locations: [0, 0.45, 1])!
+            cg.drawLinearGradient(desk, start: .zero, end: CGPoint(x: 0, y: size.height), options: [])
             cg.saveGState()
-            UIColor(patternImage: PaperTexture.paper(page.paper)).setFill()
+            UIColor(patternImage: PaperTexture.enamel(finish)).withAlphaComponent(0.35).setFill()
             cg.fill(bounds)
             cg.restoreGState()
-            let origin = CGPoint(x: inset.left, y: inset.top)
+
+            // The sheet, turned a degree, with a soft shadow on the desk.
+            cg.saveGState()
+            cg.translateBy(x: sheet.midX, y: sheet.midY)
+            cg.rotate(by: -0.016)
+            cg.translateBy(x: -sheet.midX, y: -sheet.midY)
+            cg.setShadow(offset: CGSize(width: 0, height: 14), blur: 40, color: UIColor(white: 0, alpha: 0.35).cgColor)
+            UIColor(cgColor: page.paper.color.cgColor).setFill()
+            cg.fill(sheet)
+            cg.setShadow(offset: .zero, blur: 0, color: nil)
+            UIColor(patternImage: PaperTexture.paper(page.paper)).setFill()
+            cg.fill(sheet)
+            let origin = CGPoint(x: sheet.minX + inset.left, y: sheet.minY + inset.top)
             let glyphs = layout.glyphRange(for: container)
             layout.drawGlyphs(forGlyphRange: glyphs, at: origin)
             TypedPagePDF.drawStrikes(storage: storage, layout: layout, container: container, glyphs: glyphs, origin: origin, font: font, advance: advance, ink: page.ink)
@@ -226,13 +257,39 @@ enum TypedPageImage {
                 let used = layout.usedRect(for: container)
                 more.draw(at: CGPoint(x: origin.x, y: origin.y + used.maxY + 6))
             }
-            let mark = NSAttributedString(string: "TYPED ON CARRIAGE", attributes: [
-                .font: Legend.uiFont(size: 22),
-                .foregroundColor: UIColor(hex: 0xA22D27),
-                .kern: 5,
+            cg.restoreGState()
+
+            // The brass plate, and a quiet line under it.
+            let name = engraving.trimmingCharacters(in: .whitespacesAndNewlines)
+            let plateText = NSAttributedString(string: name.isEmpty ? "CARRIAGE" : "CARRIAGE · \(name.uppercased())", attributes: [
+                .font: Legend.uiFont(size: 30),
+                .foregroundColor: UIColor(hex: 0x3B2A12),
+                .kern: 9,
             ])
-            let markSize = mark.size()
-            mark.draw(at: CGPoint(x: size.width - inset.right - markSize.width, y: size.height - 110))
+            let textSize = plateText.size()
+            let plate = CGRect(x: (size.width - textSize.width - 90) / 2, y: sheet.maxY + (size.height - sheet.maxY) * 0.36, width: textSize.width + 90, height: 62)
+            let platePath = UIBezierPath(roundedRect: plate, cornerRadius: plate.height / 2)
+            cg.saveGState()
+            cg.setShadow(offset: CGSize(width: 0, height: 4), blur: 8, color: UIColor(white: 0, alpha: 0.35).cgColor)
+            UIColor(hex: 0xB8955A).setFill()
+            platePath.fill()
+            cg.restoreGState()
+            cg.saveGState()
+            platePath.addClip()
+            let brass = CGGradient(colorsSpace: nil, colors: [
+                UIColor(hex: 0xF2DCA6).cgColor, UIColor(hex: 0xB8955A).cgColor, UIColor(hex: 0xE3C88E).cgColor, UIColor(hex: 0x8A6A35).cgColor,
+            ] as CFArray, locations: [0, 0.45, 0.6, 1])!
+            cg.drawLinearGradient(brass, start: CGPoint(x: 0, y: plate.minY), end: CGPoint(x: 0, y: plate.maxY), options: [])
+            cg.restoreGState()
+            plateText.draw(at: CGPoint(x: plate.midX - textSize.width / 2 + 4, y: plate.midY - textSize.height / 2))
+
+            let line = NSAttributedString(string: "TYPED ON CARRIAGE", attributes: [
+                .font: Legend.uiFont(size: 22),
+                .foregroundColor: finish.printColor.withAlphaComponent(0.85),
+                .kern: 6,
+            ])
+            let lineSize = line.size()
+            line.draw(at: CGPoint(x: (size.width - lineSize.width) / 2, y: plate.maxY + 26))
         }
     }
 }

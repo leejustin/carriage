@@ -86,6 +86,7 @@ final class AppModel {
         loadNextPage(feed: false, explainLimit: false)
         #if DEBUG
         DemoContent.exportPDFIfRequested(engine.page, settings: settings)
+        DemoContent.exportShareImagesIfRequested(engine.page, settings: settings)
         DemoContent.stageScreenshotScene(self)
         #endif
         Task {
