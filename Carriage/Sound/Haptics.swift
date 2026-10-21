@@ -84,7 +84,7 @@ final class Haptics {
     /// The lever, the ratchet down the rack as the carriage slides, then the carriage hitting its stop.
     func carriageReturn(slide: TimeInterval) {
         guard isEnabled else { return }
-        if let engine {
+        if engine != nil {
             if returnSlide != slide {
                 // Built once per slide length (it changes only with the machine or the carriage setting).
                 returnSlide = slide
