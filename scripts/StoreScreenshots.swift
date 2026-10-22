@@ -18,11 +18,13 @@ struct Shot {
     var night = false
 }
 
+// Every iPhone sees the Duo first, half-folded the way Carriage is meant to be used, then the single screen.
 let shots = [
-    Shot(source: "01-typing", title: "A quiet place\nto write.", line: "YOUR PHONE GOES QUIET. THE WORDS COME OUT."),
+    Shot(folder: "iPhone-Duo", source: "01-typing", title: "Half-fold it.\nStart typing.", line: "THE PAGE ON TOP, A FULL TYPEWRITER BELOW."),
+    Shot(folder: "iPhone-Duo", source: "03-cherry", title: "A beautiful\nlittle machine.", line: "CHROME KEYS, SOFT CLACKS, A BELL AT THE MARGIN."),
+    Shot(source: "01-typing", title: "On any iPhone,\ntoo.", line: "THE PAGE AND THE KEYS ON ONE SCREEN."),
     Shot(source: "02-focus", title: "Just you\nand the page.", line: "TAP THE MOON AND EVERYTHING ELSE FADES AWAY."),
-    Shot(source: "05-cherry", title: "A beautiful\nlittle machine.", line: "CHROME KEYS, SOFT CLACKS, A BELL AT THE MARGIN."),
-    Shot(source: "04-night", title: "Write late,\nin peace.", line: "NIGHT DESK: LIGHT INK ON DARK PAPER.", night: true),
+    Shot(folder: "iPhone-Duo", source: "04-night", title: "Write late,\nin peace.", line: "NIGHT DESK: LIGHT INK ON DARK PAPER.", night: true),
     Shot(source: "03-library", title: "Every page,\nkept safe.", line: "NOTEBOOKS, STREAKS, ICLOUD AND FILES."),
 ]
 
@@ -83,7 +85,17 @@ func render(_ shot: Shot, size: CGSize, to url: URL) throws {
     ])
     line.draw(with: CGRect(x: 60 * scale, y: size.height - 520 * scale, width: size.width - 120 * scale, height: 50 * scale), options: [.usesLineFragmentOrigin])
 
-    if duo {
+    if duo && size.width / size.height < 0.6 {
+        // On a single-screen iPhone's canvas, the Duo sits in the middle with a note saying which phone it is.
+        let device = drawLaptop(screen, in: CGRect(x: 24 * scale, y: 420 * scale, width: size.width - 48 * scale, height: size.height - 1100 * scale), night: shot.night)
+        let note = NSAttributedString(string: "SHOWN ON IPHONE DUO", attributes: [
+            .font: NSFont(name: "Futura-Medium", size: 26 * scale)!,
+            .foregroundColor: ink.withAlphaComponent(0.45),
+            .kern: 4 * scale,
+            .paragraphStyle: paragraph,
+        ])
+        note.draw(with: CGRect(x: 60 * scale, y: device.minY - 150 * scale, width: size.width - 120 * scale, height: 44 * scale), options: [.usesLineFragmentOrigin])
+    } else if duo {
         drawLaptop(screen, in: CGRect(x: 40 * scale, y: 70 * scale, width: size.width - 80 * scale, height: size.height - 640 * scale), night: shot.night)
     } else {
         drawPhone(screen, size: size, scale: scale, night: shot.night)
@@ -118,9 +130,10 @@ func drawPhone(_ screen: NSImage, size: CGSize, scale: CGFloat, night: Bool) {
 
 /// The Duo as it's really used: half-folded on the desk like a little laptop, the page standing up on the top half
 /// and the keys lying flat on the bottom half, seen from in front and a little above. Fills `area` as wide as fits,
-/// resting on its bottom edge.
-func drawLaptop(_ screen: NSImage, in area: CGRect, night: Bool) {
-    guard let cg = screen.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return }
+/// centred in it, and returns where it landed.
+@discardableResult
+func drawLaptop(_ screen: NSImage, in area: CGRect, night: Bool) -> CGRect {
+    guard let cg = screen.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return .zero }
     let w = CGFloat(cg.width), fold = CGFloat(cg.height / 2)
     let bezel: CGFloat = 46, hinge: CGFloat = 8
     let halfSize = CGSize(width: w + 2 * bezel, height: fold + bezel + hinge)
@@ -170,7 +183,7 @@ func drawLaptop(_ screen: NSImage, in area: CGRect, night: Bool) {
     let raw = (pageTop + pageBack + keysUnder + keysNear + pageHinge).map(project)
     let minX = raw.map(\.x).min()!, maxX = raw.map(\.x).max()!, minY = raw.map(\.y).min()!, maxY = raw.map(\.y).max()!
     let fit = min(area.width / (maxX - minX), area.height / (maxY - minY))
-    let ox = area.midX - (minX + maxX) / 2 * fit, oy = area.minY - minY * fit
+    let ox = area.midX - (minX + maxX) / 2 * fit, oy = area.midY - (minY + maxY) / 2 * fit
     func place(_ p: SIMD3<Double>) -> CGPoint {
         let q = project(p)
         return CGPoint(x: ox + q.x * fit, y: oy + q.y * fit)
@@ -239,6 +252,7 @@ func drawLaptop(_ screen: NSImage, in area: CGRect, night: Bool) {
     let band = quad([pageHinge[0], pageHinge[1], pageHinge[1] + SIMD3(0, 0, 70), pageHinge[0] + SIMD3(0, 0, 70)]).bounds
     NSGradient(starting: NSColor.black.withAlphaComponent(0.35), ending: NSColor.black.withAlphaComponent(0))!.draw(in: band, angle: -90)
     NSGraphicsContext.restoreGraphicsState()
+    return CGRect(x: ox + minX * fit, y: oy + minY * fit, width: (maxX - minX) * fit, height: (maxY - minY) * fit)
 }
 
 for (folder, size, set) in [("store-6.9", CGSize(width: 1320, height: 2868), shots), ("store-6.3", CGSize(width: 1206, height: 2622), shots), ("store-duo", CGSize(width: 2007, height: 2853), duoShots)] {
