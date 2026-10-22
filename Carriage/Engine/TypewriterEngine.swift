@@ -341,27 +341,46 @@ final class TypewriterEngine {
         keyboard.shiftState = state
     }
 
-    /// Lights shift at the start of a sentence (page start, after a return, or after ". " "? " "! "), and turns an
-    /// automatic shift back off if the writer moves on without using it. A shift the writer set is never touched.
+    /// Lights shift at the start of a sentence, and turns an automatic shift back off if the writer moves on without
+    /// using it. A shift the writer set is never touched.
     private func updateAutoShift() {
         guard settings.autoCapitalize, shift != .locked, shift == .off || shiftIsAutomatic else { return }
-        let text = paper.textView.textStorage.string
-        var wantsCapital = false
-        var sawSpace = false
-        for character in text.reversed() {
-            if character == " " || character == "\t" {
-                sawSpace = true
-                continue
-            }
-            wantsCapital = character == "\n" || (sawSpace && ".?!".contains(character))
-            break
-        }
-        if text.isEmpty { wantsCapital = true }
+        let wantsCapital = Self.startsSentence(after: paper.textView.textStorage.string)
         if wantsCapital, shift == .off {
             setShift(.once, automatic: true)
         } else if !wantsCapital, shiftIsAutomatic {
             setShift(.off)
         }
+    }
+
+    /// Whether the next letter typed after `text` begins a sentence: on an empty page, after a blank line, or after
+    /// ". " "? " "! " (closing quotes allowed) with a space or a return. A single return alone doesn't count; at the
+    /// margin the carriage goes home in the middle of sentences all the time.
+    nonisolated static func startsSentence(after text: String) -> Bool {
+        let closers: Set<Character> = ["\"", "'", "\u{201D}", "\u{2019}", ")"]
+        var sawSpace = false
+        var newlines = 0
+        var inClosers = false
+        for character in text.reversed() {
+            if !inClosers {
+                if character == " " || character == "\t" {
+                    sawSpace = true
+                    continue
+                }
+                if character == "\n" {
+                    newlines += 1
+                    continue
+                }
+                if closers.contains(character) {
+                    inClosers = true
+                    continue
+                }
+            } else if closers.contains(character) {
+                continue
+            }
+            return newlines >= 2 || (".?!".contains(character) && (sawSpace || newlines > 0))
+        }
+        return true
     }
 
     private func hardwareInsert(_ text: String) {

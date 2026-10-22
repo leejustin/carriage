@@ -354,3 +354,24 @@ import UIKit
         #expect(TextExport.plainText(body: body, strikes: [strike]) == "It was the summer.")
     }
 }
+
+@Suite struct AutoCapitalTests {
+    @Test func capitalisesAtTheStartOfAPageAndAfterASentence() {
+        #expect(TypewriterEngine.startsSentence(after: ""))
+        #expect(TypewriterEngine.startsSentence(after: "The rain came. "))
+        #expect(TypewriterEngine.startsSentence(after: "Did it? "))
+        #expect(TypewriterEngine.startsSentence(after: "\u{201C}Go home.\u{201D} "))
+        #expect(!TypewriterEngine.startsSentence(after: "The rain came."))
+        #expect(!TypewriterEngine.startsSentence(after: "The rain "))
+    }
+
+    @Test func aReturnAtTheMarginDoesNotStartASentence() {
+        // The carriage goes home mid-sentence at the margin; the next word carries on the sentence.
+        #expect(!TypewriterEngine.startsSentence(after: "but the old mill\n"))
+        #expect(TypewriterEngine.startsSentence(after: "as if it were waiting.\n"))
+    }
+
+    @Test func aBlankLineStartsAParagraph() {
+        #expect(TypewriterEngine.startsSentence(after: "Chapter One\n\n"))
+    }
+}
