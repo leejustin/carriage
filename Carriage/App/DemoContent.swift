@@ -101,6 +101,54 @@ enum DemoContent {
         }
     }
 
+    /// `-previewScript`: types a short scene on the on-screen keys for the App Store app preview, at a typist's
+    /// uneven pace: a new paragraph that rings the bell and sends the carriage home, a slip struck out with
+    /// X-OUT, then the moon. Every sound is noted and mixed to Documents/preview-sound.wav at the end, with the
+    /// time of the first one in preview-sound.txt, because a simulator's screen recording is silent.
+    @MainActor
+    static func previewScriptIfRequested(_ model: AppModel) {
+        guard ProcessInfo.processInfo.arguments.contains("-previewScript") else { return }
+        SoundEngine.shared.startPreviewLog()
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(1.5))
+            let rhythm = [0.11, 0.13, 0.09, 0.15, 0.12, 0.1, 0.14]
+            var n = 0
+            @MainActor func press(_ action: KeyAction, after pause: Double) async {
+                KeyboardView.demoTarget?.demoPress(action)
+                try? await Task.sleep(for: .seconds(pause))
+            }
+            @MainActor func type(_ text: String) async {
+                for word in text.split(separator: " ", omittingEmptySubsequences: false) {
+                    // Send the carriage home when the next word won't fit, as a typist does after the bell.
+                    let paper = model.engine.paper
+                    if paper.currentColumn > 0, paper.currentColumn + word.count > paper.metrics.columns - 1 {
+                        await press(.carriageReturn, after: 0.75)
+                    }
+                    for character in word {
+                        n += 1
+                        let pause = ",.".contains(character) ? 0.28 : rhythm[n % rhythm.count]
+                        await press(.character(String(character).lowercased(), shifted: String(character).uppercased()), after: pause)
+                    }
+                    await press(.space, after: 0.17)
+                }
+            }
+            await press(.carriageReturn, after: 0.5)
+            await press(.carriageReturn, after: 0.6)
+            await type("By spring the water had gone, but the mill wheel still turned some nights, as if wiating")
+            for _ in 0..<7 { await press(.delete, after: 0.13) }
+            await type("waiting for someone.")
+            try? await Task.sleep(for: .seconds(0.6))
+            model.toggleFocus()
+            try? await Task.sleep(for: .seconds(1.4))
+            await press(.carriageReturn, after: 0.5)
+            await type("She kept writing.")
+            try? await Task.sleep(for: .seconds(1.5))
+            guard let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first,
+                  let first = SoundEngine.shared.writePreviewLog(to: documents.appendingPathComponent("preview-sound.wav")) else { return }
+            try? "\(first) \(CACurrentMediaTime())".write(to: documents.appendingPathComponent("preview-sound.txt"), atomically: true, encoding: .utf8)
+        }
+    }
+
     /// `-exportSounds`: writes a listening demo of every machine and desk sound to Documents/sounds, for hearing
     /// the app where the Simulator's audio can't reach (a remote session).
     static func exportSoundsIfRequested() {

@@ -98,6 +98,9 @@ final class KeyboardView: UIView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
+        #if DEBUG
+        if window != nil { Self.demoTarget = self }
+        #endif
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         enamel.frame = bounds
@@ -304,6 +307,30 @@ final class KeyboardView: UIView {
         repeatTimer = nil
     }
 }
+
+#if DEBUG
+extension KeyboardView {
+    /// The keyboard on screen, for `-previewScript` to type on.
+    static weak var demoTarget: KeyboardView?
+
+    /// Presses a key as a finger would, for the App Store preview: the cap goes down, the key fires through the
+    /// same path a touch takes, and it springs back up.
+    func demoPress(_ action: KeyAction) {
+        let target: KeyCapView?
+        if case let .character(lower, _) = action {
+            target = caps.first { if case let .character(l, _) = $0.spec.action { return l == lower } else { return false } }
+        } else {
+            target = caps.first { $0.spec.action == action }
+        }
+        guard let cap = target else { return }
+        cap.setPressed(true, reduceMotion: reduceMotion)
+        fire(cap)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.09) { [weak self] in
+            cap.setPressed(false, reduceMotion: self?.reduceMotion ?? false)
+        }
+    }
+}
+#endif
 
 /// One key: its stem, its shadow and its cap.
 final class KeyCapView: UIView {

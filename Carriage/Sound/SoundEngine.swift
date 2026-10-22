@@ -35,6 +35,9 @@ final class SoundEngine {
     private var bank: [SoundKind: [AVAudioPCMBuffer]] = [:]
     private var format: AVAudioFormat?
     private var lastPick: [SoundKind: Int] = [:]
+    #if DEBUG
+    fileprivate var previewLog: [PreviewSound]?
+    #endif
     private var observers: [NSObjectProtocol] = []
     private let log = Logger(subsystem: "Carriage", category: "Sound")
 
@@ -139,16 +142,20 @@ final class SoundEngine {
     /// Plays `kind` now. `pan` runs from -1 (left) to 1 (right) so keys sound where they sit.
     func play(_ kind: SoundKind, pan: Float = 0, gain: Float = 1) {
         guard isEnabled, let takes = bank[kind], !takes.isEmpty else { return }
-        guard ensureRunning() else { return }
         // Never the same take twice in a row, so fast typing doesn't sound like a loop.
         var pick = Int.random(in: 0..<takes.count)
         if takes.count > 1, pick == lastPick[kind] { pick = (pick + 1) % takes.count }
+        let level = gain * Float.random(in: 0.86...1.0)
+        #if DEBUG
+        previewLog?.append(PreviewSound(time: CACurrentMediaTime(), buffer: takes[pick], gain: level, pan: max(-1, min(1, pan)) * 0.35))
+        #endif
+        guard ensureRunning() else { return }
         lastPick[kind] = pick
 
         let player = voices[nextVoice]
         nextVoice = (nextVoice + 1) % voices.count
         player.pan = max(-1, min(1, pan)) * 0.35
-        player.volume = gain * Float.random(in: 0.86...1.0)
+        player.volume = level
         player.scheduleBuffer(takes[pick], at: nil, options: .interrupts)
         if !player.isPlaying { try? player.playAudio() }
     }
@@ -281,6 +288,56 @@ nonisolated enum RecordedSamples {
         return Array(UnsafeBufferPointer(start: channel, count: Int(output.frameLength)))
     }
 }
+
+#if DEBUG
+/// One sound played while the App Store preview was being recorded.
+struct PreviewSound {
+    var time: CFTimeInterval
+    var buffer: AVAudioPCMBuffer
+    var gain: Float
+    var pan: Float
+}
+
+extension SoundEngine {
+    /// Starts noting every sound played, for the App Store preview: a simulator's screen recording is silent, so
+    /// its soundtrack is put together afterwards from exactly what played.
+    func startPreviewLog() { previewLog = [] }
+
+    /// Mixes everything played since `startPreviewLog()` into a stereo WAV at `url`, time zero being the first
+    /// sound, and returns when (in `CACurrentMediaTime`) that first sound played.
+    @discardableResult
+    func writePreviewLog(to url: URL) -> CFTimeInterval? {
+        guard let log = previewLog, let first = log.first, let format = format else { return nil }
+        previewLog = nil
+        let rate = format.sampleRate
+        let end = log.map { $0.time - first.time + Double($0.buffer.frameLength) / rate }.max() ?? 0
+        let frames = Int((end + 0.5) * rate)
+        var left = [Float](repeating: 0, count: frames), right = left
+        for sound in log {
+            guard let samples = sound.buffer.floatChannelData?[0] else { continue }
+            let start = Int((sound.time - first.time) * rate)
+            // Equal-power pan, as the mixer does it.
+            let angle = (sound.pan + 1) * .pi / 4
+            let l = cos(angle) * sound.gain, r = sin(angle) * sound.gain
+            for i in 0..<Int(sound.buffer.frameLength) where start + i < frames {
+                left[start + i] += samples[i] * l
+                right[start + i] += samples[i] * r
+            }
+        }
+        guard let stereo = AVAudioFormat(standardFormatWithSampleRate: rate, channels: 2),
+              let buffer = AVAudioPCMBuffer(pcmFormat: stereo, frameCapacity: AVAudioFrameCount(frames)),
+              let file = try? AVAudioFile(forWriting: url, settings: stereo.settings) else { return nil }
+        buffer.frameLength = AVAudioFrameCount(frames)
+        let peak = max(1, (left + right).map(abs).max() ?? 1)
+        for i in 0..<frames {
+            buffer.floatChannelData![0][i] = left[i] / peak
+            buffer.floatChannelData![1][i] = right[i] / peak
+        }
+        try? file.write(from: buffer)
+        return first.time
+    }
+}
+#endif
 
 private extension String {
     /// `hashValue` changes every launch; this doesn't.

@@ -90,6 +90,7 @@ final class AppModel {
         DemoContent.exportPDFIfRequested(engine.page, settings: settings)
         DemoContent.exportShareImagesIfRequested(engine.page, settings: settings)
         DemoContent.autoTypeIfRequested(self)
+        DemoContent.previewScriptIfRequested(self)
         DemoContent.exportSoundsIfRequested()
         DemoContent.stageScreenshotScene(self)
         #endif
