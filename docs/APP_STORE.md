@@ -98,15 +98,29 @@ Review screenshot: `docs/screenshots/purchases/unlock.png` (the unlock letter). 
 
 ## Screenshots
 
-Upload `docs/screenshots/store-6.3/` (App Store Connect's main iPhone slot, 1206 x 2622) in order; `store-6.9/` is the same set at 1320 x 2868. To make them again: `scripts/screenshots.sh "iPhone 18 Pro Max"`, then `swift scripts/StoreScreenshots.swift` from the repo root, which frames each capture with its caption:
+Every iPhone sees the Duo first, half-folded like a laptop, then the single screen. Upload
+`docs/screenshots/store-6.3/` (App Store Connect's main iPhone slot, 1206 x 2622) in order; `store-6.9/` is the same
+set at 1320 x 2868. `swift scripts/StoreScreenshots.swift` from the repo root draws them all from the raw captures
+(`scripts/screenshots.sh` takes those):
 
-1. A quiet place to write. *Your phone goes quiet. The words come out.*
-2. Just you and the page. *Tap the moon and everything else fades away.*
-3. A beautiful little machine. *Chrome keys, soft clacks, a bell at the margin.*
-4. Write late, in peace. *Night desk: light ink on dark paper.*
-5. Every page, kept safe. *Notebooks, streaks, iCloud and Files.*
+1. Half-fold it. Start typing. *The page on top, a full typewriter below.* (Duo, half-folded)
+2. A beautiful little machine. *Chrome keys, soft clacks, a bell at the margin.* (Duo, cherry)
+3. On any iPhone, too. *The page and the keys on one screen.*
+4. Just you and the page. *Tap the moon and everything else fades away.*
+5. Write late, in peace. *Night desk: light ink on dark paper.* (Duo)
+6. Every page, kept safe. *Notebooks, streaks, iCloud and Files.*
 
-iPhone Duo slot: upload `docs/screenshots/store-duo/` (2007 x 2853, the Duo on its side, half-folded: page on top, keys below). The raw captures are in `iPhone-Duo/`, taken on the Duo simulator with `-seedDemo -laptopPreview` and turned upright (`sips -r 270`); `swift scripts/StoreScreenshots.swift` frames them.
+The Duo shots carry a small "Shown on iPhone Duo" line. The iPhone Duo slot takes `docs/screenshots/store-duo/`
+(2007 x 2853), all four drawn half-folded; the raw captures in `iPhone-Duo/` were taken with `-seedDemo
+-laptopPreview` and turned upright.
+
+## Header, search results and app preview
+
+- Product page header: `docs/screenshots/creative/header.png` (3840 x 1646, no alpha). The Duo sits in the middle,
+  below the top fifth, where the status bar and back button cover it on iPhone.
+- Search results: `docs/screenshots/creative/search.png` (3840 x 2560): "A typewriter for your iPhone."
+- App preview (iPhone): `docs/previews/iphone.mp4`, 886 x 1920, about 26 seconds with the real sounds.
+  `scripts/preview/make.sh` records it again.
 
 ## Spanish (Mexico)
 
