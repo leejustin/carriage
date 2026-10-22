@@ -8,15 +8,26 @@ Carriage: Typewriter
 
 ## Subtitle (30)
 
-A quiet typewriter for focus
+Focus writing, made for Duo
+
+The name already says "Typewriter"; App Store search reads name, subtitle and keywords together, so the subtitle
+spends its words on new searches (focus, writing, duo) instead of repeating it.
 
 ## Promotional text (170, can change without review)
 
-Open Carriage and your iPhone goes quiet: just the page, the soft clack of the keys and the ring of the bell. Made for iPhone Duo, lovely on every iPhone.
+Half-fold your iPhone Duo into a little typewriter: the page on top, real clacking keys below. Your phone goes quiet and the words come out. Lovely on every iPhone, too.
 
 ## Description (4,000)
 
-Carriage is a quiet place to write. Open it and your iPhone goes silent, the screen clears down to a sheet of paper, and every word you type lands with the soft clack of a real typewriter.
+Carriage turns your iPhone into a typewriter. Half-fold an iPhone Duo like a little laptop and the page stands up on the top half while a full typewriter keyboard waits on the bottom. On any other iPhone, the page and the keys share one screen.
+
+Open it and your iPhone goes quiet. Every key lands with the clack of a real, recorded typewriter, the bell rings near the margin, and you push the carriage home at the end of each line.
+
+MADE FOR IPHONE DUO
+• Half-fold it like a tiny laptop: the page on the top half, a full typewriter keyboard on the bottom.
+• Hold it like a book and your draft becomes a two-page spread to read.
+• Close it and read on the outer screen. Fold it shut mid-sentence and your page is saved; open it and you're back where you were.
+• On every other iPhone, Carriage is a lovely pocket machine.
 
 MADE TO HELP YOU FOCUS
 • Set it up once and your iPhone silences notifications whenever Carriage is open. Carriage walks you through it in a few taps.
@@ -33,12 +44,6 @@ A BEAUTIFUL MACHINE
 • Recorded rain on the window or a fire in the grate under the keys. A warm desk lamp that follows the hour.
 • Engrave your name on the brass plate.
 
-MADE FOR IPHONE DUO
-• Half-fold it like a tiny laptop: the page on the top half, a full typewriter keyboard on the bottom.
-• Hold it like a book and your draft becomes a two-page spread to read.
-• Close it and read on the outer screen. Fold it shut mid-sentence and your page is saved; open it and you're back where you were.
-• On every other iPhone, Carriage is a lovely pocket machine.
-
 YOUR WRITING, KEPT SAFE
 • Saves as you type and syncs with iCloud.
 • Keeps a plain Markdown copy of every page in Files.
@@ -52,11 +57,16 @@ Your first 5,000 words are free, with every paper and ribbon. Unlock Carriage on
 
 ## Keywords (100)
 
-typewriter,focus,writing,journal,distraction free,quiet,mindful,diary,writer,novel,duo,aesthetic
+distraction,free,journal,diary,novel,writer,typing,foldable,retro,vintage,aesthetic,asmr,quiet,zen
 
-## What's new (1.0)
+Nothing here repeats a word from the name or subtitle, which Apple already searches; words are single and
+comma-separated, since Apple combines them into phrases ("distraction free", "duo typewriter") on its own.
 
-The first sheet in the machine.
+## What's new (1.0.1)
+
+Small polish and stability improvements.
+
+Writing on an iPhone Duo? Half-fold it like a little laptop: the page stands up on top, and a full typewriter waits below.
 
 ## Category
 
@@ -97,3 +107,50 @@ Upload `docs/screenshots/store-6.3/` (App Store Connect's main iPhone slot, 1206
 5. Every page, kept safe. *Notebooks, streaks, iCloud and Files.*
 
 iPhone Duo slot: upload `docs/screenshots/store-duo/` (2007 x 2853, the Duo on its side, half-folded: page on top, keys below). The raw captures are in `iPhone-Duo/`, taken on the Duo simulator with `-seedDemo -laptopPreview` and turned upright (`sips -r 270`); `swift scripts/StoreScreenshots.swift` frames them.
+
+## Spanish (Mexico)
+
+A second listing for Spanish speakers. The US store searches its keywords too, so they carry English words the
+English listing had no room for. The app itself is in English; screenshots fall back to the English set.
+
+Name (30): Carriage: Máquina de escribir
+
+Subtitle (30): Escribe sin distracciones
+
+Promotional text (170): Pliega tu iPhone Duo como una pequeña laptop: la hoja arriba y teclas que suenan de verdad abajo. Tu teléfono se queda en silencio y las palabras salen.
+
+Keywords (100): typewriter,escribir,diario,novela,enfoque,poesia,notebook,manuscript,poetry,essay,minimal,paper
+
+What's new (1.0.1): Pequeñas mejoras y más estabilidad. ¿Escribes en un iPhone Duo? Pliégalo como una pequeña laptop: la hoja arriba y una máquina de escribir completa abajo.
+
+Description:
+
+Carriage convierte tu iPhone en una máquina de escribir. Pliega un iPhone Duo como una pequeña laptop: la hoja queda de pie en la mitad de arriba y un teclado de máquina de escribir completo espera en la de abajo. En cualquier otro iPhone, la hoja y las teclas comparten una sola pantalla.
+
+Ábrela y tu iPhone se queda en silencio. Cada tecla suena como una máquina de escribir real, grabada; la campana suena cerca del margen y empujas el carro al final de cada línea.
+
+HECHA PARA IPHONE DUO
+• Pliégalo como una laptop diminuta: la hoja arriba y el teclado abajo.
+• Sostenlo como un libro y tu borrador se vuelve una doble página para leer.
+• Ciérralo y lee en la pantalla exterior. Si lo cierras a media frase, tu hoja se guarda; al abrirlo vuelves justo donde estabas.
+
+PARA CONCENTRARTE
+• Configúralo una vez y tu iPhone silencia las notificaciones mientras Carriage está abierta.
+• Toca la luna y todo desaparece excepto la hoja y las teclas.
+• Escribe como una máquina de verdad: sin borrar (X-OUT tacha con una x) y las teclas se detienen en el margen hasta que regresas el carro. ¿Prefieres borrar y saltos de línea automáticos? Están en Ajustes.
+
+UNA MÁQUINA PRECIOSA
+• Teclas redondas con aro cromado que se hunden bajo tus dedos, con un toque que se siente en cada golpe.
+• Máquinas de escribir reales, grabadas: cada tecla, la barra espaciadora, la campana y el carro. Una portátil italiana de los años 50 viene incluida; tres máquinas más vienen con el desbloqueo.
+• Cuatro papeles, cuatro colores de cinta y cinco acabados, del verde agua al rojo cereza. Escritorio nocturno con tinta clara sobre papel oscuro.
+• Lluvia en la ventana o fuego en la chimenea, grabados. Una lámpara cálida que sigue la hora del día.
+
+TU ESCRITURA, A SALVO
+• Se guarda mientras escribes y se sincroniza con iCloud.
+• Una copia en Markdown de cada hoja en Archivos, historial de versiones, cuadernos y un diario para cada día.
+• Metas diarias de palabras y rachas.
+• Exporta un PDF que parece escrito a máquina, o Markdown y texto plano.
+
+Sin suscripción. Sin anuncios. Sin cuentas. No recopilamos nada.
+
+Tus primeras 5,000 palabras son gratis, con todos los papeles y cintas. Desbloquea Carriage una sola vez para palabras ilimitadas y todas las máquinas, para siempre.
