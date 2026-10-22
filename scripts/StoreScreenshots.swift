@@ -263,3 +263,60 @@ for (folder, size, set) in [("store-6.9", CGSize(width: 1320, height: 2868), sho
     }
     print("wrote \(folder)")
 }
+
+// MARK: Creative assets
+
+// The product page header (21:9) and the search results card (3:2), saved as PNG without an alpha channel.
+func creative(size: CGSize, to url: URL, draw: (CGRect) -> Void) throws {
+    let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(size.width), pixelsHigh: Int(size.height), bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
+    NSGraphicsContext.saveGraphicsState()
+    NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+    draw(CGRect(origin: .zero, size: size))
+    NSGraphicsContext.restoreGraphicsState()
+    // Drawn into a bitmap with no alpha channel at all, as App Store Connect requires.
+    let flat = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: rep.pixelsWide, pixelsHigh: rep.pixelsHigh, bitsPerSample: 8, samplesPerPixel: 3, hasAlpha: false, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
+    NSGraphicsContext.saveGraphicsState()
+    NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: flat)
+    rep.draw(in: CGRect(origin: .zero, size: size))
+    NSGraphicsContext.restoreGraphicsState()
+    try flat.representation(using: .png, properties: [:])!.write(to: url)
+}
+
+/// The paper desk, lit warm from the upper left like the desk lamp.
+func desk(_ bounds: CGRect) {
+    NSGradient(starting: color(0xF6F1E6), ending: color(0xE3D8C2))!.draw(in: bounds, angle: -90)
+    let glow = NSGradient(colors: [color(0xFFF4D8, 0.85), color(0xFFF4D8, 0)])!
+    let r = bounds.height * 1.1
+    glow.draw(fromCenter: CGPoint(x: bounds.width * 0.3, y: bounds.maxY), radius: 0, toCenter: CGPoint(x: bounds.width * 0.3, y: bounds.maxY), radius: r, options: [])
+}
+
+let duoTyping = NSImage(contentsOf: root.appendingPathComponent("docs/screenshots/iPhone-Duo/01-typing.png"))!
+let creativeOut = root.appendingPathComponent("docs/screenshots/creative")
+try FileManager.default.createDirectory(at: creativeOut, withIntermediateDirectories: true)
+
+// Header: one clear idea, the Duo half-folded on the desk, in the middle where every crop keeps it.
+try creative(size: CGSize(width: 3840, height: 1646), to: creativeOut.appendingPathComponent("header.png")) { bounds in
+    desk(bounds)
+    // Kept below the top fifth, where the status bar and back button sit over it on iPhone.
+    drawLaptop(duoTyping, in: CGRect(x: bounds.midX - 800, y: 70, width: 1600, height: 1180), night: false)
+}
+
+// Search results: say what it is at a glance, and show it.
+try creative(size: CGSize(width: 3840, height: 2560), to: creativeOut.appendingPathComponent("search.png")) { bounds in
+    desk(bounds)
+    let ink = color(0x24211E)
+    let paragraph = NSMutableParagraphStyle()
+    paragraph.alignment = .left
+    paragraph.lineHeightMultiple = 1.0
+    NSAttributedString(string: "A typewriter\nfor your\niPhone.", attributes: [
+        .font: NSFont(name: "CourierPrime-Regular", size: 205)!, .foregroundColor: ink, .paragraphStyle: paragraph,
+        .strokeWidth: -1.2, .strokeColor: ink,
+    ]).draw(with: CGRect(x: 230, y: bounds.midY - 330, width: 1640, height: 900), options: [.usesLineFragmentOrigin])
+    color(0xA22D27).setFill()
+    NSBezierPath(roundedRect: CGRect(x: 240, y: bounds.midY - 420, width: 150, height: 14), xRadius: 7, yRadius: 7).fill()
+    NSAttributedString(string: "REAL CLACKS. NO DISTRACTIONS.", attributes: [
+        .font: NSFont(name: "Futura-Medium", size: 70)!, .foregroundColor: ink.withAlphaComponent(0.7), .kern: 9,
+    ]).draw(at: CGPoint(x: 236, y: bounds.midY - 580))
+    drawLaptop(duoTyping, in: CGRect(x: 1850, y: 160, width: 1880, height: bounds.height - 320), night: false)
+}
+print("wrote creative")
