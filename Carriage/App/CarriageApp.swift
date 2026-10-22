@@ -11,6 +11,9 @@ struct CarriageApp: App {
 
     init() {
         Typeface.registerBundledFonts()
+        #if DEBUG
+        CloudKitSchema.initializeIfRequested()
+        #endif
         container = Self.makeContainer()
         try? Tips.configure([.displayFrequency(.immediate)])
         DiagnosticsStore.shared.start()

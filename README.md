@@ -43,6 +43,7 @@ The hinge (`UIHingeInteraction`) and fold-line (`reservedRegions(kind: .division
 | --- | --- |
 | `-foldSimulation halfOpen` | Fake a posture: `regular`, `closed`, `halfOpen`, `flat`, `flatBook` (also in Settings › Developer) |
 | `-seedDemo` | Fill an empty library with sample pages and two weeks of writing history |
+| `-initCloudKitSchema` | Push every record type to the iCloud container's Development schema, for deploying to Production (needs an iCloud account) |
 | `-unlocked` | Act as if the unlock is bought, for screenshots |
 | `-lampHour 21` | Light the desk lamp for that hour |
 | `-engraving "J. Lee"` | Engrave a name on the plate |
