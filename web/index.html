@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Carriage: a typewriter for your iPhone</title>
-<meta name="description" content="Carriage turns your iPhone into a typewriter. Half-fold an iPhone Duo and the page stands up while a full typewriter keyboard waits below. Real recorded clacks, a bell at the margin, no delete key.">
+<title>Carriage: an analog typewriter for iPhone Duo</title>
+<meta name="description" content="Carriage is an analog typewriter for your iPhone Duo. Half-fold it and the page stands up while a full typewriter waits below. You can't type fast, and you can't take anything back. Write with intent.">
 <meta name="apple-itunes-app" content="app-id=6825005564">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Carriage: a typewriter for your iPhone">
-<meta property="og:description" content="Half-fold an iPhone Duo and the page stands up while a full typewriter waits below. Real recorded clacks, a bell at the margin, no delete key.">
+<meta property="og:title" content="Carriage: write with intent">
+<meta property="og:description" content="An analog typewriter for your iPhone Duo. Real recorded clacks, a bell at the margin, and no delete key.">
 <meta property="og:image" content="https://carriage.pages.dev/assets/og.jpg">
 <meta property="og:url" content="https://carriage.pages.dev/">
 <meta name="twitter:card" content="summary_large_image">
@@ -62,6 +62,14 @@ p.lead { font-size: clamp(17px, 1.8vw, 20px); max-width: 34em; }
 .feature ul { padding-left: 1.1em; margin: 18px 0 0; }
 .feature li { margin: 6px 0; }
 
+.story { padding-block: 96px; }
+.story .wrap { max-width: 760px; }
+.story p { font-size: clamp(17px, 1.8vw, 20px); margin: 0 0 1.1em; }
+.story .sign { font-family: var(--label); font-size: 14px; letter-spacing: .08em; color: var(--soft); }
+.slow { background: var(--desk); padding-block: 88px; }
+.slow .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 40px; }
+.slow .card p { color: var(--ink); }
+.also { font-family: var(--label); font-size: 14px; color: var(--soft); margin-top: 18px; }
 .night { background: linear-gradient(#24211f, #141312); color: var(--night-ink); padding: 96px 0; }
 .night .wrap { display: grid; grid-template-columns: 1fr 1.2fr; gap: 48px; align-items: center; }
 .night .label { color: #b9b0a2; }
@@ -80,7 +88,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: 
 footer a { color: var(--soft); }
 
 @media (max-width: 820px) {
-  .hero, .listen .wrap, .feature, .night .wrap, .price .cards { grid-template-columns: minmax(0, 1fr); }
+  .hero, .listen .wrap, .feature, .night .wrap, .price .cards, .slow .cards { grid-template-columns: minmax(0, 1fr); }
   .hero { padding-top: 16px; }
   .feature .art, .feature.flip .art { order: -1; }
   .listen .wrap { justify-items: center; text-align: left; }
@@ -101,16 +109,16 @@ footer a { color: var(--soft); }
 <main>
   <section class="wrap hero">
     <div>
-      <div class="label">For iPhone and iPhone Duo</div>
+      <div class="label">Made for iPhone Duo</div>
       <div class="rule"></div>
-      <h1>A typewriter for your iPhone.</h1>
-      <p class="lead">Half-fold an iPhone Duo like a little laptop: the page stands up on top while a full typewriter keyboard waits below. Every key is a real, recorded typewriter. Your phone goes quiet, and the words come out.</p>
+      <h1>Write with intent.</h1>
+      <p class="lead">Carriage is an analog typewriter for your iPhone Duo. Half-fold it like a little laptop: the page stands up on top, and a full typewriter waits below. You can't type fast, and you can't take anything back. That's the point.</p>
       <div class="cta">
         <a class="store" href="https://apps.apple.com/us/app/carriage-typewriter/id6825005564">
           <svg viewBox="0 0 17 20" aria-hidden="true"><path d="M14.2 10.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.3-.9C3.8 4.8 2.2 5.8 1.3 7.4c-1.9 3.2-.5 8 1.3 10.6.9 1.3 1.9 2.7 3.3 2.6 1.3-.1 1.8-.8 3.4-.8s2 .8 3.4.8c1.4 0 2.3-1.3 3.2-2.6 1-1.5 1.4-2.9 1.4-3-.1 0-2.8-1.1-2.9-4.4zM11.6 3C12.3 2.1 12.8.9 12.7-.3c-1 .1-2.3.7-3 1.6-.7.8-1.3 2-1.1 3.2 1.1.1 2.3-.6 3-1.5z"/></svg>
           Download on the App Store
         </a>
-        <span class="note">Your first 5,000 words are free</span>
+        <span class="note">Your first 5,000 words are free. That's a whole short story.</span>
       </div>
     </div>
     <img src="assets/laptop-seafoam-1600.webp" srcset="assets/laptop-seafoam-1000.webp 1000w, assets/laptop-seafoam-1600.webp 1600w" sizes="(max-width: 820px) 92vw, 600px" width="1600" height="1312" alt="An iPhone Duo half-folded like a laptop, showing a typed page on the top half and round typewriter keys on the bottom half.">
@@ -122,11 +130,36 @@ footer a { color: var(--soft); }
         <div class="label">Turn the sound on</div>
         <div class="rule"></div>
         <h2>Those are real typewriters.</h2>
-        <p class="lead">Every key, the space bar, the bell near the margin and the carriage sliding home, recorded from real machines. Each stroke lands with a tap you can feel. At the margin the keys stop, the way they do on the real thing, until you send the carriage home.</p>
+        <p class="lead">Every key, the bell near the margin and the carriage sliding home, recorded from real machines, with rain on the window. Each stroke lands with a tap you can feel. At the margin the keys stop until you push the carriage home by hand.</p>
       </div>
       <div class="phone">
         <video id="demo" src="assets/typing.mp4" poster="assets/typing-poster.jpg" autoplay muted loop playsinline preload="metadata" aria-label="Carriage typing a paragraph, ringing the bell and returning the carriage."></video>
         <button class="sound" id="sound" type="button">🔊 Sound on</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="story">
+    <div class="wrap">
+      <div class="label">Why Carriage</div>
+      <div class="rule"></div>
+      <h2>It started with my parents' old typewriter.</h2>
+      <p style="margin-top: 32px;">I found it and fed a sheet of paper in, and something changed. I couldn't type fast: every key needed a real press. When the bell rang I had to decide where the line ended and push the carriage back by hand. And I couldn't take anything back. Every letter went onto the paper for good, so a mistake stayed there, struck through with x's.</p>
+      <p>So I slowed down. I thought before I pressed a key. I wrote less, and meant more of it.</p>
+      <p>Our phones are built for the opposite. So I rebuilt that typewriter for the iPhone Duo, the most advanced phone I own, and made it the most analog thing it can be.</p>
+      <p class="sign">Justin, who made Carriage</p>
+    </div>
+  </section>
+
+  <section class="slow">
+    <div class="wrap">
+      <div class="label">Built to slow you down</div>
+      <div class="rule"></div>
+      <h2>Every letter on purpose.</h2>
+      <div class="cards">
+        <div class="card"><h3>You can't type fast</h3><p>Every key is a full press with a real recorded clack, and the carriage goes home by hand.</p></div>
+        <div class="card"><h3>No taking it back</h3><p>There's no delete. X-OUT strikes a mistake through with x's, and it stays on the page, like the real thing.</p></div>
+        <div class="card"><h3>The page has an edge</h3><p>The bell rings near the margin and the keys stop. You decide where the line ends.</p></div>
       </div>
     </div>
   </section>
@@ -139,24 +172,12 @@ footer a { color: var(--soft); }
         <div class="rule"></div>
         <h2>Half-fold it like a laptop.</h2>
         <ul>
-          <li>The page on the top half, a full typewriter keyboard on the bottom.</li>
+          <li>The page stands on the top screen; a full typewriter keyboard sits on the bottom.</li>
           <li>Hold it like a book and your draft becomes a two-page spread to read.</li>
           <li>Fold it shut mid-sentence and your page is saved; open it and you're back where you were.</li>
+          <li>Set it up once and your phone goes quiet whenever Carriage is open.</li>
         </ul>
-      </div>
-    </div>
-    <div class="feature flip">
-      <div class="art"><img src="assets/phone-1000.webp" srcset="assets/phone-1000.webp 1000w, assets/phone-1600.webp 1600w" sizes="(max-width: 820px) 70vw, 380px" width="1000" height="1889" loading="lazy" alt="Carriage on an iPhone: the page above and the typewriter keys below on one screen." style="width: min(380px, 100%); margin: 0 auto;"></div>
-      <div>
-        <div class="label">Lovely on any iPhone</div>
-        <div class="rule"></div>
-        <h2>Just you and the page.</h2>
-        <ul>
-          <li>Set it up once and your iPhone silences notifications whenever Carriage is open.</li>
-          <li>Tap the moon and everything but the page and the keys fades away.</li>
-          <li>No delete key: X-OUT strikes through with an x, so you keep going. Backspace is a setting away if you want it.</li>
-          <li>Rain on the window or a fire in the grate, and a desk lamp that follows the hour.</li>
-        </ul>
+        <p class="also">Also runs on any iPhone, with the page and keys sharing one screen. It's at its best half-folded on a Duo.</p>
       </div>
     </div>
   </section>
@@ -164,10 +185,10 @@ footer a { color: var(--soft); }
   <section class="night">
     <div class="wrap">
       <div>
-        <div class="label">Night desk</div>
+        <div class="label">A room to write in</div>
         <div class="rule"></div>
         <h2>Write late, in peace.</h2>
-        <p class="lead">Light ink on dark paper, four paper stocks, four ribbons and five machine finishes, from seafoam to cherry. Engrave your name on the brass plate.</p>
+        <p class="lead">Rain on the window or a fire in the grate, and a desk lamp that follows the hour. Light ink on dark paper after dark. Four paper stocks, four ribbons, five machine finishes, and your name engraved on the brass plate.</p>
       </div>
       <img src="assets/laptop-night-1600.webp" srcset="assets/laptop-night-1000.webp 1000w, assets/laptop-night-1600.webp 1600w" sizes="(max-width: 820px) 92vw, 600px" width="1600" height="1312" loading="lazy" alt="The Duo half-folded at night, with light ink on dark paper and black keys.">
     </div>
@@ -179,8 +200,8 @@ footer a { color: var(--soft); }
       <div class="rule"></div>
       <h2>Free to start. Yours forever.</h2>
       <div class="cards">
-        <div class="card"><h3>Free</h3><p>Your first 5,000 words, with every paper and ribbon and a 1950s Italian portable.</p></div>
-        <div class="card"><h3>Unlock once</h3><p>Unlimited words and three more recorded machines, forever. No subscription.</p></div>
+        <div class="card"><h3>Free to start</h3><p>Your first 5,000 words, a whole short story, with every paper and ribbon and a 1950s Italian portable.</p></div>
+        <div class="card"><h3>Unlock once</h3><p>Unlimited words and three more recorded machines, forever. No subscription.</p><p class="price-line" id="price" style="margin-top: 12px; color: var(--ribbon);">$4.99 launch price, until October 30. Then $7.99.</p></div>
       </div>
       <p class="lead" style="margin: 0 auto 28px;">Saves as you type and syncs with iCloud. Every page is also a plain Markdown file in Files, and exports as a PDF that looks typed.</p>
       <p class="promises">No ads · No account · Nothing collected</p>
@@ -200,6 +221,10 @@ footer a { color: var(--soft); }
 </footer>
 
 <script>
+  // The launch price ends at midnight Pacific on October 30, 2026; after that the page shows the regular price.
+  if (Date.now() >= Date.parse("2026-10-30T07:00:00Z")) {
+    document.getElementById("price").textContent = "$7.99, once.";
+  }
   const video = document.getElementById("demo");
   const button = document.getElementById("sound");
   button.addEventListener("click", () => {
