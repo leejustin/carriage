@@ -82,6 +82,12 @@ Data Not Collected. See docs/site/privacy.html, to be published at a public URL.
 
 ## URLs
 
+The website is https://carriage.pages.dev, a Cloudflare Pages project deployed from `web/` (no Git connection, so
+it doesn't point at this repo): `scripts/web/build.sh` builds its assets, `scripts/web/deploy.sh` publishes it.
+With the next version, set the Marketing URL to it and move the privacy and support URLs to
+https://carriage.pages.dev/privacy and https://carriage.pages.dev/support, so the store no longer depends on this
+repo's GitHub Pages. Until then, keep `docs/site/` where it is.
+
 - Privacy policy: https://leejustin.github.io/carriage/site/privacy.html
 - Support: https://leejustin.github.io/carriage/site/support.html
 - Contact: hello@leejustin.com

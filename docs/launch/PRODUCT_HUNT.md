@@ -2,6 +2,7 @@
 
 Everything to paste into Product Hunt for Carriage, plus the plan for launch day.
 
+Website: https://carriage.pages.dev (the video with sound, then the App Store button)
 App Store: https://apps.apple.com/us/app/carriage-typewriter/id6825005564
 
 ## When
@@ -30,7 +31,7 @@ the "coming soon" link.
 
 **Topics:** Writing, Productivity, iOS, Design, Minimalism
 
-**Links:** the App Store link above. Pricing: Free (with in-app purchase).
+**Links:** the website as the main link, plus the App Store link. Pricing: Free (with in-app purchase).
 
 **Thumbnail:** `product-hunt/thumbnail.png` (the app icon, 240 x 240).
 
@@ -108,6 +109,7 @@ Read each community's self-promotion rules first; many only allow it in a weekly
 > at the margin, no delete key.
 >
 > It's on Product Hunt today: [link]
+> (or, after launch day: https://carriage.pages.dev)
 
 Attach `docs/previews/iphone.mp4` with the sound on: typing ASMR does the work.
 

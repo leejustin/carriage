@@ -425,3 +425,42 @@ try creative(size: CGSize(width: 240, height: 240), to: launchOut.appendingPathC
     NSImage(contentsOf: root.appendingPathComponent("Carriage/Assets.xcassets/AppIcon.appiconset/AppIcon.png"))!.draw(in: bounds)
 }
 print("wrote product hunt gallery")
+
+// MARK: Website
+
+// The landing page's art: the machine on a clear background, so it sits on the page's own paper, plus the card
+// shown when the link is shared. Converted to WebP for the web by scripts/web/build.sh.
+let webOut = root.appendingPathComponent("docs/web-art")
+try FileManager.default.createDirectory(at: webOut, withIntermediateDirectories: true)
+
+func clear(size: CGSize, to url: URL, draw: (CGRect) -> Void) throws {
+    let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(size.width), pixelsHigh: Int(size.height), bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
+    NSGraphicsContext.saveGraphicsState()
+    NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+    draw(CGRect(origin: .zero, size: size))
+    NSGraphicsContext.restoreGraphicsState()
+    try rep.representation(using: .png, properties: [:])!.write(to: url)
+}
+
+for (name, capture, night) in [("laptop-seafoam", "01-typing", false), ("laptop-cherry", "03-cherry", false), ("laptop-night", "04-night", true)] {
+    try clear(size: CGSize(width: 2000, height: 1640), to: webOut.appendingPathComponent("\(name).png")) { bounds in
+        drawLaptop(duoCapture(capture), in: bounds.insetBy(dx: 60, dy: 90), night: night)
+    }
+}
+try clear(size: CGSize(width: 1700, height: 3212), to: webOut.appendingPathComponent("phone.png")) { bounds in
+    drawPhone(phoneCapture("01-typing"), fitting: bounds.insetBy(dx: 230, dy: 170), night: false)
+}
+try creative(size: CGSize(width: 2400, height: 1260), to: webOut.appendingPathComponent("og.png")) { bounds in
+    desk(bounds)
+    let ink = color(0x24211E)
+    NSAttributedString(string: "A typewriter\nfor your\niPhone.", attributes: [
+        .font: NSFont(name: "CourierPrime-Regular", size: 140)!, .foregroundColor: ink, .strokeWidth: -1.2, .strokeColor: ink,
+    ]).draw(with: CGRect(x: 140, y: bounds.midY - 180, width: 1100, height: 560), options: [.usesLineFragmentOrigin])
+    color(0xA22D27).setFill()
+    NSBezierPath(roundedRect: CGRect(x: 148, y: bounds.midY - 250, width: 100, height: 10), xRadius: 5, yRadius: 5).fill()
+    NSAttributedString(string: "CARRIAGE", attributes: [
+        .font: NSFont(name: "Futura-Medium", size: 44)!, .foregroundColor: ink.withAlphaComponent(0.7), .kern: 12,
+    ]).draw(at: CGPoint(x: 144, y: bounds.midY - 350))
+    drawLaptop(duoCapture("01-typing"), in: CGRect(x: 1150, y: 90, width: 1180, height: bounds.height - 180), night: false)
+}
+print("wrote web art")
