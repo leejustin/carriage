@@ -15,7 +15,7 @@ for line in rec.stderr:
 threading.Thread(target=lambda: rec.stderr.read(), daemon=True).start()
 print("recording at", started, "mach", time.clock_gettime(time.CLOCK_MONOTONIC_RAW))
 time.sleep(0.6)
-sim("launch", udid, "com.carriage.app", "-seedDemo", "-seenOnboarding", "YES", "-seenFocusSetup", "YES", "-foldSimulation", "regular", "-unlocked", "-lampHour", "13", "-previewScript", *extra)
+sim("launch", udid, "com.carriage.app", "-seedDemo", "-seenOnboarding", "YES", "-seenFocusSetup", "YES", "-foldSimulation", os.environ.get("FOLD", "regular"), "-unlocked", "-lampHour", "13", "-previewScript", *extra)
 time.sleep(seconds)
 rec.send_signal(signal.SIGINT); rec.wait()
 data = sim("get_app_container", udid, "com.carriage.app", "data").stdout.strip()
@@ -24,4 +24,5 @@ for f in ["preview-sound.wav", "preview-sound.txt"]:
 first = float(open(os.path.join(out, "preview-sound.txt")).read().split()[0])
 print("first sound", first, "offset into video", first - started)
 open(os.path.join(out, "offset.txt"), "w").write(str(first - started))
+sim("terminate", udid, "com.carriage.app")  # so its sounds don't keep playing through the Mac
 sim("status_bar", udid, "clear")

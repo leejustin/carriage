@@ -11,8 +11,8 @@ for f in laptop-seafoam laptop-cherry laptop-night phone; do
   done
 done
 sips -s format jpeg -s formatOptions 82 -Z 1200 "$ROOT/docs/web-art/og.png" --out "$OUT/og.jpg" >/dev/null
-cp "$ROOT/docs/previews/iphone.mp4" "$OUT/typing.mp4"
-ffmpeg -v error -y -ss 9 -i "$ROOT/docs/previews/iphone.mp4" -frames:v 1 -q:v 3 "$OUT/typing-poster.jpg"
+cp "$ROOT/docs/previews/duo-web.mp4" "$OUT/typing.mp4"
+ffmpeg -v error -y -ss 12 -i "$ROOT/docs/previews/duo-web.mp4" -frames:v 1 -q:v 3 "$OUT/typing-poster.jpg"
 sips -Z 180 "$ROOT/Carriage/Assets.xcassets/AppIcon.appiconset/AppIcon.png" --out "$OUT/icon-180.png" >/dev/null
 sips -Z 64 "$ROOT/Carriage/Assets.xcassets/AppIcon.appiconset/AppIcon.png" --out "$OUT/icon-64.png" >/dev/null
 cp "$ROOT/Carriage/Fonts/CourierPrime-Regular.ttf" "$ROOT/Carriage/Fonts/CourierPrime-OFL.txt" "$OUT/"

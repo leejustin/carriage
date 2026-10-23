@@ -132,7 +132,7 @@ func drawPhone(_ screen: NSImage, size: CGSize, scale: CGFloat, night: Bool) {
 /// and the keys lying flat on the bottom half, seen from in front and a little above. Fills `area` as wide as fits,
 /// centred in it, and returns where it landed.
 @discardableResult
-func drawLaptop(_ screen: NSImage, in area: CGRect, night: Bool) -> CGRect {
+func drawLaptop(_ screen: NSImage, in area: CGRect, night: Bool, glass report: ((_ top: [CGPoint], _ bottom: [CGPoint]) -> Void)? = nil) -> CGRect {
     guard let cg = screen.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return .zero }
     let w = CGFloat(cg.width), fold = CGFloat(cg.height / 2)
     let bezel: CGFloat = 46, hinge: CGFloat = 8
@@ -194,6 +194,20 @@ func drawLaptop(_ screen: NSImage, in area: CGRect, night: Bool) -> CGRect {
         for p in points.dropFirst() { path.line(to: place(p)) }
         path.close()
         return path
+    }
+
+    // Where each screen's glass lands, corners in reading order (top left, top right, bottom left, bottom right),
+    // for laying video over it.
+    if let report {
+        let across = pageHinge[1] - pageHinge[0]
+        func onPage(_ u: CGFloat, _ v: CGFloat) -> CGPoint {
+            place(pageHinge[0] + across * Double(u / halfSize.width) + (pageTop[0] - pageHinge[0]) * Double(v / halfSize.height))
+        }
+        func onKeys(_ u: CGFloat, _ v: CGFloat) -> CGPoint {
+            place(keysNear[0] + across * Double(u / halfSize.width) + (pageHinge[0] - keysNear[0]) * Double(v / halfSize.height))
+        }
+        report([onPage(bezel, hinge + fold), onPage(bezel + w, hinge + fold), onPage(bezel, hinge), onPage(bezel + w, hinge)],
+               [onKeys(bezel, bezel + fold), onKeys(bezel + w, bezel + fold), onKeys(bezel, bezel), onKeys(bezel + w, bezel)])
     }
 
     // Its shadow on the desk.
@@ -464,3 +478,51 @@ try creative(size: CGSize(width: 2400, height: 1260), to: webOut.appendingPathCo
     drawLaptop(duoCapture("01-typing"), in: CGRect(x: 1150, y: 90, width: 1180, height: bounds.height - 180), night: false)
 }
 print("wrote web art")
+
+// MARK: Duo video
+
+// The pieces for laying a Duo screen recording over the half-folded Duo (scripts/preview/duo.sh): the desk and the
+// machine, a mask for each screen, and where each screen's corners land.
+func solid(_ c: NSColor, _ size: CGSize) -> NSImage {
+    let image = NSImage(size: size)
+    image.lockFocus()
+    c.setFill()
+    NSRect(origin: .zero, size: size).fill()
+    image.unlockFocus()
+    return image
+}
+func halves(top: NSColor, bottom: NSColor) -> NSImage {
+    let size = CGSize(width: 2007, height: 2853)
+    let image = NSImage(size: size)
+    image.lockFocus()
+    bottom.setFill()
+    NSRect(x: 0, y: 0, width: size.width, height: size.height / 2).fill()
+    top.setFill()
+    NSRect(x: 0, y: size.height / 2, width: size.width, height: size.height / 2).fill()
+    image.unlockFocus()
+    return image
+}
+for (name, size, background) in [("web", CGSize(width: 1920, height: 1200), color(0xEBE2CF)), ("film", CGSize(width: 1920, height: 1080), color(0xF3ECDD))] {
+    let out = root.appendingPathComponent("docs/web-art/duo-video/\(name)")
+    try FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
+    let area = CGRect(x: 100, y: 50, width: size.width - 200, height: size.height - 100)
+    var corners: [String: [[Double]]] = [:]
+    try creative(size: size, to: out.appendingPathComponent("background.png")) { bounds in
+        background.setFill()
+        bounds.fill()
+        drawLaptop(halves(top: .black, bottom: .black), in: area, night: false) { top, bottom in
+            // Video frames count down from the top.
+            corners["top"] = top.map { [Double($0.x), Double(size.height - $0.y)] }
+            corners["bottom"] = bottom.map { [Double($0.x), Double(size.height - $0.y)] }
+        }
+    }
+    for (mask, image) in [("mask-top", halves(top: .white, bottom: .black)), ("mask-bottom", halves(top: .black, bottom: .white))] {
+        try creative(size: size, to: out.appendingPathComponent("\(mask).png")) { bounds in
+            NSColor.black.setFill()
+            bounds.fill()
+            drawLaptop(image, in: area, night: true)
+        }
+    }
+    try JSONSerialization.data(withJSONObject: corners, options: [.prettyPrinted]).write(to: out.appendingPathComponent("corners.json"))
+}
+print("wrote duo video pieces")

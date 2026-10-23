@@ -19,15 +19,13 @@ the "coming soon" link.
 **Name:** Carriage
 
 **Tagline** (60 max), pick one:
-1. A real-sounding typewriter for your iPhone *(recommended: says what it is to someone who's never heard of it)*
+1. A typewriter for your iPhone Duo *(recommended: says what it is to someone who's never heard of it)*
 2. Half-fold your iPhone Duo into a little typewriter
 3. Your iPhone, as a quiet typewriter that clacks back
 
-**Description** (260 max, 240 used):
+**Description** (260 max, 237 used):
 
-> Carriage turns your iPhone into a typewriter. Half-fold an iPhone Duo and the page stands up while a full
-> typewriter keyboard waits below. Real recorded clacks, a bell at the margin, no delete key. Your phone goes
-> quiet; the words come out.
+> Carriage turns your iPhone Duo into a typewriter. Half-fold it and the page stands up while a full keyboard waits below. Real recorded keys, a bell at the margin, and a carriage you push home yourself. A quiet place to write with intent.
 
 **Topics:** Writing, Productivity, iOS, Design, Minimalism
 
@@ -43,9 +41,9 @@ the "coming soon" link.
 4. `product-hunt/4-real-typewriters.png`: Real typewriters, recorded.
 5. `product-hunt/5-write-late.png`: Write late, in peace.
 
-**Video:** Product Hunt only takes a YouTube link. Upload `docs/previews/iphone.mp4` to YouTube (unlisted is fine),
-titled "Carriage: a typewriter for your iPhone", and paste the link. It's 26 seconds of typing with the real sounds;
-put it first in the gallery if you add it.
+**Video:** Product Hunt only takes a YouTube link. Upload `docs/previews/duo-film.mp4` to YouTube (unlisted is
+fine), titled "Carriage: a typewriter for your iPhone Duo", and paste the link. It's 29 seconds of the half-folded
+Duo typing, with the real sounds and rain; put it first in the gallery.
 
 ## Maker's first comment
 
@@ -53,35 +51,36 @@ Post this the moment it goes live. Edit freely; it should sound like you.
 
 > Hi Product Hunt! 👋
 >
-> I made Carriage because every writing app on my phone was one swipe away from everything that kills writing.
-> I wanted the opposite: something that feels like sitting down at a typewriter.
+> A while ago I found my parents' old typewriter [where/what it was]. I fed a sheet of paper in and noticed I was
+> slowing down. Each key took a real press. When the bell rang I decided where the line ended and pushed the
+> carriage back myself. A typo stayed on the page, struck through, so I chose my words before I pressed them. I
+> was thinking about every sentence, and enjoying it.
 >
-> So Carriage is a typewriter. Every key is a real recording of a real machine, the bell rings near the margin,
-> and the keys stop at the edge of the page until you send the carriage home. There's no delete, just X-OUT, like
-> the real thing (backspace and line wrap are a setting away if you want them). Open it and your iPhone goes quiet.
+> Our phones are built for creating and consuming more than our brains can take in. I wanted one place on mine
+> that asks for less. So I rebuilt that typewriter for the iPhone Duo: half-fold it like a little laptop, and the
+> page stands on the top screen while a full typewriter keyboard sits on the bottom.
 >
-> It was made for the iPhone Duo: half-fold it like a little laptop and the page stands up on top while a full
-> typewriter keyboard sits on the bottom half. On any other iPhone, the page and keys share one screen.
->
-> A few things I'm proud of:
-> - Four real machines to choose from, recorded key by key, with haptics you feel on every stroke
-> - Rain on the window or a fire in the grate, and a desk lamp that follows the time of day
-> - Everything saves as you type, syncs with iCloud, and keeps a plain Markdown copy in Files
+> What's in it:
+> - Four real typewriters, recorded key by key, with a tap you feel on every stroke
+> - The bell near the margin, and a carriage you push home by hand
+> - X-OUT for typos, like the real thing (backspace is in Settings if you'd rather)
+> - Rain on the window or a fire in the grate, and a desk lamp that follows the hour
+> - Your pages saved as you type, synced with iCloud, with a Markdown copy in Files
 > - No account, no ads, no subscription, and nothing collected
 >
-> Your first 5,000 words are free. The unlock (unlimited words and every machine, forever) is $4.99 through
-> launch week, then $7.99 from October 30.
+> Your first 5,000 words are free, a whole short story. The unlock (unlimited words and every machine, forever)
+> is $4.99 through launch week, then $7.99 from October 30.
 >
-> I'd love to hear what you'd write on it, and what would make it feel even more like the real thing.
+> It also runs on any iPhone, but it's at its best half-folded on a Duo. I'd love to hear what you'd write on it.
 
 ## Replies to have ready
 
 - **Is there an Android / iPad / Mac version?** Not yet; it's iPhone only for now, built around the Duo's fold.
   Tell me which you'd want next.
-- **Do I need an iPhone Duo?** No. It works on any iPhone running iOS 27; the Duo gets the half-folded laptop
-  layout.
-- **Why no delete key?** It's the point: on a typewriter you keep going. X-OUT strikes through with an x, and
-  copying out gives you clean text or the struck-through version, your choice. Backspace is one setting away.
+- **Do I need an iPhone Duo?** It's made for the Duo, half-folded like a laptop. It also runs on any iPhone with
+  iOS 27, with the page and keys sharing one screen.
+- **Is there backspace?** Yes, in Settings. By default Carriage works like a typewriter: X-OUT strikes a typo
+  through with x's. When you copy your writing out, you choose the clean text or the struck-through version.
 - **Can I get my writing out?** Yes: every page is a Markdown file in Files, plus PDF, Markdown and plain-text
   export, sharing as an image, and sending to Notes.
 - **Is it a subscription?** No. One purchase, yours forever.
@@ -103,15 +102,15 @@ Read each community's self-promotion rules first; many only allow it in a weekly
 
 **X / Threads / Bluesky**
 
-> I made a typewriter for your iPhone. ⌨️
+> I found my parents' old typewriter and noticed it made me slow down and write with more intent.
 >
-> Half-fold an iPhone Duo and the page stands up while a full typewriter sits below. Real recorded clacks, a bell
-> at the margin, no delete key.
+> So I rebuilt it for the iPhone Duo. ⌨️ Half-fold it and the page stands up while the keys wait below. Real
+> recorded keys, a bell at the margin, and a carriage you push home yourself.
 >
 > It's on Product Hunt today: [link]
 > (or, after launch day: https://carriage.pages.dev)
 
-Attach `docs/previews/iphone.mp4` with the sound on: typing ASMR does the work.
+Attach `docs/previews/duo-film.mp4` with the sound on: typing ASMR does the work.
 
 **Reddit (Duo and foldables communities):** Title: *I made a typewriter app that uses the Duo's half-fold like a
 laptop*. Body: two lines on what it does, the video, the App Store link, and an honest "it's my app, happy to
