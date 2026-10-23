@@ -41,9 +41,10 @@ the "coming soon" link.
 4. `product-hunt/4-real-typewriters.png`: Real typewriters, recorded.
 5. `product-hunt/5-write-late.png`: Write late, in peace.
 
-**Video:** Product Hunt only takes a YouTube link. Upload `docs/previews/duo-film.mp4` to YouTube (unlisted is
-fine), titled "Carriage: a typewriter for your iPhone Duo", and paste the link. It's 29 seconds of the half-folded
-Duo typing, with the real sounds and rain; put it first in the gallery.
+**Video:** Product Hunt only takes a YouTube link. Upload `docs/previews/launch-film.mp4` to YouTube (unlisted is
+fine), titled "Carriage: a typewriter for your iPhone Duo", and paste the link; put it first in the gallery. It's
+about a minute: the story of the old typewriter in typed title cards, then Carriage on a half-folded Duo with the
+real sounds. `docs/previews/duo-film.mp4` is the 29-second demo on its own, for social posts.
 
 ## Maker's first comment
 
