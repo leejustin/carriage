@@ -435,41 +435,15 @@ final class PaperView: UIView {
     /// follows the finger and ticks through the rack; let go past the threshold and it returns. The RETURN key
     /// still does the same thing instantly.
     @objc private func carriageDragged(_ pan: UIPanGestureRecognizer) {
-        let caretX = textView.endCaretRect.minX
         switch pan.state {
         case .began:
-            dragStartX = carriageX
-            // How far the carriage has to travel back to the left margin.
-            dragTravel = max(0, restingCarriageX(forCaretX: metrics.margin) - carriageX)
-            dragTicks = 0
-            rackTick.prepare()
+            beginCarriageDrag()
         case .changed:
-            let pulled = max(0, pan.translation(in: self).x)
-            // Past the margin stop, the carriage only gives a little.
-            let offset = pulled <= dragTravel ? pulled : dragTravel + (pulled - dragTravel) * 0.15
-            placeCarriage(x: dragStartX + offset, caretX: caretX - min(offset, dragTravel))
-            lever.transform = CGAffineTransform(rotationAngle: min(0.25, pulled / 400))
-            // A tick every five characters of rack, felt and heard.
-            let ticks = Int(min(pulled, max(dragTravel, 60)) / (metrics.advance * 5))
-            if ticks > dragTicks {
-                dragTicks = ticks
-                rackTick.selectionChanged()
-                rackTick.prepare()
-                onRackTick?()
-            }
+            moveCarriageDrag(pulled: max(0, pan.translation(in: self).x))
         case .ended:
-            let pulled = max(0, pan.translation(in: self).x)
-            let threshold = max(44, dragTravel * 0.4)
-            UIView.animate(withDuration: 0.2) { self.lever.transform = .identity }
-            if pulled >= threshold || pan.velocity(in: self).x > 700 {
-                onCarriagePushed?()
-                onReturnLever?()
-            } else {
-                UIView.animate(withDuration: 0.25, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0, options: [.allowUserInteraction]) {
-                    self.placeCarriage(x: self.dragStartX, caretX: caretX)
-                }
-            }
+            endCarriageDrag(pulled: max(0, pan.translation(in: self).x), velocity: pan.velocity(in: self).x)
         case .cancelled, .failed:
+            let caretX = textView.endCaretRect.minX
             UIView.animate(withDuration: 0.2) {
                 self.lever.transform = .identity
                 self.placeCarriage(x: self.dragStartX, caretX: caretX)
@@ -478,6 +452,62 @@ final class PaperView: UIView {
             break
         }
     }
+
+    private func beginCarriageDrag() {
+        dragStartX = carriageX
+        // How far the carriage has to travel back to the left margin.
+        dragTravel = max(0, restingCarriageX(forCaretX: metrics.margin) - carriageX)
+        dragTicks = 0
+        rackTick.prepare()
+    }
+
+    private func moveCarriageDrag(pulled: CGFloat) {
+        let caretX = textView.endCaretRect.minX
+        // Past the margin stop, the carriage only gives a little.
+        let offset = pulled <= dragTravel ? pulled : dragTravel + (pulled - dragTravel) * 0.15
+        placeCarriage(x: dragStartX + offset, caretX: caretX - min(offset, dragTravel))
+        lever.transform = CGAffineTransform(rotationAngle: min(0.25, pulled / 400))
+        // A tick every five characters of rack, felt and heard.
+        let ticks = Int(min(pulled, max(dragTravel, 60)) / (metrics.advance * 5))
+        if ticks > dragTicks {
+            dragTicks = ticks
+            rackTick.selectionChanged()
+            rackTick.prepare()
+            onRackTick?()
+        }
+    }
+
+    private func endCarriageDrag(pulled: CGFloat, velocity: CGFloat) {
+        let caretX = textView.endCaretRect.minX
+        let threshold = max(44, dragTravel * 0.4)
+        UIView.animate(withDuration: 0.2) { self.lever.transform = .identity }
+        if pulled >= threshold || velocity > 700 {
+            onCarriagePushed?()
+            onReturnLever?()
+        } else {
+            UIView.animate(withDuration: 0.25, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0, options: [.allowUserInteraction]) {
+                self.placeCarriage(x: self.dragStartX, caretX: caretX)
+            }
+        }
+    }
+
+    #if DEBUG
+    /// Pushes the carriage home as a hand would, for the App Store preview: it follows an eased drag across the
+    /// rack, ticking as it goes, then returns.
+    @MainActor
+    func demoPushCarriage(over duration: Double) async {
+        beginCarriageDrag()
+        let distance = max(dragTravel, 80) * 1.04
+        let steps = max(1, Int(duration * 60))
+        for step in 1...steps {
+            let t = Double(step) / Double(steps)
+            let eased = t < 0.5 ? 2 * t * t : 1 - pow(-2 * t + 2, 2) / 2
+            moveCarriageDrag(pulled: distance * CGFloat(eased))
+            try? await Task.sleep(for: .seconds(duration / Double(steps)))
+        }
+        endCarriageDrag(pulled: distance, velocity: 0)
+    }
+    #endif
 
     override func gestureRecognizerShouldBegin(_ gesture: UIGestureRecognizer) -> Bool {
         guard gesture === carriagePan else { return super.gestureRecognizerShouldBegin(gesture) }

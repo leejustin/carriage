@@ -324,6 +324,15 @@ extension SoundEngine {
                 right[start + i] += samples[i] * r
             }
         }
+        // The desk sound runs under everything, at the level it plays at in the app.
+        if let loop = ambienceLoops[playingAmbience]?.floatChannelData?[0], let length = ambienceLoops[playingAmbience].map({ Int($0.frameLength) }), length > 0 {
+            let gain = ambiencePlayer.volume
+            for i in 0..<frames {
+                let v = loop[i % length] * gain
+                left[i] += v
+                right[i] += v
+            }
+        }
         guard let stereo = AVAudioFormat(standardFormatWithSampleRate: rate, channels: 2),
               let buffer = AVAudioPCMBuffer(pcmFormat: stereo, frameCapacity: AVAudioFrameCount(frames)),
               let file = try? AVAudioFile(forWriting: url, settings: stereo.settings) else { return nil }

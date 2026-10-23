@@ -11,7 +11,7 @@ DERIVED="${TMPDIR:-/tmp}/carriage-screenshots"
 xcrun simctl boot "$UDID" 2>/dev/null || true
 xcodebuild -project "$ROOT/Carriage.xcodeproj" -scheme Carriage -configuration Debug \
   -destination "platform=iOS Simulator,id=$UDID" -derivedDataPath "$DERIVED" build -quiet
-python3 -I "$ROOT/scripts/preview/record.py" "$UDID" "$DERIVED/Build/Products/Debug-iphonesimulator/Carriage.app" "$WORK" 33
+python3 -I "$ROOT/scripts/preview/record.py" "$UDID" "$DERIVED/Build/Products/Debug-iphonesimulator/Carriage.app" "$WORK" 40 -ambience rain
 
 # Start a second before the first sound, with the page already up, and stop just after the last.
 OFFSET=$(cat "$WORK/offset.txt")
