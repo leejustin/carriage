@@ -273,13 +273,11 @@ func creative(size: CGSize, to url: URL, draw: (CGRect) -> Void) throws {
     NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
     draw(CGRect(origin: .zero, size: size))
     NSGraphicsContext.restoreGraphicsState()
-    // Drawn into a bitmap with no alpha channel at all, as App Store Connect requires.
-    let flat = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: rep.pixelsWide, pixelsHigh: rep.pixelsHigh, bitsPerSample: 8, samplesPerPixel: 3, hasAlpha: false, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
-    NSGraphicsContext.saveGraphicsState()
-    NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: flat)
-    rep.draw(in: CGRect(origin: .zero, size: size))
-    NSGraphicsContext.restoreGraphicsState()
-    try flat.representation(using: .png, properties: [:])!.write(to: url)
+    // Copied into a bitmap with no alpha channel at all, as App Store Connect requires.
+    let context = CGContext(data: nil, width: rep.pixelsWide, height: rep.pixelsHigh, bitsPerComponent: 8, bytesPerRow: 0,
+                            space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)!
+    context.draw(rep.cgImage!, in: CGRect(x: 0, y: 0, width: rep.pixelsWide, height: rep.pixelsHigh))
+    try NSBitmapImageRep(cgImage: context.makeImage()!).representation(using: .png, properties: [:])!.write(to: url)
 }
 
 /// The paper desk, lit warm from the upper left like the desk lamp.
@@ -320,3 +318,110 @@ try creative(size: CGSize(width: 3840, height: 2560), to: creativeOut.appendingP
     drawLaptop(duoTyping, in: CGRect(x: 1850, y: 160, width: 1880, height: bounds.height - 320), night: false)
 }
 print("wrote creative")
+
+// MARK: Product Hunt gallery
+
+// Product Hunt's gallery is 1270 x 760; drawn at twice that. A typed headline over the desk, and the machine.
+let launchOut = root.appendingPathComponent("docs/launch/product-hunt")
+try FileManager.default.createDirectory(at: launchOut, withIntermediateDirectories: true)
+let launchSize = CGSize(width: 2540, height: 1520)
+
+func duoCapture(_ name: String) -> NSImage { NSImage(contentsOf: root.appendingPathComponent("docs/screenshots/iPhone-Duo/\(name).png"))! }
+func phoneCapture(_ name: String) -> NSImage { NSImage(contentsOf: root.appendingPathComponent("docs/screenshots/iPhone-18-Pro-Max/\(name).png"))! }
+
+/// A single-screen iPhone, upright in `rect` (fitted by height), with its bezel and shadow.
+func drawPhone(_ screen: NSImage, fitting rect: CGRect, night: Bool) {
+    let height = rect.height, width = height * screen.size.width / screen.size.height
+    let frame = CGRect(x: rect.midX - width / 2, y: rect.minY, width: width, height: height)
+    let corner = width * 0.13, bezel = width * 0.025
+    NSGraphicsContext.saveGraphicsState()
+    let shadow = NSShadow()
+    shadow.shadowColor = NSColor.black.withAlphaComponent(night ? 0.6 : 0.3)
+    shadow.shadowBlurRadius = 70
+    shadow.shadowOffset = NSSize(width: 0, height: -24)
+    shadow.set()
+    color(0x111111).setFill()
+    NSBezierPath(roundedRect: frame.insetBy(dx: -bezel, dy: -bezel), xRadius: corner + bezel, yRadius: corner + bezel).fill()
+    NSGraphicsContext.restoreGraphicsState()
+    NSGraphicsContext.saveGraphicsState()
+    NSBezierPath(roundedRect: frame, xRadius: corner, yRadius: corner).addClip()
+    screen.draw(in: frame)
+    NSGraphicsContext.restoreGraphicsState()
+}
+
+/// A headline and a small line under it, centred near the top, set like the store screenshots.
+func headline(_ title: String, _ line: String, in bounds: CGRect, night: Bool, top: CGFloat = 120, size: CGFloat = 132) {
+    let ink = night ? color(0xEDE6D8) : color(0x24211E)
+    let paragraph = NSMutableParagraphStyle()
+    paragraph.alignment = .center
+    NSAttributedString(string: title, attributes: [
+        .font: NSFont(name: "CourierPrime-Regular", size: size)!, .foregroundColor: ink, .paragraphStyle: paragraph,
+        .strokeWidth: -1.2, .strokeColor: ink,
+    ]).draw(with: CGRect(x: 80, y: bounds.maxY - top - size * 1.3, width: bounds.width - 160, height: size * 1.4), options: [.usesLineFragmentOrigin])
+    color(0xA22D27).setFill()
+    NSBezierPath(roundedRect: CGRect(x: bounds.midX - 50, y: bounds.maxY - top - size * 1.62, width: 100, height: 9), xRadius: 4.5, yRadius: 4.5).fill()
+    NSAttributedString(string: line, attributes: [
+        .font: NSFont(name: "Futura-Medium", size: 40)!, .foregroundColor: ink.withAlphaComponent(0.7), .kern: 6, .paragraphStyle: paragraph,
+    ]).draw(with: CGRect(x: 80, y: bounds.maxY - top - size * 1.62 - 90, width: bounds.width - 160, height: 60), options: [.usesLineFragmentOrigin])
+}
+
+func nightDesk(_ bounds: CGRect) {
+    NSGradient(starting: color(0x23211F), ending: color(0x141312))!.draw(in: bounds, angle: -90)
+    NSGradient(colors: [color(0xFFC878, 0.16), color(0xFFC878, 0)])!
+        .draw(fromCenter: CGPoint(x: bounds.width * 0.3, y: bounds.maxY), radius: 0, toCenter: CGPoint(x: bounds.width * 0.3, y: bounds.maxY), radius: bounds.height * 1.1, options: [])
+}
+
+// 1. What it is.
+try creative(size: launchSize, to: launchOut.appendingPathComponent("1-typewriter.png")) { bounds in
+    desk(bounds)
+    let ink = color(0x24211E)
+    let paragraph = NSMutableParagraphStyle()
+    NSAttributedString(string: "A typewriter\nfor your\niPhone.", attributes: [
+        .font: NSFont(name: "CourierPrime-Regular", size: 150)!, .foregroundColor: ink, .paragraphStyle: paragraph,
+        .strokeWidth: -1.2, .strokeColor: ink,
+    ]).draw(with: CGRect(x: 150, y: bounds.midY - 200, width: 1150, height: 600), options: [.usesLineFragmentOrigin])
+    color(0xA22D27).setFill()
+    NSBezierPath(roundedRect: CGRect(x: 158, y: bounds.midY - 280, width: 110, height: 10), xRadius: 5, yRadius: 5).fill()
+    NSAttributedString(string: "REAL CLACKS. NO DISTRACTIONS.", attributes: [
+        .font: NSFont(name: "Futura-Medium", size: 46)!, .foregroundColor: ink.withAlphaComponent(0.7), .kern: 6,
+    ]).draw(at: CGPoint(x: 154, y: bounds.midY - 390))
+    drawLaptop(duoCapture("01-typing"), in: CGRect(x: 1240, y: 110, width: 1220, height: bounds.height - 220), night: false)
+}
+
+// 2. The fold.
+try creative(size: launchSize, to: launchOut.appendingPathComponent("2-half-fold.png")) { bounds in
+    desk(bounds)
+    headline("Half-fold it like a laptop.", "THE PAGE STANDS UP. A FULL TYPEWRITER WAITS BELOW.", in: bounds, night: false)
+    drawLaptop(duoCapture("03-cherry"), in: CGRect(x: 200, y: 70, width: bounds.width - 400, height: bounds.height - 520), night: false)
+}
+
+// 3. Every iPhone.
+try creative(size: launchSize, to: launchOut.appendingPathComponent("3-every-iphone.png")) { bounds in
+    desk(bounds)
+    headline("Made for Duo. Lovely on any iPhone.", "HALF-FOLDED ON A DUO, OR PAGE AND KEYS ON ONE SCREEN.", in: bounds, night: false, size: 112)
+    drawLaptop(duoCapture("01-typing"), in: CGRect(x: 180, y: 90, width: 1400, height: bounds.height - 520), night: false)
+    drawPhone(phoneCapture("01-typing"), fitting: CGRect(x: 1700, y: 110, width: 600, height: bounds.height - 560), night: false)
+}
+
+// 4. The machines.
+try creative(size: launchSize, to: launchOut.appendingPathComponent("4-real-typewriters.png")) { bounds in
+    desk(bounds)
+    headline("Real typewriters, recorded.", "EVERY KEY, THE BELL AT THE MARGIN, THE CARRIAGE SLIDING HOME.", in: bounds, night: false)
+    let w = (bounds.width - 300) / 3
+    for (i, name) in ["01-typing", "03-cherry", "04-night"].enumerated() {
+        drawLaptop(duoCapture(name), in: CGRect(x: 110 + CGFloat(i) * (w + 40), y: 150, width: w, height: bounds.height - 650), night: false)
+    }
+}
+
+// 5. Night.
+try creative(size: launchSize, to: launchOut.appendingPathComponent("5-write-late.png")) { bounds in
+    nightDesk(bounds)
+    headline("Write late, in peace.", "YOUR PHONE GOES QUIET. JUST THE PAGE AND THE KEYS.", in: bounds, night: true)
+    drawLaptop(duoCapture("04-night"), in: CGRect(x: 200, y: 70, width: bounds.width - 400, height: bounds.height - 520), night: true)
+}
+
+// Thumbnail: the app icon at Product Hunt's 240 x 240.
+try creative(size: CGSize(width: 240, height: 240), to: launchOut.appendingPathComponent("thumbnail.png")) { bounds in
+    NSImage(contentsOf: root.appendingPathComponent("Carriage/Assets.xcassets/AppIcon.appiconset/AppIcon.png"))!.draw(in: bounds)
+}
+print("wrote product hunt gallery")
