@@ -19,7 +19,7 @@ swift scripts/film/Film.swift "$WORK" scripts/film/timeline.txt "$WORK/duo.wav" 
 
 n=0
 : > "$WORK/list.txt"
-while read kind name count; do
+while read kind name count behind; do
   n=$((n + 1))
   out="$WORK/seg-$n.mp4"
   length=$(( count / 30.0 ))
@@ -28,7 +28,15 @@ while read kind name count; do
   common=(-an -frames:v $count -c:v libx264 -preset slow -crf 17 -pix_fmt yuv420p -r 30)
   case $kind in
     clip) ffmpeg -nostdin -v error -y -i "$CLIPS/$name.mp4" -vf "scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,fps=30,tpad=stop_mode=clone:stop_duration=2,$fades" $common "$out" ;;
-    card|word) ffmpeg -nostdin -v error -y -framerate 30 -i "$WORK/$name/frame-%04d.png" -vf "$fades" $common "$out" ;;
+    card|word)
+      if [[ ${behind:--} != - ]]; then
+        # The shot faded back behind the words: blurred, softened and washed with the page's cream.
+        ffmpeg -nostdin -v error -y -i "$CLIPS/$behind.mp4" -framerate 30 -i "$WORK/$name/frame-%04d.png" -filter_complex \
+          "[0:v]scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,fps=30,tpad=stop_mode=clone:stop_duration=4,gblur=sigma=6,eq=saturation=0.7,drawbox=x=0:y=0:w=iw:h=ih:color=0xF3ECDD@0.58:t=fill[bg];[bg][1:v]overlay=format=auto,$fades" \
+          $common "$out"
+      else
+        ffmpeg -nostdin -v error -y -framerate 30 -i "$WORK/$name/frame-%04d.png" -vf "$fades" $common "$out"
+      fi ;;
     duo)  ffmpeg -nostdin -v error -y -ss $DUO_FROM -i "$DUO" -vf "fps=30,$fades" $common "$out" ;;
     end)  ffmpeg -nostdin -v error -y -loop 1 -framerate 30 -i "$WORK/$name/frame.png" -vf "fade=t=in:st=0:d=0.5:color=$CREAM" $common "$out" ;;
   esac

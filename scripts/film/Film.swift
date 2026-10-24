@@ -5,7 +5,8 @@
 //
 // The timeline is one segment per line, `kind | seconds | text`:
 //   clip  | 5   | find               a shot from the clips folder, by name
-//   card  | 1.2 | It made me slow down.    typed out letter by letter, then held for the seconds given
+//   card  | 1.2 | It made me slow down. | find    typed out letter by letter, then held; optionally over a
+//                                                     shot from the clips folder, faded back behind the words
 //   word  | 1.4 | Carriage           typed in close-up on the page, the carriage stepping with each key
 //   duo   | 23.5 |                   the real Duo recording
 //   end   | 5   |                    the end card
@@ -40,20 +41,20 @@ func frames(_ seconds: Double) -> Int { Int((seconds * fps).rounded()) }
 
 enum Segment {
     case clip(String, Double)
-    case card(String, hold: Double)
+    case card(String, hold: Double, behind: String?)
     case word(String, hold: Double)
     case duo(Double)
     case end(Double)
 }
 
 let timeline: [Segment] = try String(contentsOf: timelineFile, encoding: .utf8).split(separator: "\n").compactMap { line in
-    let parts = line.split(separator: "|", maxSplits: 2).map { $0.trimmingCharacters(in: .whitespaces) }
+    let parts = line.split(separator: "|", maxSplits: 3).map { $0.trimmingCharacters(in: .whitespaces) }
     guard parts.count >= 2, !parts[0].hasPrefix("#") else { return nil }
     let seconds = Double(parts[1]) ?? 0
     let text = parts.count > 2 ? parts[2] : ""
     switch parts[0] {
     case "clip": return .clip(text, seconds)
-    case "card": return .card(text, hold: seconds)
+    case "card": return .card(text, hold: seconds, behind: parts.count > 3 && !parts[3].isEmpty ? parts[3] : nil)
     case "word": return .word(text, hold: seconds)
     case "duo": return .duo(seconds)
     case "end": return .end(seconds)
@@ -63,7 +64,7 @@ let timeline: [Segment] = try String(contentsOf: timelineFile, encoding: .utf8).
 
 /// When each key is struck, in frames from the start of the segment: a person's unhurried rhythm, steady within a
 /// word, a breath at a space, a pause after punctuation. Never the same gap twice in a row.
-func strikes(_ text: String, lead: Double = 0.5, pace: Double = 1) -> [Int] {
+func strikes(_ text: String, lead: Double = 0.25, pace: Double = 0.62) -> [Int] {
     let rhythm = [0.16, 0.21, 0.14, 0.19, 0.24, 0.15, 0.2, 0.17]
     var t = lead
     var out: [Int] = []
@@ -83,8 +84,8 @@ func strikes(_ text: String, lead: Double = 0.5, pace: Double = 1) -> [Int] {
 func length(_ segment: Segment) -> Int {
     switch segment {
     case let .clip(_, d), let .duo(d), let .end(d): frames(d)
-    case let .card(text, hold): (strikes(text).last ?? 0) + frames(hold)
-    case let .word(text, hold): (strikes(text, lead: 0.6, pace: 1.5).last ?? 0) + frames(hold)
+    case let .card(text, hold, _): (strikes(text).last ?? 0) + frames(hold)
+    case let .word(text, hold): (strikes(text, lead: 0.4, pace: 1.1).last ?? 0) + frames(hold)
     }
 }
 
@@ -186,7 +187,7 @@ var cutList: [String] = []
 for segment in timeline {
     let count = length(segment)
     switch segment {
-    case let .card(text, _):
+    case let .card(text, _, behind):
         cards += 1
         let folder = work.appendingPathComponent("card-\(cards)")
         try? FileManager.default.removeItem(at: folder)
@@ -198,7 +199,8 @@ for segment in timeline {
         for f in 0..<count {
             let shown = hits.filter { $0 <= f }.count
             save({ bounds in
-                paper(bounds)
+                // Over footage, only the words are drawn; make.sh lays them on the faded shot.
+                if behind == nil { paper(bounds) }
                 typed(String(text.prefix(shown))).draw(at: origin)
                 if shown == text.count {
                     color(0xA22D27).setFill()
@@ -207,7 +209,7 @@ for segment in timeline {
             }, to: folder.appendingPathComponent(String(format: "frame-%04d.png", f)))
         }
         typeSounds(text, hits, from: frameStart, gain: 0.85)
-        cutList.append("card card-\(cards) \(count)")
+        cutList.append("card card-\(cards) \(count) \(behind ?? "-")")
 
     case let .word(text, _):
         // Up close on the sheet: the typing point stays put and the paper steps left a letter at a time, as the
@@ -215,7 +217,7 @@ for segment in timeline {
         let folder = work.appendingPathComponent("word")
         try? FileManager.default.removeItem(at: folder)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        let hits = strikes(text, lead: 0.6, pace: 1.5)
+        let hits = strikes(text, lead: 0.4, pace: 1.1)
         let fontSize: CGFloat = 250
         let advance = typed("M", size: fontSize).size().width
         let lineY = size.height * 0.44
