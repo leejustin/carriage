@@ -58,7 +58,7 @@ let timeline: [Segment] = try String(contentsOf: timelineFile, encoding: .utf8).
     let text = parts.count > 2 ? parts[2] : ""
     switch parts[0] {
     case "clip": return .clip(text, seconds)
-    case "card": return .card(text, hold: seconds, behind: parts.count > 3 && !parts[3].isEmpty ? parts[3] : nil)
+    case "card": return .card(text.replacingOccurrences(of: " / ", with: "\n"), hold: seconds, behind: parts.count > 3 && !parts[3].isEmpty ? parts[3] : nil)
     case "word": return .word(text, hold: seconds)
     case "duo": return .duo(seconds)
     case "shot" where parts.count == 6: return .shot(seconds, from: Double(parts[2]) ?? 0, source: parts[3], crop: parts[4], caption: parts[5])
@@ -79,6 +79,7 @@ func strikes(_ text: String, lead: Double = 0.25, pace: Double = 0.62) -> [Int] 
         var gap = rhythm[i % rhythm.count] * pace
         if character == " " { gap += 0.1 }
         if ",.'".contains(character) { gap += 0.22 }
+        if character == "\n" { gap += 0.35 }       // the carriage going home between lines
         if previous == character { gap *= 0.8 }
         t += gap
         previous = character
@@ -133,7 +134,8 @@ func add(_ samples: [Float], atFrame frame: Int, gain: Float = 1) {
 }
 func typeSounds(_ text: String, _ hits: [Int], from start: Int, gain: Float) {
     for (i, (character, hit)) in zip(text, hits).enumerated() {
-        if character == " " { add(spaces[i % spaces.count], atFrame: start + hit, gain: gain * 0.9) }
+        if character == "\n" { add(carriageReturn, atFrame: start + hit, gain: gain * 0.45) }
+        else if character == " " { add(spaces[i % spaces.count], atFrame: start + hit, gain: gain * 0.9) }
         else { add(keys[(i * 5 + 3) % keys.count], atFrame: start + hit, gain: gain) }
     }
 }
@@ -199,18 +201,28 @@ for segment in timeline {
         try? FileManager.default.removeItem(at: folder)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         let hits = strikes(text)
-        // Laid out for the whole line, so the letters land where they'll stay instead of the line re-centring.
-        let full = typed(text).size()
-        let origin = CGPoint(x: (size.width - full.width) / 2, y: (size.height - full.height) / 2)
+        // Big enough to read on a phone, broken over lines with " / " in the timeline. Each line is laid out for its
+        // whole length, so the letters land where they'll stay instead of the line re-centring as it grows.
+        let lines = text.components(separatedBy: "\n")
+        let cardType: CGFloat = 150
+        let lineHeight = typed("M", size: cardType).size().height * 1.05
+        let blockTop = size.height / 2 + lineHeight * CGFloat(lines.count) / 2
+        let origins = lines.enumerated().map { i, line in
+            CGPoint(x: (size.width - typed(line, size: cardType).size().width) / 2, y: blockTop - lineHeight * CGFloat(i + 1))
+        }
         for f in 0..<count {
             let shown = hits.filter { $0 <= f }.count
             save({ bounds in
                 // Over footage, only the words are drawn; make.sh lays them on the faded shot.
                 if behind == nil { paper(bounds) }
-                typed(String(text.prefix(shown))).draw(at: origin)
+                var left = shown
+                for (i, line) in lines.enumerated() where left > 0 {
+                    typed(String(line.prefix(left)), size: cardType).draw(at: origins[i])
+                    left -= line.count + 1
+                }
                 if shown == text.count {
                     color(0xA22D27).setFill()
-                    NSBezierPath(roundedRect: CGRect(x: size.width / 2 - 44, y: origin.y - 40, width: 88, height: 9), xRadius: 4.5, yRadius: 4.5).fill()
+                    NSBezierPath(roundedRect: CGRect(x: size.width / 2 - 50, y: (origins.last?.y ?? 0) - 44, width: 100, height: 10), xRadius: 5, yRadius: 5).fill()
                 }
             }, to: folder.appendingPathComponent(String(format: "frame-%04d.png", f)))
         }

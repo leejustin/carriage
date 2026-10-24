@@ -5,7 +5,7 @@ shot | 3.2 | 7.9 | raw | keys | Real recorded keys.
 shot | 3.4 | 12.6 | raw | line | X-OUT, like the real thing.
 shot | 1.9 | 19.6 | raw | margin | A bell at the margin.
 shot | 2.3 | 21.3 | raw | margin | Push the carriage home.
-card | 0.8 | We scroll more than we read. | find
-card | 0.8 | Back to one page. | return
+card | 0.9 | We scroll more / than we read. | find
+card | 0.9 | Back to / one page. | return
 word | 1.2 | Carriage
 end | 4.5 |
