@@ -42,9 +42,10 @@ the "coming soon" link.
 5. `product-hunt/5-write-late.png`: Write late, in peace.
 
 **Video:** Product Hunt only takes a YouTube link. Upload `docs/previews/launch-film.mp4` to YouTube (unlisted is
-fine), titled "Carriage: a typewriter for your iPhone Duo", and paste the link; put it first in the gallery. It's
-about a minute: the story of the old typewriter in typed title cards, then Carriage on a half-folded Duo with the
-real sounds. `docs/previews/duo-film.mp4` is the 29-second demo on its own, for social posts.
+fine), titled "Carriage: a typewriter for your iPhone Duo", and paste the link; put it first in the gallery. It's 30
+seconds and works muted: captions over the Duo show the real keys, X-OUT, the bell and the carriage pushed home,
+then "We scroll more than we read. / Back to one page." `docs/previews/duo-film.mp4` is the plain demo, for social
+posts.
 
 ## Maker's first comment
 

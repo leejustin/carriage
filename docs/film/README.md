@@ -1,13 +1,20 @@
 # Launch film
 
-`docs/previews/launch-film.mp4`: about 45 seconds, 1920 x 1080, for YouTube and the Product Hunt gallery.
+`docs/previews/launch-film.mp4`: 30 seconds, 1920 x 1080, made for Product Hunt's muted autoplay and YouTube.
 
-Three typed title cards ("We scroll more than we read." / "We post more than we think." / "Back to one page."), each
-over a Dreamina shot of an old typewriter (in `clips/`) faded and blurred back behind the words,
-"Carriage" typed in close-up as the carriage steps, the real Duo recording from `docs/previews/duo-film.mp4`, and an
-end card. Every letter lands on the frame its recorded key sounds. Under it all, Satie's Gymnopédie No. 1.
+1. The half-folded Duo, easing in as it types: "A typewriter for your iPhone Duo."
+2. Close on the keys: "Real recorded keys."
+3. A typo struck through: "X-OUT, like the real thing."
+4. The bell near the margin, then the carriage pushed home by hand.
+5. "We scroll more than we read." / "Back to one page." over Dreamina shots of an old typewriter, faded back behind
+   the words (`clips/`).
+6. "Carriage" typed in close-up, then the end card.
 
-The story is `scripts/film/timeline.txt`. Cut it again with:
+Shots 1–4 come from one Duo recording: `docs/previews/duo-film.mp4` (the half-folded Duo) and `duo-raw.mp4` (the
+same take's raw screen, for close-ups; `duo-raw-offset.txt` lines the two up). Every letter lands on the frame its
+recorded key sounds. Under it all, Satie's Gymnopédie No. 1.
+
+The cut is `scripts/film/timeline.txt`. Make it again with:
 
     TAGLINE="Write with intent." scripts/film/make.sh docs/film/clips docs/film/music/gymnopedie-1-alciatore.ogg
 

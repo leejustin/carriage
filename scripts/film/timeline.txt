@@ -1,7 +1,11 @@
-# kind | seconds | text | footage behind (see scripts/film/Film.swift)
-card | 0.9 | We scroll more than we read. | find
-card | 0.9 | We post more than we think. | typing
-card | 0.9 | Back to one page. | return
-word | 1.3 | Carriage
-duo | 23.5 |
-end | 5 |
+# kind | seconds | text | footage behind   (see scripts/film/Film.swift)
+# shot | seconds | from (s into duo-film.mp4) | film or raw | crop | caption
+shot | 4.0 | 3.6 | film | - | A typewriter for your iPhone Duo.
+shot | 3.2 | 7.9 | raw | keys | Real recorded keys.
+shot | 3.4 | 12.6 | raw | line | X-OUT, like the real thing.
+shot | 1.9 | 19.6 | raw | margin | A bell at the margin.
+shot | 2.3 | 21.3 | raw | margin | Push the carriage home.
+card | 0.8 | We scroll more than we read. | find
+card | 0.8 | Back to one page. | return
+word | 1.2 | Carriage
+end | 4.5 |

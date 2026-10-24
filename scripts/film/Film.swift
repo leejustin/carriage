@@ -9,6 +9,9 @@
 //                                                     shot from the clips folder, faded back behind the words
 //   word  | 1.4 | Carriage           typed in close-up on the page, the carriage stepping with each key
 //   duo   | 23.5 |                   the real Duo recording
+//   shot  | 3.2 | 7.9 | raw | keys | Real recorded keys.
+//         a stretch of the Duo recording (from seconds into duo-film.mp4), either the half-folded Duo (film) or
+//         a crop of the raw screen (raw), with a caption over it
 //   end   | 5   |                    the end card
 //
 // Every keystroke lands on a video frame, and its recorded sound starts on that same frame. Writes card and word
@@ -44,11 +47,12 @@ enum Segment {
     case card(String, hold: Double, behind: String?)
     case word(String, hold: Double)
     case duo(Double)
+    case shot(Double, from: Double, source: String, crop: String, caption: String)
     case end(Double)
 }
 
 let timeline: [Segment] = try String(contentsOf: timelineFile, encoding: .utf8).split(separator: "\n").compactMap { line in
-    let parts = line.split(separator: "|", maxSplits: 3).map { $0.trimmingCharacters(in: .whitespaces) }
+    let parts = line.split(separator: "|", maxSplits: 5).map { $0.trimmingCharacters(in: .whitespaces) }
     guard parts.count >= 2, !parts[0].hasPrefix("#") else { return nil }
     let seconds = Double(parts[1]) ?? 0
     let text = parts.count > 2 ? parts[2] : ""
@@ -57,6 +61,7 @@ let timeline: [Segment] = try String(contentsOf: timelineFile, encoding: .utf8).
     case "card": return .card(text, hold: seconds, behind: parts.count > 3 && !parts[3].isEmpty ? parts[3] : nil)
     case "word": return .word(text, hold: seconds)
     case "duo": return .duo(seconds)
+    case "shot" where parts.count == 6: return .shot(seconds, from: Double(parts[2]) ?? 0, source: parts[3], crop: parts[4], caption: parts[5])
     case "end": return .end(seconds)
     default: return nil
     }
@@ -83,7 +88,7 @@ func strikes(_ text: String, lead: Double = 0.25, pace: Double = 0.62) -> [Int] 
 
 func length(_ segment: Segment) -> Int {
     switch segment {
-    case let .clip(_, d), let .duo(d), let .end(d): frames(d)
+    case let .clip(_, d), let .duo(d), let .end(d), let .shot(d, _, _, _, _): frames(d)
     case let .card(text, hold, _): (strikes(text).last ?? 0) + frames(hold)
     case let .word(text, hold): (strikes(text, lead: 0.4, pace: 1.1).last ?? 0) + frames(hold)
     }
@@ -163,7 +168,7 @@ func paper(_ bounds: CGRect) {
 }
 
 let ink = color(0x24211E)
-func typed(_ text: String, size: CGFloat = 64) -> NSAttributedString {
+func typed(_ text: String, size: CGFloat = 96) -> NSAttributedString {
     NSAttributedString(string: text, attributes: [.font: NSFont(name: "CourierPrime-Regular", size: size)!, .foregroundColor: ink, .strokeWidth: -1.4, .strokeColor: ink])
 }
 
@@ -183,6 +188,7 @@ let grain: NSImage = {
 
 var frameStart = 0
 var cards = 0
+var shots = 0
 var cutList: [String] = []
 for segment in timeline {
     let count = length(segment)
@@ -204,7 +210,7 @@ for segment in timeline {
                 typed(String(text.prefix(shown))).draw(at: origin)
                 if shown == text.count {
                     color(0xA22D27).setFill()
-                    NSBezierPath(roundedRect: CGRect(x: size.width / 2 - 34, y: origin.y - 34, width: 68, height: 7), xRadius: 3.5, yRadius: 3.5).fill()
+                    NSBezierPath(roundedRect: CGRect(x: size.width / 2 - 44, y: origin.y - 40, width: 88, height: 9), xRadius: 4.5, yRadius: 4.5).fill()
                 }
             }, to: folder.appendingPathComponent(String(format: "frame-%04d.png", f)))
         }
@@ -259,8 +265,36 @@ for segment in timeline {
         cutList.append("clip \(name) \(count)")
 
     case .duo:
-        add(duo, atFrame: frameStart)
+        let from = Int((Double(ProcessInfo.processInfo.environment["DUO_FROM"] ?? "5.5") ?? 5.5) * rate)
+        add(Array(duo[min(from, duo.count)..<min(duo.count, from + Int(Double(count) / fps * rate) + Int(rate))]), atFrame: frameStart)
         cutList.append("duo duo \(count)")
+
+    case let .shot(_, from, source, crop, caption):
+        shots += 1
+        // Its own sound, from the same moment of the recording.
+        let a = Int(from * rate), b = min(duo.count, a + Int(Double(count) / fps * rate))
+        if a < b { add(Array(duo[a..<b]), atFrame: frameStart) }
+        // The caption: a cream band across the top, the line set large enough to read on a phone, sound off.
+        let url = work.appendingPathComponent("caption-\(shots).png")
+        let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(size.width), pixelsHigh: Int(size.height), bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+        let line = typed(caption, size: 76)
+        let w = line.size().width + 110, h: CGFloat = 132
+        let band = CGRect(x: (size.width - w) / 2, y: size.height - h - 56, width: w, height: h)
+        let shadow = NSShadow()
+        shadow.shadowColor = NSColor.black.withAlphaComponent(0.18)
+        shadow.shadowBlurRadius = 24
+        shadow.shadowOffset = NSSize(width: 0, height: -6)
+        NSGraphicsContext.saveGraphicsState()
+        shadow.set()
+        color(0xF6F1E6, 0.96).setFill()
+        NSBezierPath(roundedRect: band, xRadius: 22, yRadius: 22).fill()
+        NSGraphicsContext.restoreGraphicsState()
+        line.draw(at: CGPoint(x: band.minX + 55, y: band.midY - line.size().height / 2))
+        NSGraphicsContext.restoreGraphicsState()
+        try! rep.representation(using: .png, properties: [:])!.write(to: url)
+        cutList.append("shot caption-\(shots) \(count) \(from) \(source) \(crop)")
 
     case .end:
         let folder = work.appendingPathComponent("card-end")
@@ -273,18 +307,18 @@ for segment in timeline {
             let centred = NSMutableParagraphStyle()
             centred.alignment = .center
             NSGraphicsContext.saveGraphicsState()
-            let iconRect = CGRect(x: bounds.midX - 80, y: 640, width: 160, height: 160)
-            NSBezierPath(roundedRect: iconRect, xRadius: 36, yRadius: 36).addClip()
+            let iconRect = CGRect(x: bounds.midX - 100, y: 660, width: 200, height: 200)
+            NSBezierPath(roundedRect: iconRect, xRadius: 45, yRadius: 45).addClip()
             icon.draw(in: iconRect)
             NSGraphicsContext.restoreGraphicsState()
-            NSAttributedString(string: "Carriage", attributes: [.font: NSFont(name: "CourierPrime-Regular", size: 96)!, .foregroundColor: ink, .strokeWidth: -1.4, .strokeColor: ink, .paragraphStyle: centred])
-                .draw(with: CGRect(x: 0, y: 500, width: bounds.width, height: 120), options: [.usesLineFragmentOrigin])
+            NSAttributedString(string: "Carriage", attributes: [.font: NSFont(name: "CourierPrime-Regular", size: 132)!, .foregroundColor: ink, .strokeWidth: -1.4, .strokeColor: ink, .paragraphStyle: centred])
+                .draw(with: CGRect(x: 0, y: 470, width: bounds.width, height: 170), options: [.usesLineFragmentOrigin])
             color(0xA22D27).setFill()
-            NSBezierPath(roundedRect: CGRect(x: bounds.midX - 40, y: 478, width: 80, height: 8), xRadius: 4, yRadius: 4).fill()
-            NSAttributedString(string: tagline, attributes: [.font: NSFont(name: "CourierPrime-Regular", size: 52)!, .foregroundColor: ink, .paragraphStyle: centred])
-                .draw(with: CGRect(x: 0, y: 380, width: bounds.width, height: 80), options: [.usesLineFragmentOrigin])
-            NSAttributedString(string: "A TYPEWRITER FOR IPHONE DUO  ·  CARRIAGE.PAGES.DEV", attributes: [.font: NSFont(name: "Futura-Medium", size: 30)!, .foregroundColor: ink.withAlphaComponent(0.65), .kern: 5, .paragraphStyle: centred])
-                .draw(with: CGRect(x: 0, y: 300, width: bounds.width, height: 50), options: [.usesLineFragmentOrigin])
+            NSBezierPath(roundedRect: CGRect(x: bounds.midX - 50, y: 452, width: 100, height: 10), xRadius: 5, yRadius: 5).fill()
+            NSAttributedString(string: tagline, attributes: [.font: NSFont(name: "CourierPrime-Regular", size: 70)!, .foregroundColor: ink, .paragraphStyle: centred])
+                .draw(with: CGRect(x: 0, y: 320, width: bounds.width, height: 100), options: [.usesLineFragmentOrigin])
+            NSAttributedString(string: "FOR IPHONE DUO  ·  ON THE APP STORE  ·  CARRIAGE.PAGES.DEV", attributes: [.font: NSFont(name: "Futura-Medium", size: 34)!, .foregroundColor: ink.withAlphaComponent(0.7), .kern: 5, .paragraphStyle: centred])
+                .draw(with: CGRect(x: 0, y: 220, width: bounds.width, height: 60), options: [.usesLineFragmentOrigin])
         }, to: folder.appendingPathComponent("frame.png"))
         cutList.append("end card-end \(count)")
     }

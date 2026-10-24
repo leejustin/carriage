@@ -14,12 +14,15 @@ DUO_FROM=${DUO_FROM:-5.5}     # where in the Duo recording to start: just before
 CREAM=0xF3ECDD
 cd "$ROOT"
 
-ffmpeg -nostdin -v error -y -ss $DUO_FROM -i "$DUO" -vn -ac 1 -ar 48000 "$WORK/duo.wav"
-swift scripts/film/Film.swift "$WORK" scripts/film/timeline.txt "$WORK/duo.wav" ${MUSIC:+"$MUSIC"} > "$WORK/cut.txt"
+RAW="$ROOT/docs/film/duo-raw.mp4"
+# duo-film.mp4 starts a second before the raw recording's first sound.
+RAW_LEAD=$(( $(cat "$ROOT/docs/film/duo-raw-offset.txt") - 1.0 ))
+ffmpeg -nostdin -v error -y -i "$DUO" -vn -ac 1 -ar 48000 "$WORK/duo.wav"
+DUO_FROM=$DUO_FROM swift scripts/film/Film.swift "$WORK" scripts/film/timeline.txt "$WORK/duo.wav" ${MUSIC:+"$MUSIC"} > "$WORK/cut.txt"
 
 n=0
 : > "$WORK/list.txt"
-while read kind name count behind; do
+while read kind name count behind source crop; do
   n=$((n + 1))
   out="$WORK/seg-$n.mp4"
   length=$(( count / 30.0 ))
@@ -37,6 +40,24 @@ while read kind name count behind; do
       else
         ffmpeg -nostdin -v error -y -framerate 30 -i "$WORK/$name/frame-%04d.png" -vf "$fades" $common "$out"
       fi ;;
+    shot)
+      # A moment of the Duo recording, easing in slowly, with its caption faded up over it.
+      from=$behind
+      case $crop in
+        keys)   box=2006:1128:0:1560 ;;
+        line)   box=1150:647:110:820 ;;
+        margin) box=1420:799:586:700 ;;
+        *)      box= ;;
+      esac
+      push="zoompan=z='1+0.0009*on':x='iw/2-(iw/zoom/2)':y='ih*0.46-(ih/zoom/2)':d=1:s=1920x1080:fps=30"
+      if [[ $source == raw ]]; then
+        input=(-ss $(( from + RAW_LEAD )) -i "$RAW"); frame="crop=$box,scale=1920:1080,$push"
+      else
+        input=(-ss $from -i "$DUO"); frame="scale=1920:1080,zoompan=z='1+0.0016*on':x='iw/2-(iw/zoom/2)':y='ih*0.42-(ih/zoom/2)':d=1:s=1920x1080:fps=30"
+      fi
+      ffmpeg -nostdin -v error -y $input -loop 1 -i "$WORK/$name.png" -filter_complex \
+        "[0:v]fps=30,${frame}[v];[1:v]format=rgba,fade=t=in:st=0.15:d=0.3:alpha=1[c];[v][c]overlay=format=auto,${fades}" \
+        $common "$out" ;;
     duo)  ffmpeg -nostdin -v error -y -ss $DUO_FROM -i "$DUO" -vf "fps=30,$fades" $common "$out" ;;
     end)  ffmpeg -nostdin -v error -y -loop 1 -framerate 30 -i "$WORK/$name/frame.png" -vf "fade=t=in:st=0:d=0.5:color=$CREAM" $common "$out" ;;
   esac
