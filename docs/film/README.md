@@ -1,13 +1,20 @@
 # Launch film
 
-`docs/previews/launch-film.mp4`: about a minute, 1920 x 1080, for YouTube and the Product Hunt gallery.
+`docs/previews/launch-film.mp4`: about 50 seconds, 1920 x 1080, for YouTube and the Product Hunt gallery.
 
-Three mood shots of an old typewriter, made with Dreamina (Seedance 2.0) and kept in `clips/`, between typed title
-cards ("I found my parents' old typewriter." / "It made me slow down." / "So I rebuilt it for the iPhone Duo."), then
-the real Duo recording from `docs/previews/duo-film.mp4` and an end card. The sound is the app's own recorded
-typewriter and rain; the AI shots carry Dreamina's small "AI" mark.
+Three typed title cards ("We scroll more than we read." / "We post more than we think." / "Back to one page."),
+"Carriage" typed in close-up as the carriage steps, the real Duo recording from `docs/previews/duo-film.mp4`, and an
+end card. Every letter lands on the frame its recorded key sounds. Under it all, Satie's Gymnopédie No. 1.
 
-The AI footage is only ever the old typewriter, never Carriage. Everything showing the app is a real recording.
+The story is `scripts/film/timeline.txt`. Cut it again with:
 
-Cut it again with `scripts/film/make.sh docs/film/clips`; `scripts/film/Film.swift` draws the cards and mixes the
-soundtrack.
+    TAGLINE="Write with intent." scripts/film/make.sh - docs/film/music/gymnopedie-1-alciatore.ogg
+
+## Music
+
+Both recordings are public domain, from Wikimedia Commons; no credit is required.
+
+- `music/gymnopedie-1-alciatore.ogg`: Erik Satie, Gymnopédie No. 1, piano, Robin Alciatore.
+  https://commons.wikimedia.org/wiki/File:Erik_Satie_-_gymnopedies_-_la_1_ere._lent_et_douloureux.ogg
+- `music/gymnopedie-1-laucke.flac`: the same piece performed by Michael Laucke.
+  https://commons.wikimedia.org/wiki/File:Satie_Gymnopedie_No_1_performed_by_Michael_Laucke.flac

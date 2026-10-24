@@ -299,8 +299,8 @@ if let musicFile {
     let duoEnd = duoStart + Double(timeline.first { if case .duo = $0 { true } else { false } }.map(length) ?? 0) / fps
     for i in mix.indices where i < music.count {
         let s = Double(i) / rate
-        var g = 0.32 * min(1, s / 2) * min(1, (total - s) / 3)
-        if s > duoStart - 1, s < duoEnd + 1 { g *= 0.6 }
+        var g = 0.75 * min(1, s / 2) * min(1, (total - s) / 3)
+        if s > duoStart - 1, s < duoEnd + 1 { g *= 0.55 }
         mix[i] += music[i] * Float(g)
     }
 }

@@ -2,7 +2,7 @@
 # Cuts the launch film from scripts/film/timeline.txt: mood shots, typed title cards, the typed close-up, the real
 # Duo recording and an end card, over the app's recorded keys and optional music. 1920 x 1080, 30 fps.
 #
-#   scripts/film/make.sh <clips folder> [music file]       writes docs/previews/launch-film.mp4
+#   scripts/film/make.sh <clips folder, or - for none> [music file]       writes docs/previews/launch-film.mp4
 #   TAGLINE="Write with intent." sets the end card's line.
 set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
