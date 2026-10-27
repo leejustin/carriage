@@ -390,7 +390,7 @@ try creative(size: launchSize, to: launchOut.appendingPathComponent("1-typewrite
     desk(bounds)
     let ink = color(0x24211E)
     let paragraph = NSMutableParagraphStyle()
-    NSAttributedString(string: "A typewriter\nfor your\niPhone.", attributes: [
+    NSAttributedString(string: "A typewriter\nfor your\niPhone Duo.", attributes: [
         .font: NSFont(name: "CourierPrime-Regular", size: 150)!, .foregroundColor: ink, .paragraphStyle: paragraph,
         .strokeWidth: -1.2, .strokeColor: ink,
     ]).draw(with: CGRect(x: 150, y: bounds.midY - 200, width: 1150, height: 600), options: [.usesLineFragmentOrigin])
@@ -409,12 +409,11 @@ try creative(size: launchSize, to: launchOut.appendingPathComponent("2-half-fold
     drawLaptop(duoCapture("03-cherry"), in: CGRect(x: 200, y: 70, width: bounds.width - 400, height: bounds.height - 520), night: false)
 }
 
-// 3. Every iPhone.
-try creative(size: launchSize, to: launchOut.appendingPathComponent("3-every-iphone.png")) { bounds in
+// 3. Intent.
+try creative(size: launchSize, to: launchOut.appendingPathComponent("3-intent.png")) { bounds in
     desk(bounds)
-    headline("Made for Duo. Lovely on any iPhone.", "HALF-FOLDED ON A DUO, OR PAGE AND KEYS ON ONE SCREEN.", in: bounds, night: false, size: 112)
-    drawLaptop(duoCapture("01-typing"), in: CGRect(x: 180, y: 90, width: 1400, height: bounds.height - 520), night: false)
-    drawPhone(phoneCapture("01-typing"), fitting: CGRect(x: 1700, y: 110, width: 600, height: bounds.height - 560), night: false)
+    headline("Every word, on purpose.", "ONE PAGE. NO FEED. TYPOS STAY, STRUCK THROUGH.", in: bounds, night: false)
+    drawLaptop(duoCapture("02-focus"), in: CGRect(x: 200, y: 70, width: bounds.width - 400, height: bounds.height - 520), night: false)
 }
 
 // 4. The machines.

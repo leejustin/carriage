@@ -23,9 +23,9 @@ the "coming soon" link.
 2. Half-fold your iPhone Duo into a little typewriter
 3. Your iPhone, as a quiet typewriter that clacks back
 
-**Description** (260 max, 237 used):
+**Description** (260 max, 231 used):
 
-> Carriage turns your iPhone Duo into a typewriter. Half-fold it and the page stands up while a full keyboard waits below. Real recorded keys, a bell at the margin, and a carriage you push home yourself. A quiet place to write with intent.
+> Everything is effortless to make and scroll past now. Carriage asks for intent. Half-fold your iPhone Duo into a typewriter: one page up top, real keys below. Typos stay, struck through, so you choose every word before you type it.
 
 **Topics:** Writing, Productivity, iOS, Design, Minimalism
 
@@ -35,17 +35,14 @@ the "coming soon" link.
 
 **Gallery**, in this order (2540 x 1520, Product Hunt's 1270 x 760 at twice the size):
 
-1. `product-hunt/1-typewriter.png`: A typewriter for your iPhone.
+1. `product-hunt/1-typewriter.png`: A typewriter for your iPhone Duo.
 2. `product-hunt/2-half-fold.png`: Half-fold it like a laptop.
-3. `product-hunt/3-every-iphone.png`: Made for Duo. Lovely on any iPhone.
+3. `product-hunt/3-intent.png`: Every word, on purpose.
 4. `product-hunt/4-real-typewriters.png`: Real typewriters, recorded.
 5. `product-hunt/5-write-late.png`: Write late, in peace.
 
-**Video:** Product Hunt only takes a YouTube link. Upload `docs/previews/launch-film.mp4` to YouTube (unlisted is
-fine), titled "Carriage: a typewriter for your iPhone Duo", and paste the link; put it first in the gallery. It's 30
-seconds and works muted: captions over the Duo show the real keys, X-OUT, the bell and the carriage pushed home,
-then "We scroll more than we read. / Back to one page." `docs/previews/duo-film.mp4` is the plain demo, for social
-posts.
+**Video:** https://youtu.be/-g95l52dml0 (unlisted, first in the gallery). It's `docs/previews/launch-film.mp4`, 30
+seconds, and works muted. `docs/previews/duo-film.mp4` is the plain demo, for social posts.
 
 ## Maker's first comment
 
@@ -53,13 +50,11 @@ Post this the moment it goes live. Edit freely; it should sound like you.
 
 > Hi Product Hunt! 👋
 >
-> Carriage is a writing app made for the iPhone Duo. Half-fold it like a little laptop, and the page stands on the
-> top screen while a full typewriter keyboard sits on the bottom.
+> Carriage is a typewriter for the iPhone Duo. Half-fold it like a little laptop, and the page stands on the top screen while a full typewriter keyboard sits on the bottom.
 >
-> Almost everything on my phone is built to keep me scrolling. I wanted one thing on it that asks for less: just a
-> page and the keys, nothing else until I'm done. Making it act like a real typewriter turned out to be the best
-> way to get there. Each key takes a real press, the bell rings near the margin, and you push the carriage home
-> yourself. Typos stay on the page, struck through, so you end up choosing your words before you type them.
+> I made it because so much around us is now made and consumed without much thought. Feeds refill themselves, drafts write themselves, and it's easy to spend a whole day producing and scrolling without choosing much of anything. I wanted one place on my phone that asks for the opposite: a single page, and nothing else until I'm done.
+>
+> A typewriter turned out to be the right shape for that. Each key takes a real press, the bell rings near the margin, and you push the carriage home yourself. Typos stay on the page, struck through, so you start choosing your words before you type them. It's slower, on purpose.
 >
 > What's in it:
 > - Four real typewriters, recorded key by key, with a tap you feel on every stroke
@@ -68,11 +63,9 @@ Post this the moment it goes live. Edit freely; it should sound like you.
 > - Pages saved as you type, synced with iCloud, with a Markdown copy in Files
 > - No account, no ads, no subscription, and nothing collected
 >
-> Your first 5,000 words are free. The unlock is $4.99 through launch week (unlimited words and every machine,
-> forever), then $7.99 from October 30.
+> Your first 5,000 words are free. The unlock is $4.99 through launch week (unlimited words and every machine, forever), then $7.99 from October 30.
 >
-> It runs on any iPhone, but it's at its best half-folded on a Duo. I'd love to hear what you'd write on it, and
-> which typewriter I should record next.
+> I'd love to hear what you'd write on it, and which typewriter I should record next.
 
 ## Replies to have ready
 
