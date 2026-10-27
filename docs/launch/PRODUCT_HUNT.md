@@ -53,27 +53,26 @@ Post this the moment it goes live. Edit freely; it should sound like you.
 
 > Hi Product Hunt! 👋
 >
-> A while ago I found my parents' old typewriter [where/what it was]. I fed a sheet of paper in and noticed I was
-> slowing down. Each key took a real press. When the bell rang I decided where the line ended and pushed the
-> carriage back myself. A typo stayed on the page, struck through, so I chose my words before I pressed them. I
-> was thinking about every sentence, and enjoying it.
+> Carriage is a writing app made for the iPhone Duo. Half-fold it like a little laptop, and the page stands on the
+> top screen while a full typewriter keyboard sits on the bottom.
 >
-> Our phones are built for creating and consuming more than our brains can take in. I wanted one place on mine
-> that asks for less. So I rebuilt that typewriter for the iPhone Duo: half-fold it like a little laptop, and the
-> page stands on the top screen while a full typewriter keyboard sits on the bottom.
+> Almost everything on my phone is built to keep me scrolling. I wanted one thing on it that asks for less: just a
+> page and the keys, nothing else until I'm done. Making it act like a real typewriter turned out to be the best
+> way to get there. Each key takes a real press, the bell rings near the margin, and you push the carriage home
+> yourself. Typos stay on the page, struck through, so you end up choosing your words before you type them.
 >
 > What's in it:
 > - Four real typewriters, recorded key by key, with a tap you feel on every stroke
-> - The bell near the margin, and a carriage you push home by hand
-> - X-OUT for typos, like the real thing (backspace is in Settings if you'd rather)
+> - X-OUT for typos (backspace is in Settings if you'd rather)
 > - Rain on the window or a fire in the grate, and a desk lamp that follows the hour
-> - Your pages saved as you type, synced with iCloud, with a Markdown copy in Files
+> - Pages saved as you type, synced with iCloud, with a Markdown copy in Files
 > - No account, no ads, no subscription, and nothing collected
 >
-> Your first 5,000 words are free, a whole short story. The unlock (unlimited words and every machine, forever)
-> is $4.99 through launch week, then $7.99 from October 30.
+> Your first 5,000 words are free. The unlock is $4.99 through launch week (unlimited words and every machine,
+> forever), then $7.99 from October 30.
 >
-> It also runs on any iPhone, but it's at its best half-folded on a Duo. I'd love to hear what you'd write on it.
+> It runs on any iPhone, but it's at its best half-folded on a Duo. I'd love to hear what you'd write on it, and
+> which typewriter I should record next.
 
 ## Replies to have ready
 
@@ -104,9 +103,7 @@ Read each community's self-promotion rules first; many only allow it in a weekly
 
 **X / Threads / Bluesky**
 
-> I found my parents' old typewriter and noticed it made me slow down and write with more intent.
->
-> So I rebuilt it for the iPhone Duo. ⌨️ Half-fold it and the page stands up while the keys wait below. Real
+> I made a typewriter for the iPhone Duo. ⌨️ Half-fold it and the page stands up while the keys wait below. Real
 > recorded keys, a bell at the margin, and a carriage you push home yourself.
 >
 > It's on Product Hunt today: [link]
