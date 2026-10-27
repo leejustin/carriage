@@ -17,6 +17,79 @@
 <meta property="og:image:alt" content="Carriage on an iPhone Duo, half-folded like a laptop, with a typed page above and typewriter keys below.">
 <meta property="og:url" content="https://carriage.pages.dev/">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#f6f1e6">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Do I need an iPhone Duo?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Carriage is made for the Duo, half-folded like a laptop, with the page on the top screen and the keys on the bottom. It also runs on any iPhone with iOS 27, with the page and keys sharing one screen."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is there a backspace?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, in Settings. By default Carriage works like a typewriter: X-OUT strikes a typo through with x's. When you copy or export your writing, you choose the clean text or the struck-through version."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is it a subscription?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Your first 5,000 words are free, with every paper and ribbon. One purchase unlocks unlimited words and every machine, forever. No ads and no account."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I get my writing out?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Every page is saved as a plain Markdown file in Files, and you can export a PDF that looks typed, Markdown or plain text, print, share a page as an image or send it to Notes."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does it sync between devices?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Your pages save as you type and sync through your own iCloud. Without iCloud, they stay on your iPhone."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I silence notifications while I write?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Set it up once and iOS turns on Do Not Disturb whenever Carriage opens; Carriage walks you through it. Tap the moon and everything but the page and keys fades away."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I use dictation or another language?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Turn on Settings › Accessibility › Use the system keyboard, and Carriage swaps its typewriter keys for the standard iOS keyboard, with dictation and every language iOS supports."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What about privacy?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Carriage collects nothing: no analytics, no tracking, no accounts. Your writing stays on your phone and in your own iCloud."
+      }
+    }
+  ]
+}
+</script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -96,8 +169,11 @@ p.lead { font-size: clamp(17px, 1.8vw, 20px); max-width: 34em; }
 .desk .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 32px 28px; margin-top: 40px; }
 .desk h3 { font-size: 18px; margin: 0 0 6px; }
 .desk p { margin: 0; color: var(--soft); font-size: 15px; }
+.faq .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 48px; }
+.faq h3 { font-size: 19px; }
+.faq p { font-size: 16px; }
 @media (max-width: 980px) { .desk .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 520px) { .desk .grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 520px) { .desk .grid, .faq .grid { grid-template-columns: minmax(0, 1fr); } }
 .night { background: linear-gradient(#24211f, #141312); color: var(--night-ink); padding: 96px 0; }
 .night .wrap { display: grid; grid-template-columns: 1fr 1.2fr; gap: 48px; align-items: center; }
 .night .label { color: #b9b0a2; }
@@ -171,10 +247,10 @@ footer a { color: var(--soft); }
     <div class="wrap">
       <div class="label">Why Carriage</div>
       <div class="rule"></div>
-      <h2>It started with my parents' old typewriter.</h2>
-      <p style="margin-top: 32px;">I fed a sheet of paper in and started typing, and noticed I was slowing down. Each key took a real press. When the bell rang near the margin, I decided where the line ended and pushed the carriage back myself. A typo stayed on the page, struck through, so I chose my words before I pressed them.</p>
-      <p>I was thinking about every sentence, and I was enjoying it.</p>
-      <p>Our phones are built for creating and consuming more than our brains can take in. I wanted one place on mine that asks for less: a page, a line at a time, and the sound of the keys. So I rebuilt that typewriter for the iPhone Duo.</p>
+      <h2>One place on your phone that asks for less.</h2>
+      <p style="margin-top: 32px;">Almost everything on our phones is built to keep us scrolling. I wanted one thing on mine that asks for less: a page, a line at a time, and the sound of the keys, with nothing else until I'm done.</p>
+      <p>Making it act like a real typewriter turned out to be the best way to get there. Each key takes a real press. The bell rings near the margin, and you decide where the line ends and push the carriage home yourself. A typo stays on the page, struck through, so you choose your words before you type them.</p>
+      <p>The iPhone Duo made it feel right: half-fold it like a little laptop, and the page stands on the top screen while a full typewriter keyboard sits on the bottom.</p>
       <p class="sign">Justin, who made Carriage</p>
     </div>
   </section>
@@ -235,6 +311,22 @@ footer a { color: var(--soft); }
       <div><h3>Quiet</h3><p>Set it up once and your phone silences notifications whenever Carriage is open. Tap the moon and everything but the page fades away.</p></div>
       <div><h3>Your pages, kept</h3><p>Saves as you type and syncs with iCloud, with a plain Markdown copy of every page in Files and a PDF that looks typed.</p></div>
       <div><h3>A writing habit</h3><p>Notebooks, a journal page for each day, daily word goals and streaks.</p></div>
+    </div>
+  </section>
+
+  <section class="wrap desk faq">
+    <div class="label">Questions</div>
+    <div class="rule"></div>
+    <h2>Good to know.</h2>
+    <div class="grid">
+      <div><h3>Do I need an iPhone Duo?</h3><p>Carriage is made for the Duo, half-folded like a laptop, with the page on the top screen and the keys on the bottom. It also runs on any iPhone with iOS 27, with the page and keys sharing one screen.</p></div>
+      <div><h3>Is there a backspace?</h3><p>Yes, in Settings. By default Carriage works like a typewriter: X-OUT strikes a typo through with x&#x27;s. When you copy or export your writing, you choose the clean text or the struck-through version.</p></div>
+      <div><h3>Is it a subscription?</h3><p>No. Your first 5,000 words are free, with every paper and ribbon. One purchase unlocks unlimited words and every machine, forever. No ads and no account.</p></div>
+      <div><h3>Can I get my writing out?</h3><p>Yes. Every page is saved as a plain Markdown file in Files, and you can export a PDF that looks typed, Markdown or plain text, print, share a page as an image or send it to Notes.</p></div>
+      <div><h3>Does it sync between devices?</h3><p>Your pages save as you type and sync through your own iCloud. Without iCloud, they stay on your iPhone.</p></div>
+      <div><h3>Can I silence notifications while I write?</h3><p>Yes. Set it up once and iOS turns on Do Not Disturb whenever Carriage opens; Carriage walks you through it. Tap the moon and everything but the page and keys fades away.</p></div>
+      <div><h3>Can I use dictation or another language?</h3><p>Turn on Settings › Accessibility › Use the system keyboard, and Carriage swaps its typewriter keys for the standard iOS keyboard, with dictation and every language iOS supports.</p></div>
+      <div><h3>What about privacy?</h3><p>Carriage collects nothing: no analytics, no tracking, no accounts. Your writing stays on your phone and in your own iCloud.</p></div>
     </div>
   </section>
 
