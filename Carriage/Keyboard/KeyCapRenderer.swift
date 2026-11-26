@@ -43,7 +43,7 @@ enum KeyCapRenderer {
             UIColor(hex: 0xFFFFFF).cgColor, UIColor(hex: 0xC6CBCD).cgColor, UIColor(hex: 0x6F7578).cgColor,
             UIColor(hex: 0xB9BEC0).cgColor, UIColor(hex: 0x50555A).cgColor,
         ] as CFArray, locations: [0, 0.28, 0.55, 0.78, 1])!
-        cg.drawLinearGradient(chrome, start: CGPoint(x: outer.minX, y: outer.minY), end: CGPoint(x: outer.maxX * 0.7, y: outer.maxY), options: [])
+        cg.drawLinearGradient(chrome, start: CGPoint(x: outer.minX, y: outer.minY), end: CGPoint(x: outer.maxX * 0.7, y: outer.maxY), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
         cg.restoreGState()
 
         // The black glass top.
